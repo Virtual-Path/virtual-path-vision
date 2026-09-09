@@ -301,4 +301,76 @@
   <data name="FeatureMatches" xml:space="preserve">
     <value>Matches</value>
   </data>
+  <data name="Industrial" xml:space="preserve">
+    <value>Industrial</value>
+  </data>
+  <data name="ModbusPLC" xml:space="preserve">
+    <value>Modbus PLC</value>
+  </data>
+  <data name="OpcUa" xml:space="preserve">
+    <value>OPC-UA</value>
+  </data>
+  <data name="WorkReport" xml:space="preserve">
+    <value>Work Report</value>
+  </data>
+  <data name="UnitId" xml:space="preserve">
+    <value>Unit</value>
+  </data>
+  <data name="RegisterAddress" xml:space="preserve">
+    <value>Register</value>
+  </data>
+  <data name="Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Read" xml:space="preserve">
+    <value>Read</value>
+  </data>
+  <data name="Write" xml:space="preserve">
+    <value>Write</value>
+  </data>
+  <data name="PlcLink" xml:space="preserve">
+    <value>PLC Link</value>
+  </data>
+  <data name="PlcCountRegister" xml:space="preserve">
+    <value>Count Register</value>
+  </data>
+  <data name="WorkOrder" xml:space="preserve">
+    <value>Order</value>
+  </data>
+  <data name="ScanSource" xml:space="preserve">
+    <value>Scan Source</value>
+  </data>
+  <data name="ScanCamera" xml:space="preserve">
+    <value>Camera</value>
+  </data>
+  <data name="ScanSerial" xml:space="preserve">
+    <value>Serial</value>
+  </data>
+  <data name="ScanTcp" xml:space="preserve">
+    <value>TCP</value>
+  </data>
+  <data name="TodayCount" xml:space="preserve">
+    <value>Today Output</value>
+  </data>
+  <data name="LastBarcode" xml:space="preserve">
+    <value>Last Barcode</value>
+  </data>
+  <data name="ExportCsv" xml:space="preserve">
+    <value>Export CSV</value>
+  </data>
+  <data name="CameraReport" xml:space="preserve">
+    <value>Camera Reporting</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="Stop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="ModbusNotConnected" xml:space="preserve">
+    <value>Modbus not connected</value>
+  </data>
+  <data name="CsvExported" xml:space="preserve">
+    <value>CSV exported to</value>
+  </data>
 </root>

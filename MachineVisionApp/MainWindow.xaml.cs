@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using MachineVisionApp.Industrial;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using OpenCvSharp;
 
@@ -27,6 +29,14 @@ namespace MachineVisionApp
         private Components.ShapeDetectionComponent _shapeDetectionComponent;
         private Components.FeatureMatchComponent _featureMatchComponent;
         private Components.EnhancementComponent _enhancementComponent;
+
+        // ---- 工业互联（企业化）服务 ----
+        private Industrial.ModbusTcpDriver _modbusDriver;
+        private Industrial.OpcUaDriver _opcUaDriver;
+        private Industrial.SerialScanDriver _serialDriver;
+        private Industrial.TcpScanDriver _tcpDriver;
+        private Industrial.WorkReportService _workReportService;
+        private Industrial.IndustrialConfig _industrialConfig;
 
         // ---- 处理参数 ----
         private Components.ProcessingMode _currentMode = Components.ProcessingMode.Canny;
@@ -64,6 +74,26 @@ namespace MachineVisionApp
             _shapeDetectionComponent = new Components.ShapeDetectionComponent();
             _featureMatchComponent = new Components.FeatureMatchComponent();
             _enhancementComponent = new Components.EnhancementComponent();
+
+            // 工业互联服务（依赖注入容器解析）
+            _modbusDriver = App.Services.GetRequiredService<Industrial.ModbusTcpDriver>();
+            _opcUaDriver = App.Services.GetRequiredService<Industrial.OpcUaDriver>();
+            _serialDriver = App.Services.GetRequiredService<Industrial.SerialScanDriver>();
+            _tcpDriver = App.Services.GetRequiredService<Industrial.TcpScanDriver>();
+            _workReportService = App.Services.GetRequiredService<Industrial.WorkReportService>();
+            _industrialConfig = App.Services.GetRequiredService<Industrial.IndustrialConfig>();
+
+            // 设备驱动状态/错误事件（后台线程 → Dispatcher 封送）
+            _modbusDriver.OnStateChanged += s => Dispatcher.Invoke(() => UpdateModbusState(s));
+            _modbusDriver.OnError += msg => Dispatcher.Invoke(() => AppLogger.Instance.Error($"Modbus: {msg}"));
+            _opcUaDriver.OnStateChanged += s => Dispatcher.Invoke(() => UpdateOpcUaState(s));
+            _opcUaDriver.OnError += msg => Dispatcher.Invoke(() => AppLogger.Instance.Error($"OPC-UA: {msg}"));
+
+            // 扫码数据源事件：条码 → 报工
+            _serialDriver.OnBarcodeScanned += code => Dispatcher.Invoke(() => AddReport(code, TranslationService.Instance.ScanSerial));
+            _serialDriver.OnError += msg => Dispatcher.Invoke(() => AppLogger.Instance.Error($"串口: {msg}"));
+            _tcpDriver.OnBarcodeScanned += code => Dispatcher.Invoke(() => AddReport(code, TranslationService.Instance.ScanTcp));
+            _tcpDriver.OnError += msg => Dispatcher.Invoke(() => AppLogger.Instance.Error($"TCP: {msg}"));
 
             _videoCaptureComponent.OnFrameCaptured += ProcessFrame;
             _videoCaptureComponent.OnCaptureStopped += OnCaptureStoppedHandler;
@@ -122,6 +152,10 @@ namespace MachineVisionApp
                 int colorIndex = ColorComboBox.SelectedIndex;
                 ColorComboBox.ItemsSource = TranslationService.Instance.ColorNames;
                 ColorComboBox.SelectedIndex = colorIndex < 0 ? 0 : colorIndex;
+
+                int scanIndex = ScanSourceComboBox.SelectedIndex;
+                ScanSourceComboBox.ItemsSource = TranslationService.Instance.ScanSourceNames;
+                ScanSourceComboBox.SelectedIndex = scanIndex < 0 ? 0 : scanIndex;
             }
             finally
             {
@@ -187,6 +221,24 @@ namespace MachineVisionApp
                 if (LogPanel.Visibility == Visibility.Visible)
                     LogListBox.ScrollIntoView(entry);
             });
+
+            // ---- 工业互联面板初始化 ----
+            ScanSourceComboBox.ItemsSource = TranslationService.Instance.ScanSourceNames;
+            ScanSourceComboBox.SelectedIndex = 0;
+            SerialPortComboBox.ItemsSource = Industrial.SerialScanDriver.GetPortNames();
+            SerialBaudComboBox.ItemsSource = new[] { "9600", "19200", "38400", "57600", "115200" };
+            SerialBaudComboBox.SelectedIndex = 0;
+            ReportListBox.ItemsSource = _workReportService.Records;
+            TodayCountTextBlock.Text = _workReportService.TodayCount.ToString();
+
+            // 配置回填
+            ModbusIpTextBox.Text = _industrialConfig.Modbus.Ip;
+            ModbusPortTextBox.Text = _industrialConfig.Modbus.Port.ToString();
+            ModbusUnitTextBox.Text = _industrialConfig.Modbus.UnitId.ToString();
+            OpcUaEndpointTextBox.Text = _industrialConfig.OpcUa.Endpoint;
+            TcpScanPortTextBox.Text = _industrialConfig.TcpScanner.Port.ToString();
+            PlcRegisterTextBox.Text = _industrialConfig.Report.PlcCountRegister.ToString();
+            ModbusLinkCheckBox.IsChecked = _industrialConfig.Report.PlcReportEnable;
         }
 
         /// <summary>
@@ -199,6 +251,11 @@ namespace MachineVisionApp
             _templateMatchComponent.Clear();
             _featureMatchComponent.Clear();
             _lastOriginalFrame?.Dispose();
+
+            _serialDriver.Dispose();
+            _tcpDriver.Dispose();
+            _modbusDriver.Dispose();
+            _opcUaDriver.Dispose();
         }
 
         /// <summary>
@@ -528,6 +585,298 @@ namespace MachineVisionApp
             LogPanel.Visibility = isVisible ? Visibility.Collapsed : Visibility.Visible;
         }
 
+        // ==================== 工业互联（企业化） ====================
+
+        /// <summary>工业互联面板开关</summary>
+        private void IndustrialToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            IndustrialPanel.Visibility = IndustrialPanel.Visibility == Visibility.Visible
+                ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        /// <summary>更新 Modbus 状态指示</summary>
+        private void UpdateModbusState(DeviceDriverState state)
+        {
+            Color color = state switch
+            {
+                DeviceDriverState.Connected => Color.FromRgb(0x3F, 0xB9, 0x50),
+                DeviceDriverState.Connecting => Color.FromRgb(0xD2, 0x99, 0x22),
+                DeviceDriverState.Failed => Color.FromRgb(0xF8, 0x51, 0x49),
+                _ => Color.FromRgb(0x48, 0x4F, 0x58)
+            };
+            ModbusStatusDot.Fill = new SolidColorBrush(color);
+            ModbusStatusText.Text = state switch
+            {
+                DeviceDriverState.Connected => TranslationService.GetStringStatic("StatusConnected"),
+                DeviceDriverState.Connecting => TranslationService.GetStringStatic("StatusConnecting"),
+                DeviceDriverState.Failed => TranslationService.GetStringStatic("StatusFailed"),
+                _ => TranslationService.GetStringStatic("StatusDisconnected")
+            };
+            ModbusConnectButton.IsEnabled = state != DeviceDriverState.Connected;
+            ModbusDisconnectButton.IsEnabled = state == DeviceDriverState.Connected;
+        }
+
+        /// <summary>更新 OPC-UA 状态指示</summary>
+        private void UpdateOpcUaState(DeviceDriverState state)
+        {
+            Color color = state switch
+            {
+                DeviceDriverState.Connected => Color.FromRgb(0x3F, 0xB9, 0x50),
+                DeviceDriverState.Connecting => Color.FromRgb(0xD2, 0x99, 0x22),
+                DeviceDriverState.Failed => Color.FromRgb(0xF8, 0x51, 0x49),
+                _ => Color.FromRgb(0x48, 0x4F, 0x58)
+            };
+            OpcUaStatusDot.Fill = new SolidColorBrush(color);
+            OpcUaStatusText.Text = state switch
+            {
+                DeviceDriverState.Connected => TranslationService.GetStringStatic("StatusConnected"),
+                DeviceDriverState.Connecting => TranslationService.GetStringStatic("StatusConnecting"),
+                DeviceDriverState.Failed => TranslationService.GetStringStatic("StatusFailed"),
+                _ => TranslationService.GetStringStatic("StatusDisconnected")
+            };
+            OpcUaConnectButton.IsEnabled = state != DeviceDriverState.Connected;
+            OpcUaDisconnectButton.IsEnabled = state == DeviceDriverState.Connected;
+        }
+
+        /// <summary>
+        /// 报工登记：条码 → 报工记录（SQLite 持久化 + 今日产量 + PLC 联动）。
+        /// 必须在 UI 线程调用。
+        /// </summary>
+        private void AddReport(string barcode, string source)
+        {
+            if (string.IsNullOrWhiteSpace(barcode)) return;
+
+            var record = _workReportService.AddRecord(WorkOrderTextBox.Text.Trim(), barcode, source);
+            TodayCountTextBlock.Text = _workReportService.TodayCount.ToString();
+            LastBarcodeTextBlock.Text = barcode;
+            ReportListBox.ScrollIntoView(record);
+            AppLogger.Instance.Info($"{TranslationService.Instance.WorkReport}: {barcode} ({source})");
+
+            // PLC 联动：将今日产量写入 Modbus 保持寄存器
+            if (ModbusLinkCheckBox.IsChecked == true)
+            {
+                try
+                {
+                    if (_modbusDriver.State != DeviceDriverState.Connected)
+                    {
+                        AppLogger.Instance.Warn(TranslationService.GetStringStatic("ModbusNotConnected"));
+                        return;
+                    }
+                    if (ushort.TryParse(PlcRegisterTextBox.Text, out ushort register))
+                    {
+                        _modbusDriver.WriteSingleRegister(register, (ushort)_workReportService.TodayCount);
+                        AppLogger.Instance.Info($"PLC联动: [{register}] = {_workReportService.TodayCount}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Instance.Error($"PLC联动失败: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>Modbus 连接按钮</summary>
+        private async void ModbusConnectButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!byte.TryParse(ModbusUnitTextBox.Text, out byte unitId) ||
+                !int.TryParse(ModbusPortTextBox.Text, out int port) ||
+                string.IsNullOrWhiteSpace(ModbusIpTextBox.Text))
+            {
+                ShowError(TranslationService.GetStringStatic("InvalidThreshold"));
+                return;
+            }
+
+            HideError();
+            _modbusDriver.UpdateSettings(ModbusIpTextBox.Text.Trim(), port, unitId);
+            ModbusConnectButton.IsEnabled = false;
+            bool ok = await _modbusDriver.ConnectAsync();
+            if (ok)
+            {
+                AppLogger.Instance.Info($"Modbus 已连接: {_modbusDriver.Ip}:{_modbusDriver.Port} (从站 {_modbusDriver.UnitId})");
+            }
+        }
+
+        /// <summary>Modbus 断开按钮</summary>
+        private void ModbusDisconnectButton_Click(object sender, RoutedEventArgs e)
+        {
+            _modbusDriver.Disconnect();
+            AppLogger.Instance.Info("Modbus 已断开");
+        }
+
+        /// <summary>Modbus 读取保持寄存器</summary>
+        private void ModbusReadButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!ushort.TryParse(ModbusAddrTextBox.Text, out ushort address))
+                    return;
+                ushort[] values = _modbusDriver.ReadHoldingRegisters(address, 1);
+                ModbusResultText.Text = $"= {values[0]}";
+                AppLogger.Instance.Info($"Modbus 读取: [{address}] = {values[0]}");
+            }
+            catch (Exception ex)
+            {
+                ModbusResultText.Text = "";
+                AppLogger.Instance.Error($"Modbus 读取失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>Modbus 写单个保持寄存器</summary>
+        private void ModbusWriteButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!ushort.TryParse(ModbusAddrTextBox.Text, out ushort address) ||
+                    !ushort.TryParse(ModbusValueTextBox.Text, out ushort value))
+                    return;
+                _modbusDriver.WriteSingleRegister(address, value);
+                ModbusResultText.Text = "OK";
+                AppLogger.Instance.Info($"Modbus 写入: [{address}] = {value}");
+            }
+            catch (Exception ex)
+            {
+                ModbusResultText.Text = "";
+                AppLogger.Instance.Error($"Modbus 写入失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>OPC-UA 连接按钮</summary>
+        private async void OpcUaConnectButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(OpcUaEndpointTextBox.Text)) return;
+
+            HideError();
+            _opcUaDriver.UpdateSettings(OpcUaEndpointTextBox.Text.Trim());
+            OpcUaConnectButton.IsEnabled = false;
+            bool ok = await _opcUaDriver.ConnectAsync();
+            if (ok)
+            {
+                AppLogger.Instance.Info($"OPC-UA 已连接: {_opcUaDriver.EndpointUrl}");
+            }
+        }
+
+        /// <summary>OPC-UA 断开按钮</summary>
+        private void OpcUaDisconnectButton_Click(object sender, RoutedEventArgs e)
+        {
+            _opcUaDriver.Disconnect();
+            AppLogger.Instance.Info("OPC-UA 已断开");
+        }
+
+        /// <summary>OPC-UA 读取节点</summary>
+        private async void OpcUaReadButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string? result = await _opcUaDriver.ReadNodeAsync(OpcUaNodeTextBox.Text.Trim());
+                OpcUaResultText.Text = $"{OpcUaNodeTextBox.Text.Trim()} = {result}";
+                AppLogger.Instance.Info($"OPC-UA 读取: {OpcUaNodeTextBox.Text.Trim()} = {result}");
+            }
+            catch (Exception ex)
+            {
+                OpcUaResultText.Text = "";
+                AppLogger.Instance.Error($"OPC-UA 读取失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>OPC-UA 写入节点（数值优先按 double 解析，否则按字符串写入）</summary>
+        private async void OpcUaWriteButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                object value = double.TryParse(OpcUaValueTextBox.Text, out double number)
+                    ? number : OpcUaValueTextBox.Text;
+                await _opcUaDriver.WriteNodeAsync(OpcUaNodeTextBox.Text.Trim(), value);
+                OpcUaResultText.Text = "OK";
+                AppLogger.Instance.Info($"OPC-UA 写入: {OpcUaNodeTextBox.Text.Trim()} = {value}");
+            }
+            catch (Exception ex)
+            {
+                OpcUaResultText.Text = "";
+                AppLogger.Instance.Error($"OPC-UA 写入失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>扫码源切换：显示对应配置面板</summary>
+        private void ScanSourceComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (ScanSourceComboBox.SelectedIndex < 0) return;
+            SerialScanPanel.Visibility = ScanSourceComboBox.SelectedIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
+            TcpScanPanel.Visibility = ScanSourceComboBox.SelectedIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        /// <summary>串口扫码开关</summary>
+        private async void SerialToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_serialDriver.IsRunning)
+            {
+                _serialDriver.Stop();
+                SerialToggleButton.Content = TranslationService.Instance.Start;
+                AppLogger.Instance.Info("串口扫码已停止");
+                return;
+            }
+
+            string? portName = SerialPortComboBox.SelectedItem as string;
+            if (string.IsNullOrEmpty(portName)) return;
+            _serialDriver.PortName = portName;
+            if (int.TryParse(SerialBaudComboBox.SelectedItem as string, out int baud))
+                _serialDriver.BaudRate = baud;
+
+            bool ok = await _serialDriver.StartAsync();
+            if (ok)
+            {
+                SerialToggleButton.Content = TranslationService.Instance.Stop;
+                AppLogger.Instance.Info($"串口扫码已启动: {portName} @ {_serialDriver.BaudRate}");
+            }
+        }
+
+        /// <summary>TCP 扫码开关</summary>
+        private async void TcpToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_tcpDriver.IsRunning)
+            {
+                _tcpDriver.Stop();
+                TcpToggleButton.Content = TranslationService.Instance.Start;
+                AppLogger.Instance.Info("TCP 扫码已停止");
+                return;
+            }
+
+            if (!int.TryParse(TcpScanPortTextBox.Text, out int port) || port <= 0 || port > 65535)
+                return;
+            _tcpDriver.Port = port;
+
+            bool ok = await _tcpDriver.StartAsync();
+            if (ok)
+            {
+                TcpToggleButton.Content = TranslationService.Instance.Stop;
+                AppLogger.Instance.Info($"TCP 扫码已启动: 端口 {port}");
+            }
+        }
+
+        /// <summary>导出报工记录 CSV</summary>
+        private void ExportCsvButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string path = _workReportService.ExportCsv();
+                AppLogger.Instance.Info($"{TranslationService.GetStringStatic("CsvExported")}: {path}");
+                MessageBox.Show($"{TranslationService.GetStringStatic("CsvExported")}:\n{path}",
+                    TranslationService.Instance.AppTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Instance.Error($"CSV 导出失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>清空今日报工记录</summary>
+        private void ClearReportButton_Click(object sender, RoutedEventArgs e)
+        {
+            _workReportService.ClearToday();
+            TodayCountTextBlock.Text = "0";
+            LastBarcodeTextBlock.Text = "--";
+            AppLogger.Instance.Info("今日报工记录已清空");
+        }
+
         /// <summary>清空日志按钮：清空所有日志条目</summary>
         private void ClearLogButton_Click(object sender, RoutedEventArgs e)
         {
@@ -693,12 +1042,14 @@ namespace MachineVisionApp
                     ThresholdInfoText.Text = showThreshold ? $"{_threshold1} ~ {_threshold2}" : "";
                     ModeResultTextBlock.Text = modeResult;
 
-                    // QR/条码识别到新内容时记录日志（去重）
+                    // QR/条码识别到新内容时记录日志（去重）+ 摄像头扫码报工
                     if (_currentMode == Components.ProcessingMode.QRCode &&
                         !string.IsNullOrEmpty(modeResult) && modeResult != _lastDecodedText)
                     {
                         _lastDecodedText = modeResult;
                         AppLogger.Instance.Info($"{TranslationService.Instance.QRDecoded}: {modeResult}");
+                        if (CameraReportCheckBox.IsChecked == true)
+                            AddReport(modeResult, TranslationService.Instance.ScanCamera);
                     }
 
                     UpdateCameraData();

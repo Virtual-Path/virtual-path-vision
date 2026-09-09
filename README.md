@@ -12,6 +12,7 @@
   <img src="https://img.shields.io/badge/OpenCV-4.11-5C3EE8?style=flat-square&logo=opencv" alt="OpenCV 4.11"/>
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=flat-square" alt="Windows"/>
   <img src="https://img.shields.io/badge/lang-EN%20%2F%20中文-3FB950?style=flat-square" alt="i18n"/>
+  <img src="https://img.shields.io/badge/version-v2.3.0-blue?style=flat-square" alt="v2.3.0"/>
 </p>
 
 <p align="center">
