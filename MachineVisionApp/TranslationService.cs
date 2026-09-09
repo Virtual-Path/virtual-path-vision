@@ -75,6 +75,34 @@ namespace MachineVisionApp
         public string QRDecoded => GetString("QRDecoded");
         public string PickColorHint => GetString("PickColorHint");
         public string FeatureMatches => GetString("FeatureMatches");
+        public string Industrial => GetString("Industrial");
+        public string ModbusPLC => GetString("ModbusPLC");
+        public string OpcUa => GetString("OpcUa");
+        public string WorkReport => GetString("WorkReport");
+        public string UnitId => GetString("UnitId");
+        public string RegisterAddress => GetString("RegisterAddress");
+        public string Value => GetString("Value");
+        public string Read => GetString("Read");
+        public string Write => GetString("Write");
+        public string PlcLink => GetString("PlcLink");
+        public string PlcCountRegister => GetString("PlcCountRegister");
+        public string WorkOrder => GetString("WorkOrder");
+        public string ScanSource => GetString("ScanSource");
+        public string ScanCamera => GetString("ScanCamera");
+        public string ScanSerial => GetString("ScanSerial");
+        public string ScanTcp => GetString("ScanTcp");
+        public string TodayCount => GetString("TodayCount");
+        public string LastBarcode => GetString("LastBarcode");
+        public string ExportCsv => GetString("ExportCsv");
+        public string CameraReport => GetString("CameraReport");
+        public string Start => GetString("Start");
+        public string Stop => GetString("Stop");
+
+        /// <summary>扫码源名称列表（供报工面板下拉框使用）</summary>
+        public string[] ScanSourceNames => new[]
+        {
+            GetString("ScanCamera"), GetString("ScanSerial"), GetString("ScanTcp")
+        };
 
         /// <summary>目标颜色名称列表（供颜色检测下拉框使用）</summary>
         public string[] ColorNames => new[]
