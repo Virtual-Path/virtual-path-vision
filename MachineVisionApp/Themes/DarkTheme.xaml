@@ -384,11 +384,7 @@
                                 BorderThickness="1.5"
                                 Margin="0,0,10,0"
                                 VerticalAlignment="Center"
-                                SnapsToDevicePixels="True"
-                                RenderTransformOrigin="0.5,0.5">
-                            <Border.RenderTransform>
-                                <ScaleTransform ScaleX="1" ScaleY="1" />
-                            </Border.RenderTransform>
+                                SnapsToDevicePixels="True">
                             <Grid>
                                 <Path x:Name="checkMark"
                                       Data="M4,11 L8,15 L18,5"
@@ -423,10 +419,7 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetName="checkBorder"
-                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                                                         From="0.6" To="1" Duration="0:0:0.15" />
-                                        <DoubleAnimation Storyboard.TargetName="checkBorder"
-                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                         Storyboard.TargetProperty="Opacity"
                                                          From="0.6" To="1" Duration="0:0:0.15" />
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -435,10 +428,7 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetName="checkBorder"
-                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                                                         To="1" Duration="0:0:0.1" />
-                                        <DoubleAnimation Storyboard.TargetName="checkBorder"
-                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                         Storyboard.TargetProperty="Opacity"
                                                          To="1" Duration="0:0:0.1" />
                                     </Storyboard>
                                 </BeginStoryboard>
