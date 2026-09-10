@@ -258,6 +258,7 @@ namespace MachineVisionApp
             try
             {
                 int srcIndex = CameraPanelCtrl.SourceTypeComboBoxEl.SelectedIndex;
+                CameraPanelCtrl.SourceTypeComboBoxEl.ItemsSource = null;
                 CameraPanelCtrl.SourceTypeComboBoxEl.Items.Clear();
                 CameraPanelCtrl.SourceTypeComboBoxEl.ItemsSource = new string[]
                 {
@@ -267,6 +268,7 @@ namespace MachineVisionApp
                 CameraPanelCtrl.SourceTypeComboBoxEl.SelectedIndex = srcIndex < 0 ? 0 : srcIndex;
 
                 int modeIndex = ProcessingPanelCtrl.ProcessingModeComboBoxEl.SelectedIndex;
+                ProcessingPanelCtrl.ProcessingModeComboBoxEl.ItemsSource = null;
                 ProcessingPanelCtrl.ProcessingModeComboBoxEl.Items.Clear();
                 ProcessingPanelCtrl.ProcessingModeComboBoxEl.ItemsSource = new string[]
                 {
@@ -285,11 +287,13 @@ namespace MachineVisionApp
                 ProcessingPanelCtrl.ProcessingModeComboBoxEl.SelectedIndex = modeIndex < 0 ? 0 : modeIndex;
 
                 int colorIndex = ProcessingPanelCtrl.ColorComboBoxEl.SelectedIndex;
+                ProcessingPanelCtrl.ColorComboBoxEl.ItemsSource = null;
                 ProcessingPanelCtrl.ColorComboBoxEl.Items.Clear();
                 ProcessingPanelCtrl.ColorComboBoxEl.ItemsSource = TranslationService.Instance.ColorNames;
                 ProcessingPanelCtrl.ColorComboBoxEl.SelectedIndex = colorIndex < 0 ? 0 : colorIndex;
 
                 int scanIndex = IndustrialPanelCtrl.ScanSourceComboBoxEl.SelectedIndex;
+                IndustrialPanelCtrl.ScanSourceComboBoxEl.ItemsSource = null;
                 IndustrialPanelCtrl.ScanSourceComboBoxEl.Items.Clear();
                 IndustrialPanelCtrl.ScanSourceComboBoxEl.ItemsSource = TranslationService.Instance.ScanSourceNames;
                 IndustrialPanelCtrl.ScanSourceComboBoxEl.SelectedIndex = scanIndex < 0 ? 0 : scanIndex;
