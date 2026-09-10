@@ -1580,7 +1580,7 @@ namespace MachineVisionApp
                     _activePerception.CurrentDetections);
                 AIPanelCtrl.DigitalTwinImageEl.Dispatcher.Invoke(() =>
                 {
-                    AIPanelCtrl.DigitalTwinImageEl.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(twin);
+                    AIPanelCtrl.DigitalTwinImageEl.Source = Components.DpiAwareBitmapSource.FromMat(twin);
                 });
 
                 int det = _activePerception.CurrentDetections.Count;

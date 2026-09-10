@@ -1,6 +1,5 @@
 ﻿using System.Windows.Controls;
 using OpenCvSharp;
-using OpenCvSharp.WpfExtensions;
 
 namespace MachineVisionApp.Components
 {
@@ -35,8 +34,8 @@ namespace MachineVisionApp.Components
         {
             _originalImage.Dispatcher.Invoke(() =>
             {
-                _originalImage.Source = BitmapSourceConverter.ToBitmapSource(originalFrame);
-                _edgeImage.Source = BitmapSourceConverter.ToBitmapSource(edges);
+                _originalImage.Source = DpiAwareBitmapSource.FromMat(originalFrame);
+                _edgeImage.Source = DpiAwareBitmapSource.FromMat(edges);
             });
         }
     }
