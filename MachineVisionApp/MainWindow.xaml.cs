@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using MachineVisionApp.AI;
+using MachineVisionApp.Cloud;
 using MachineVisionApp.Industrial;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
@@ -38,6 +42,21 @@ namespace MachineVisionApp
         private Industrial.WorkReportService _workReportService;
         private Industrial.IndustrialConfig _industrialConfig;
 
+        // ---- AI 模块 ----
+        private AI.YoloDetectionComponent? _yoloComponent;
+        private AI.KalmanTrackerComponent? _kalmanTracker;
+        private AI.ActivePerceptionEngine? _activePerception;
+        private AI.DigitalTwinRenderer? _digitalTwin;
+        private bool _aiEnabled;
+        private readonly object _aiLock = new();
+
+        // ---- Cloud 模块 ----
+        private Cloud.S3Service? _s3Service;
+        private Cloud.IoTService? _iotService;
+        private Cloud.LambdaClient? _lambdaClient;
+        private int _detectionTotalCount;
+        private int _detectionDefectCount;
+
         // ---- 处理参数 ----
         private Components.ProcessingMode _currentMode = Components.ProcessingMode.Canny;
         private int _threshold1 = 100;
@@ -61,7 +80,7 @@ namespace MachineVisionApp
             InitializeComponent();
 
             _faceDetectionComponent = new Components.FaceDetectionComponent(
-                System.IO.Path.Combine(AppContext.BaseDirectory, "haarcascade_frontalface_default.xml"));
+                System.IO.Path.Combine(AppContext.BaseDirectory, "face_detection_yunet_2023mar.onnx"));
             _imageProcessingComponent = new Components.ImageProcessingComponent();
             _videoCaptureComponent = new Components.VideoCaptureComponent();
             _imageDisplayComponent = new Components.ImageDisplayComponent(OriginalImage, EdgeImage);
@@ -256,6 +275,15 @@ namespace MachineVisionApp
             _tcpDriver.Dispose();
             _modbusDriver.Dispose();
             _opcUaDriver.Dispose();
+
+            lock (_aiLock)
+            {
+                _yoloComponent?.Dispose();
+                _digitalTwin?.Dispose();
+            }
+            _s3Service?.Dispose();
+            _iotService?.Dispose();
+            _lambdaClient?.Dispose();
         }
 
         /// <summary>
@@ -1006,13 +1034,60 @@ namespace MachineVisionApp
                 int faceCount = 0;
                 try
                 {
-                    faceCount = _faceDetectionComponent.DetectFaces(grayFrame, originalFrame);
+                    faceCount = _faceDetectionComponent.DetectFaces(originalFrame);
+
+                    // ---- AI 主动感知 ----
+                    int aiDetCount = 0;
+                    int aiTrackCount = 0;
+                    if (_aiEnabled && _activePerception != null && _yoloComponent != null && _yoloComponent.IsModelLoaded)
+                    {
+                        lock (_aiLock)
+                        {
+                            _activePerception.ProcessFrame(originalFrame);
+                            _activePerception.DrawOverlay(resultImage);
+                            aiDetCount = _activePerception.CurrentDetections.Count;
+                            aiTrackCount = _activePerception.CurrentTracks.Count;
+
+                            // 统计
+                            _detectionTotalCount += aiDetCount;
+                            int defects = _activePerception.CurrentDetections.Count(d => d.Confidence > 0.8f);
+                            _detectionDefectCount += defects;
+
+                            // 异步发布到云端（每 30 帧一次，避免过频）
+                            if (_iotService != null && _detectionTotalCount % 30 == 0)
+                            {
+                                var iot = _iotService;
+                                var tracks = _activePerception.CurrentTracks;
+                                _ = Task.Run(async () =>
+                                {
+                                    try
+                                    {
+                                        await iot.PublishDetectionResultAsync(
+                                            _currentMode.ToString(), aiDetCount, 0.8f);
+                                    }
+                                    catch { }
+                                });
+                            }
+                        }
+                    }
 
                     _imageDisplayComponent.UpdateImages(originalFrame, resultImage, _threshold1, _threshold2);
 
                     if (_recordingComponent.IsRecording)
                     {
                         _recordingComponent.WriteFrame(originalFrame);
+                    }
+
+                    // Dispatcher 更新 AI 面板
+                    if (_aiEnabled)
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            AiDetectionsText.Text = $"Detections: {aiDetCount}";
+                            AiTracksText.Text = $"Tracks: {aiTrackCount}";
+                            if (_activePerception != null)
+                                AiSampleText.Text = $"Interval: {_activePerception.AdaptiveInterval}";
+                        });
                     }
                 }
                 finally
@@ -1054,6 +1129,12 @@ namespace MachineVisionApp
 
                     UpdateCameraData();
                 });
+
+                // 数字孪生更新（在 Dispatcher 外收集数据，在 Dispatcher 内更新 UI）
+                if (_aiEnabled && _digitalTwin != null)
+                {
+                    Dispatcher.Invoke(UpdateDigitalTwin);
+                }
             }
             catch (Exception ex)
             {
@@ -1096,7 +1177,7 @@ namespace MachineVisionApp
                     using Mat grayImage = new Mat();
                     Cv2.CvtColor(image, grayImage, ColorConversionCodes.BGR2GRAY);
                     using Mat edges = ProcessByMode(image, grayImage, out int contourCount, out string modeResult);
-                    int faceCount = _faceDetectionComponent.DetectFaces(grayImage, image);
+                    int faceCount = _faceDetectionComponent.DetectFaces(image);
                     _imageDisplayComponent.UpdateImages(image, edges, _threshold1, _threshold2);
                     FaceCountTextBlock.Text = $"{faceCount}";
                     ContourCountTextBlock.Text = $"{contourCount}";
@@ -1191,6 +1272,286 @@ namespace MachineVisionApp
         {
             ErrorBorder.Visibility = Visibility.Collapsed;
             ErrorMessageTextBlock.Text = "";
+        }
+
+        // ==================== AI + Cloud ====================
+
+        /// <summary>AI / Cloud 面板开关</summary>
+        private void AiCloudToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            AiCloudPanel.Visibility = AiCloudPanel.Visibility == Visibility.Visible
+                ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        /// <summary>加载 YOLO 模型</summary>
+        private void LoadYoloModelButton_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new OpenFileDialog
+            {
+                Filter = "ONNX Model (*.onnx)|*.onnx|All Files (*.*)|*.*"
+            };
+            if (dlg.ShowDialog() != true) return;
+
+            try
+            {
+                float conf = 0.5f;
+                float.TryParse(ConfThresholdTextBox.Text, out conf);
+
+                lock (_aiLock)
+                {
+                    _yoloComponent?.Dispose();
+                    _yoloComponent = new AI.YoloDetectionComponent(
+                        dlg.FileName, confidenceThreshold: conf);
+
+                    _kalmanTracker = new AI.KalmanTrackerComponent();
+                    _activePerception = new AI.ActivePerceptionEngine(_yoloComponent, _kalmanTracker);
+                    _digitalTwin?.Dispose();
+                    _digitalTwin = new AI.DigitalTwinRenderer();
+                }
+
+                YoloModelPathText.Text = Path.GetFileName(dlg.FileName);
+                AiStatusDot.Fill = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
+                AiStatusText.Text = "Model Loaded";
+                AiStatusText.Foreground = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
+                AppLogger.Instance.Info($"YOLO 模型已加载: {dlg.FileName}");
+            }
+            catch (Exception ex)
+            {
+                AiStatusDot.Fill = new SolidColorBrush(Color.FromRgb(0xF8, 0x51, 0x49));
+                AiStatusText.Text = "Load Failed";
+                ShowError($"YOLO 模型加载失败: {ex.Message}");
+                AppLogger.Instance.Error($"YOLO 模型加载失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>AI 启用/禁用</summary>
+        private void AiEnableCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            if (!IsLoaded) return;
+            _aiEnabled = AiEnableCheckBox.IsChecked == true;
+
+            if (_aiEnabled && (_yoloComponent == null || !_yoloComponent.IsModelLoaded))
+            {
+                ShowError("请先加载 YOLO 模型");
+                AiEnableCheckBox.IsChecked = false;
+                _aiEnabled = false;
+                return;
+            }
+
+            if (_aiEnabled)
+            {
+                lock (_aiLock) { _activePerception?.Reset(); }
+                AiStatusDot.Fill = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
+                _detectionTotalCount = 0;
+                _detectionDefectCount = 0;
+                AppLogger.Instance.Info("AI 主动感知已启用");
+            }
+            else
+            {
+                AiStatusDot.Fill = new SolidColorBrush(Color.FromRgb(0x48, 0x4F, 0x58));
+                AppLogger.Instance.Info("AI 主动感知已禁用");
+            }
+        }
+
+        /// <summary>初始化 Cloud 服务</summary>
+        private async void CloudInitButton_Click(object sender, RoutedEventArgs e)
+        {
+            string region = AwsRegionTextBox.Text.Trim();
+            string bucket = S3BucketTextBox.Text.Trim();
+            string iotEndpoint = IoTEndpointTextBox.Text.Trim();
+            string lambdaFunc = LambdaFuncTextBox.Text.Trim();
+
+            if (string.IsNullOrEmpty(region))
+            {
+                ShowError("请输入 AWS Region");
+                return;
+            }
+
+            try
+            {
+                if (!string.IsNullOrEmpty(bucket))
+                {
+                    _s3Service?.Dispose();
+                    _s3Service = new S3Service(region, bucket);
+                    _s3Service.OnUploadSuccess += key =>
+                        Dispatcher.Invoke(() => AppLogger.Instance.Info($"S3 上传成功: {key}"));
+                    _s3Service.OnUploadError += (key, ex) =>
+                        Dispatcher.Invoke(() => AppLogger.Instance.Error($"S3 上传失败: {key} - {ex.Message}"));
+                    CloudUploadScreenshotButton.IsEnabled = true;
+                    AppLogger.Instance.Info($"S3 服务已初始化: {bucket} ({region})");
+                }
+
+                if (!string.IsNullOrEmpty(iotEndpoint))
+                {
+                    string certPath = Path.Combine(AppContext.BaseDirectory, "certs", "device-certificate.pem.crt");
+                    string keyPath = Path.Combine(AppContext.BaseDirectory, "certs", "private.pem.key");
+
+                    _iotService?.Dispose();
+                    if (File.Exists(certPath) && File.Exists(keyPath))
+                    {
+                        _iotService = new IoTService(iotEndpoint, certPath, keyPath);
+                    }
+                    else
+                    {
+                        var handler = new System.Net.Http.HttpClientHandler();
+                        _iotService = new IoTService(
+                            new System.Net.Http.HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) },
+                            iotEndpoint);
+                        AppLogger.Instance.Warn("IoT: 未找到设备证书，使用无认证模式（仅限测试）");
+                    }
+                    _iotService.OnPublishSuccess += topic =>
+                        Dispatcher.Invoke(() => AppLogger.Instance.Info($"IoT 发布成功: {topic}"));
+                    _iotService.OnPublishError += (topic, ex) =>
+                        Dispatcher.Invoke(() => AppLogger.Instance.Error($"IoT 发布失败: {topic} - {ex.Message}"));
+                    CloudAlertButton.IsEnabled = true;
+                    CloudPublishStatsButton.IsEnabled = true;
+                    AppLogger.Instance.Info($"IoT 服务已初始化: {iotEndpoint}");
+                }
+
+                if (!string.IsNullOrEmpty(lambdaFunc))
+                {
+                    _lambdaClient?.Dispose();
+                    _lambdaClient = new LambdaClient(region);
+                    _lambdaClient.OnInvocationSuccess += fn =>
+                        Dispatcher.Invoke(() => AppLogger.Instance.Info($"Lambda 调用成功: {fn}"));
+                    _lambdaClient.OnInvocationError += (fn, ex) =>
+                        Dispatcher.Invoke(() => AppLogger.Instance.Error($"Lambda 调用失败: {fn} - {ex.Message}"));
+                    AppLogger.Instance.Info($"Lambda 客户端已初始化: {lambdaFunc}");
+                }
+
+                CloudStatusDot.Fill = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
+                CloudStatusText.Text = "Connected";
+                CloudStatusText.Foreground = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
+                HideError();
+            }
+            catch (Exception ex)
+            {
+                CloudStatusDot.Fill = new SolidColorBrush(Color.FromRgb(0xF8, 0x51, 0x49));
+                CloudStatusText.Text = "Init Failed";
+                ShowError($"Cloud 初始化失败: {ex.Message}");
+                AppLogger.Instance.Error($"Cloud 初始化失败: {ex.Message}");
+            }
+
+            await Task.CompletedTask;
+        }
+
+        /// <summary>上传截图到 S3</summary>
+        private async void CloudUploadScreenshotButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_s3Service == null)
+            {
+                ShowError("请先初始化 S3 服务");
+                return;
+            }
+
+            try
+            {
+                var source = OriginalImage.Source as System.Windows.Media.Imaging.BitmapSource;
+                if (source == null)
+                {
+                    ShowError("没有可上传的截图");
+                    return;
+                }
+
+                int w = source.PixelWidth;
+                int h = source.PixelHeight;
+                int stride = w * 4;
+                byte[] pixels = new byte[stride * h];
+                source.CopyPixels(pixels, stride, 0);
+
+                using var mat = new Mat(h, w, MatType.CV_8UC4);
+                System.Runtime.InteropServices.Marshal.Copy(pixels, 0, mat.Data, pixels.Length);
+                using var bgr = new Mat();
+                Cv2.CvtColor(mat, bgr, ColorConversionCodes.BGRA2BGR);
+
+                string key = await _s3Service.UploadDetectionScreenshotAsync(bgr, _currentMode.ToString());
+                AppLogger.Instance.Info($"截图已上传 S3: {key}");
+            }
+            catch (Exception ex)
+            {
+                ShowError($"S3 上传失败: {ex.Message}");
+                AppLogger.Instance.Error($"S3 上传失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>发送告警到 IoT</summary>
+        private async void CloudAlertButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_iotService == null)
+            {
+                ShowError("请先初始化 IoT 服务");
+                return;
+            }
+
+            try
+            {
+                await _iotService.PublishAlertAsync(
+                    "manual_alert", 3,
+                    $"手动告警 - 站点: {Environment.MachineName}, 模式: {_currentMode}");
+                AppLogger.Instance.Info("告警已发送到 IoT Core");
+            }
+            catch (Exception ex)
+            {
+                ShowError($"IoT 告警发送失败: {ex.Message}");
+                AppLogger.Instance.Error($"IoT 告警发送失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>发布生产统计到 IoT</summary>
+        private async void CloudPublishStatsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_iotService == null)
+            {
+                ShowError("请先初始化 IoT 服务");
+                return;
+            }
+
+            try
+            {
+                int total = _workReportService.TodayCount;
+                double passRate = total > 0 ? (double)(total - _detectionDefectCount) / total : 1.0;
+                await _iotService.PublishProductionStatsAsync(total, _detectionDefectCount, passRate);
+                AppLogger.Instance.Info($"生产统计已发布: 总数={total}, 缺陷={_detectionDefectCount}, 合格率={passRate:P1}");
+            }
+            catch (Exception ex)
+            {
+                ShowError($"IoT 统计发布失败: {ex.Message}");
+                AppLogger.Instance.Error($"IoT 统计发布失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>数字孪生视图更新（每帧 ProcessFrame 后更新）</summary>
+        private void UpdateDigitalTwin()
+        {
+            if (_digitalTwin == null || _activePerception == null) return;
+
+            try
+            {
+                using Mat twin = _digitalTwin.Render(
+                    _activePerception.CurrentTracks,
+                    _activePerception.CurrentDetections);
+                DigitalTwinImage.Dispatcher.Invoke(() =>
+                {
+                    DigitalTwinImage.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(twin);
+                });
+
+                int det = _activePerception.CurrentDetections.Count;
+                int defects = _activePerception.CurrentDetections.Count(d => d.Confidence > 0.8f);
+                double passRate = _detectionTotalCount > 0
+                    ? (double)(_detectionTotalCount - _detectionDefectCount) / _detectionTotalCount * 100
+                    : 100;
+
+                TwinDetectionsText.Text = $"Detections: {det}";
+                TwinDefectsText.Text = $"Defects: {defects}";
+                TwinPassRateText.Text = $"Pass: {passRate:F1}%";
+
+                if (_aiEnabled)
+                {
+                    TwinStatusDot.Fill = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
+                    TwinStatusText.Text = "Active";
+                }
+            }
+            catch { }
         }
     }
 }

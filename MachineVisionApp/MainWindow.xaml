@@ -19,6 +19,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- ====== Title Bar ====== -->
@@ -387,6 +388,110 @@
             </Grid>
         </Border>
 
+        <!-- ====== AI + Cloud Panel (collapsible) ====== -->
+        <Border Grid.Row="3" x:Name="AiCloudPanel" Background="{StaticResource CardBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10"
+                Margin="20,0,20,12" Padding="14,10" Visibility="Collapsed">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="1.2*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- AI Detection -->
+                <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10,8">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <Ellipse x:Name="AiStatusDot" Width="8" Height="8" Fill="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="AI Detection (YOLO)" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="AiStatusText" Text="Not Loaded" Style="{StaticResource LabelStyle}" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <Button x:Name="LoadYoloModelButton" Content="Load Model" Style="{StaticResource PrimaryButtonStyle}" Padding="10,4" FontSize="11" Click="LoadYoloModelButton_Click"/>
+                            <TextBlock x:Name="YoloModelPathText" Text="No model" Style="{StaticResource LabelStyle}" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="140"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="Confidence:" Style="{StaticResource LabelStyle}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
+                                <TextBox x:Name="ConfThresholdTextBox" Text="0.5" Width="42" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
+                            </Border>
+                            <CheckBox x:Name="AiEnableCheckBox" Content="Enable" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" IsChecked="False" Checked="AiEnableCheckBox_Changed" Unchecked="AiEnableCheckBox_Changed"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="AiDetectionsText" Text="Detections: 0" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource SuccessBrush}"/>
+                            <TextBlock Text=" | " Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="6,0"/>
+                            <TextBlock x:Name="AiTracksText" Text="Tracks: 0" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource PrimaryBrush}"/>
+                            <TextBlock Text=" | " Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="6,0"/>
+                            <TextBlock x:Name="AiSampleText" Text="Interval: 1" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource WarningBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Cloud Services -->
+                <Border Grid.Column="2" Background="{StaticResource SurfaceBrush}" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10,8">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <Ellipse x:Name="CloudStatusDot" Width="8" Height="8" Fill="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="AWS Cloud" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="CloudStatusText" Text="Not Configured" Style="{StaticResource LabelStyle}" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="Region:" Style="{StaticResource LabelStyle}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
+                                <TextBox x:Name="AwsRegionTextBox" Text="ap-northeast-1" Width="120" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
+                            </Border>
+                            <TextBlock Text="Bucket:" Style="{StaticResource LabelStyle}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6">
+                                <TextBox x:Name="S3BucketTextBox" Text="" Width="120" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
+                            </Border>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="IoT Endpoint:" Style="{StaticResource LabelStyle}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
+                                <TextBox x:Name="IoTEndpointTextBox" Text="" Width="180" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
+                            </Border>
+                            <TextBlock Text="Lambda:" Style="{StaticResource LabelStyle}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6">
+                                <TextBox x:Name="LambdaFuncTextBox" Text="" Width="120" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
+                            </Border>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="CloudInitButton" Content="Init Services" Style="{StaticResource PrimaryButtonStyle}" Padding="10,4" FontSize="11" Click="CloudInitButton_Click"/>
+                            <Button x:Name="CloudUploadScreenshotButton" Content="Upload Screenshot" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" FontSize="11" Margin="6,0,0,0" Click="CloudUploadScreenshotButton_Click" IsEnabled="False"/>
+                            <Button x:Name="CloudAlertButton" Content="Send Alert" Style="{StaticResource DangerButtonStyle}" Padding="10,4" FontSize="11" Margin="6,0,0,0" Click="CloudAlertButton_Click" IsEnabled="False"/>
+                            <Button x:Name="CloudPublishStatsButton" Content="Publish Stats" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" FontSize="11" Margin="6,0,0,0" Click="CloudPublishStatsButton_Click" IsEnabled="False"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Digital Twin -->
+                <Border Grid.Column="4" Background="{StaticResource SurfaceBrush}" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10,8">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <Ellipse x:Name="TwinStatusDot" Width="8" Height="8" Fill="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Digital Twin" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TwinStatusText" Text="Idle" Style="{StaticResource LabelStyle}" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Grid Height="120">
+                            <Border Background="{StaticResource BgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6">
+                                <Image x:Name="DigitalTwinImage" Stretch="Uniform" Margin="2"/>
+                            </Border>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <TextBlock x:Name="TwinDetectionsText" Text="Detections: 0" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource SuccessBrush}"/>
+                            <TextBlock Text=" | " Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="6,0"/>
+                            <TextBlock x:Name="TwinDefectsText" Text="Defects: 0" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource DangerBrush}"/>
+                            <TextBlock Text=" | " Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="6,0"/>
+                            <TextBlock x:Name="TwinPassRateText" Text="Pass: 100%" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource PrimaryBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
         <!-- ====== Status Bar ====== -->
         <Border Grid.Row="3" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="16,4" Height="30">
             <Grid>
@@ -397,18 +502,20 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" x:Name="FpsTextBlock" Text="0 FPS" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center"/>
                 <TextBlock Grid.Column="1" Text="·" Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="8,0" VerticalAlignment="Center"/>
                 <TextBlock Grid.Column="2" x:Name="ProcessTimeTextBlock" Text="0 ms" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center"/>
                 <TextBlock Grid.Column="3" Text="Machine Vision App · v2.3.0" Foreground="{StaticResource TextMutedBrush}" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <Button Grid.Column="4" x:Name="IndustrialToggleButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Industrial}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,2" FontSize="11" Margin="0,0,6,0" Click="IndustrialToggleButton_Click"/>
-                <Button Grid.Column="5" x:Name="LogToggleButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Log}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,2" FontSize="11" Click="LogToggleButton_Click"/>
+                <Button Grid.Column="5" x:Name="AiCloudToggleButton" Content="AI / Cloud" Style="{StaticResource SecondaryButtonStyle}" Padding="10,2" FontSize="11" Click="AiCloudToggleButton_Click"/>
+                <Button Grid.Column="6" x:Name="LogToggleButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Log}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,2" FontSize="11" Margin="6,0,0,0" Click="LogToggleButton_Click"/>
             </Grid>
         </Border>
 
         <!-- ====== Log Panel (collapsible) ====== -->
-        <Border Grid.Row="4" x:Name="LogPanel" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="8,4" Height="140" Visibility="Collapsed">
+        <Border Grid.Row="5" x:Name="LogPanel" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="8,4" Height="140" Visibility="Collapsed">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

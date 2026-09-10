@@ -40,7 +40,7 @@ namespace MachineVisionApp.Components
             Cv2.CvtColor(template, gray, ColorConversionCodes.BGR2GRAY);
 
             var descriptors = new Mat();
-            _orb.DetectAndCompute(gray, null, out var keypoints, descriptors);
+            _orb.DetectAndCompute(gray, default, out var keypoints, descriptors);
             if (keypoints.Length < 4)
             {
                 descriptors.Dispose();
@@ -81,7 +81,7 @@ namespace MachineVisionApp.Components
                 return result;
 
             using var frameDescriptors = new Mat();
-            _orb.DetectAndCompute(grayFrame, null, out var frameKeypoints, frameDescriptors);
+            _orb.DetectAndCompute(grayFrame, default, out var frameKeypoints, frameDescriptors);
 
             // 暴力匹配 + 最近邻/次近邻比率测试
             DMatch[][] knnMatches = _matcher.KnnMatch(_templateDescriptors, frameDescriptors, 2, null, false);
