@@ -38,7 +38,7 @@
                                  VerticalAlignment="Center"
                                  Margin="0,0,8,0">
                             <Ellipse.Effect>
-                                <DropShadowEffect Color="{StaticResource DangerBrush}"
+                                <DropShadowEffect Color="#F85149"
                                                   ShadowDepth="0"
                                                   BlurRadius="8"
                                                   Opacity="0.6" />
