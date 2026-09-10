@@ -1,0 +1,22 @@
+  姝ｅ湪纭畾瑕佽繕鍘熺殑椤圭洰鈥?
+  鎵€鏈夐」鐩潎鏄渶鏂扮殑锛屾棤娉曡繕鍘熴€?
+D:\Engineering-Project\MachineVisionApp\MachineVisionApp\AI\YoloDetectionComponent.cs(82,17): warning CS8602: 瑙ｅ紩鐢ㄥ彲鑳藉嚭鐜扮┖寮曠敤銆?[D:\Engineering-Project\MachineVisionApp\MachineVisionApp\MachineVisionApp.csproj]
+D:\Engineering-Project\MachineVisionApp\MachineVisionApp\AI\YoloDetectionComponent.cs(272,17): warning CS8602: 瑙ｅ紩鐢ㄥ彲鑳藉嚭鐜扮┖寮曠敤銆?[D:\Engineering-Project\MachineVisionApp\MachineVisionApp\MachineVisionApp.csproj]
+D:\Engineering-Project\MachineVisionApp\MachineVisionApp\Industrial\OpcUaDriver.cs(91,23): warning CS0618: 鈥淎pplicationConfiguration.Validate(ApplicationType)鈥濆凡杩囨椂:鈥淯se ValidateAsync instead.鈥?[D:\Engineering-Project\MachineVisionApp\MachineVisionApp\MachineVisionApp.csproj]
+D:\Engineering-Project\MachineVisionApp\MachineVisionApp\Industrial\OpcUaDriver.cs(94,35): warning CS0618: 鈥淎pplicationInstance.ApplicationInstance(ApplicationConfiguration)鈥濆凡杩囨椂:鈥淯se ApplicationInstance(ApplicationConfiguration, ITelemetryContext) instead.鈥?[D:\Engineering-Project\MachineVisionApp\MachineVisionApp\MachineVisionApp.csproj]
+D:\Engineering-Project\MachineVisionApp\MachineVisionApp\Industrial\OpcUaDriver.cs(95,37): warning CS0618: 鈥淎pplicationInstanceObsolete.CheckApplicationInstanceCertificates(ApplicationInstance, bool, ushort, CancellationToken)鈥濆凡杩囨椂:鈥淯se CheckApplicationInstanceCertificatesAsync instead.鈥?[D:\Engineering-Project\MachineVisionApp\MachineVisionApp\MachineVisionApp.csproj]
+D:\Engineering-Project\MachineVisionApp\MachineVisionApp\Industrial\OpcUaDriver.cs(119,43): warning CS0618: 鈥淒efaultSessionFactory.DefaultSessionFactory()鈥濆凡杩囨椂:鈥淯se DefaultSessionFactory(ITelemetryContext) instead.鈥?[D:\Engineering-Project\MachineVisionApp\MachineVisionApp\MachineVisionApp.csproj]
+  MachineVisionApp -> D:\Engineering-Project\MachineVisionApp\MachineVisionApp\bin\Debug\net8.0-windows\MachineVisionApp.dll
+
+宸叉垚鍔熺敓鎴愩€?
+
+D:\Engineering-Project\MachineVisionApp\MachineVisionApp\AI\YoloDetectionComponent.cs(82,17): warning CS8602: 瑙ｅ紩鐢ㄥ彲鑳藉嚭鐜扮┖寮曠敤銆?[D:\Engineering-Project\MachineVisionApp\MachineVisionApp\MachineVisionApp.csproj]
+D:\Engineering-Project\MachineVisionApp\MachineVisionApp\AI\YoloDetectionComponent.cs(272,17): warning CS8602: 瑙ｅ紩鐢ㄥ彲鑳藉嚭鐜扮┖寮曠敤銆?[D:\Engineering-Project\MachineVisionApp\MachineVisionApp\MachineVisionApp.csproj]
+D:\Engineering-Project\MachineVisionApp\MachineVisionApp\Industrial\OpcUaDriver.cs(91,23): warning CS0618: 鈥淎pplicationConfiguration.Validate(ApplicationType)鈥濆凡杩囨椂:鈥淯se ValidateAsync instead.鈥?[D:\Engineering-Project\MachineVisionApp\MachineVisionApp\MachineVisionApp.csproj]
+D:\Engineering-Project\MachineVisionApp\MachineVisionApp\Industrial\OpcUaDriver.cs(94,35): warning CS0618: 鈥淎pplicationInstance.ApplicationInstance(ApplicationConfiguration)鈥濆凡杩囨椂:鈥淯se ApplicationInstance(ApplicationConfiguration, ITelemetryContext) instead.鈥?[D:\Engineering-Project\MachineVisionApp\MachineVisionApp\MachineVisionApp.csproj]
+D:\Engineering-Project\MachineVisionApp\MachineVisionApp\Industrial\OpcUaDriver.cs(95,37): warning CS0618: 鈥淎pplicationInstanceObsolete.CheckApplicationInstanceCertificates(ApplicationInstance, bool, ushort, CancellationToken)鈥濆凡杩囨椂:鈥淯se CheckApplicationInstanceCertificatesAsync instead.鈥?[D:\Engineering-Project\MachineVisionApp\MachineVisionApp\MachineVisionApp.csproj]
+D:\Engineering-Project\MachineVisionApp\MachineVisionApp\Industrial\OpcUaDriver.cs(119,43): warning CS0618: 鈥淒efaultSessionFactory.DefaultSessionFactory()鈥濆凡杩囨椂:鈥淯se DefaultSessionFactory(ITelemetryContext) instead.鈥?[D:\Engineering-Project\MachineVisionApp\MachineVisionApp\MachineVisionApp.csproj]
+    6 涓鍛?
+    0 涓敊璇?
+
+宸茬敤鏃堕棿 00:00:01.81
