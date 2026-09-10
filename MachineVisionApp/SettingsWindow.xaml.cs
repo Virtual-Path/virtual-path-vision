@@ -15,11 +15,11 @@ namespace MachineVisionApp
             InitializeComponent();
 
             string current = CultureInfo.CurrentUICulture.Name;
-            foreach (ComboBoxItem item in LanguageComboBox.Items)
+            for (int i = 0; i < LanguageComboBox.Items.Count; i++)
             {
-                if (item.Tag?.ToString() == current)
+                if (LanguageComboBox.Items[i] is ComboBoxItem item && item.Tag?.ToString() == current)
                 {
-                    item.IsSelected = true;
+                    LanguageComboBox.SelectedIndex = i;
                     break;
                 }
             }

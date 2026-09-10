@@ -119,6 +119,11 @@ public partial class IndustrialPanel : UserControl
         TcpToggleButton.Content = t.Start;
         ExportCsvButton.Content = t.ExportCsv;
         ClearReportButton.Content = t.ClearLog;
+
+        SectionModbusTitle.Text = t.SectionModbusTCP;
+        SectionOPCUATitle.Text = t.SectionOPCUA;
+        SectionBarcodeTitle.Text = t.SectionBarcodeScanner;
+        SectionReportTitle.Text = t.SectionWorkReport;
     }
 
     public void SetModbusState(bool connected, string statusText)

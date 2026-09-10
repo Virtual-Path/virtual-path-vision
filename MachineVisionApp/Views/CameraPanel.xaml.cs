@@ -55,6 +55,8 @@ public partial class CameraPanel : UserControl
         StopCameraButton.Content = t.StopCamera;
         SaveScreenshotButton.Content = t.SaveScreenshot;
         RecordButton.Content = t.StartRecording;
+        SectionTitleText.Text = t.SectionCamera;
+        SourceLabel.Text = t.FieldSource;
     }
 
     public void SetConnected(bool connected, string statusText)

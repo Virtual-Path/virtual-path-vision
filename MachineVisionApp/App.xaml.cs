@@ -26,7 +26,9 @@ namespace MachineVisionApp
             // Microsoft.Data.Sqlite 8.0 使用 SQLitePCLRaw.bundle_e_sqlite3，显式注册 provider
             SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlite3());
 
-            var culture = new CultureInfo("en-US");
+            // 加载保存的语言偏好，默认英语
+            string savedCulture = TranslationService.Instance.LoadLanguage();
+            var culture = new CultureInfo(savedCulture);
             CultureInfo.CurrentUICulture = culture;
             CultureInfo.CurrentCulture = culture;
 

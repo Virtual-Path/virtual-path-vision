@@ -56,6 +56,12 @@ public partial class AIPanel : UserControl
         var t = TranslationService.Instance;
         LoadYoloModelButton.Content = t.LoadImage;
         AiEnableCheckBox.Content = "Enable";
+
+        SectionAITitle.Text = t.SectionAIDetection;
+        SectionDigitalTwinTitle.Text = t.SectionDigitalTwin;
+        SectionActivePerceptionTitle.Text = t.SectionActivePerception;
+        SectionBreakdownTitle.Text = t.SectionDetectionBreakdown;
+        SectionTrackingTitle.Text = t.SectionTrackingTrail;
     }
 
     public void SetModelStatus(bool loaded, string path)

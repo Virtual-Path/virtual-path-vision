@@ -20,7 +20,8 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0"
+                        <TextBlock x:Name="SectionProcessingTitle"
+                                   Grid.Column="0"
                                    Text="Image Processing"
                                    FontSize="22"
                                    FontWeight="Bold"
@@ -248,7 +249,8 @@
                         Visibility="Collapsed">
                     <StackPanel >
 
-                        <TextBlock Text="Template / Feature"
+                        <TextBlock x:Name="TemplateFeatureTitle"
+                                   Text="Template / Feature"
                                    FontSize="15"
                                    FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimaryBrush}" />
@@ -302,7 +304,8 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Column="0"
+                            <TextBlock x:Name="ResultTitle"
+                                       Grid.Column="0"
                                        Text="Result"
                                        FontSize="15"
                                        FontWeight="SemiBold"

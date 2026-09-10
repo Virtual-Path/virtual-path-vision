@@ -55,6 +55,9 @@ public partial class ProcessingPanel : UserControl
         ApplyThresholdsButton.Content = t.Apply;
         LoadTemplateButton.Content = t.LoadTemplate;
         PickColorHintText.Text = t.PickColorHint;
+        SectionProcessingTitle.Text = t.SectionImageProcessing;
+        TemplateFeatureTitle.Text = t.SectionTemplateFeature;
+        ResultTitle.Text = t.SectionResult;
     }
 
     public void SetResultTitle(string title)

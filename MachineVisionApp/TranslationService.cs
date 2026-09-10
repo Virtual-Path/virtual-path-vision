@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Resources;
 
 namespace MachineVisionApp
@@ -8,6 +9,7 @@ namespace MachineVisionApp
     /// 国际化翻译服务（单例模式）。
     /// 基于 .resx 资源文件提供中英文切换功能。
     /// 实现 INotifyPropertyChanged，切换语言时通过 PropertyChanged("") 刷新所有 XAML 绑定。
+    /// 支持语言偏好持久化到 user_settings.json。
     /// </summary>
     public class TranslationService : INotifyPropertyChanged
     {
@@ -17,13 +19,44 @@ namespace MachineVisionApp
         private static readonly TranslationService _instance = new();
         public static TranslationService Instance => _instance;
 
+        private static readonly string SettingsPath = Path.Combine(
+            AppContext.BaseDirectory, "user_settings.json");
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public void ChangeLanguage(string cultureName)
         {
             CultureInfo.CurrentUICulture = new CultureInfo(cultureName);
             CultureInfo.CurrentCulture = new CultureInfo(cultureName);
+            SaveLanguage(cultureName);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(""));
+        }
+
+        public string CurrentLanguage => CultureInfo.CurrentUICulture.Name;
+
+        private void SaveLanguage(string culture)
+        {
+            try
+            {
+                string json = $"{{\"Language\":\"{culture}\"}}";
+                File.WriteAllText(SettingsPath, json);
+            }
+            catch { }
+        }
+
+        public string LoadLanguage()
+        {
+            try
+            {
+                if (File.Exists(SettingsPath))
+                {
+                    string json = File.ReadAllText(SettingsPath);
+                    if (json.Contains("zh-CN")) return "zh-CN";
+                    if (json.Contains("en-US")) return "en-US";
+                }
+            }
+            catch { }
+            return "en-US";
         }
 
         public string this[string key] => GetString(key);
@@ -97,6 +130,84 @@ namespace MachineVisionApp
         public string CameraReport => GetString("CameraReport");
         public string Start => GetString("Start");
         public string Stop => GetString("Stop");
+
+        // ---- Section Headers ----
+        public string SectionCamera => GetString("SectionCamera");
+        public string SectionImageProcessing => GetString("SectionImageProcessing");
+        public string SectionAIDetection => GetString("SectionAIDetection");
+        public string SectionDigitalTwin => GetString("SectionDigitalTwin");
+        public string SectionActivePerception => GetString("SectionActivePerception");
+        public string SectionDetectionBreakdown => GetString("SectionDetectionBreakdown");
+        public string SectionTrackingTrail => GetString("SectionTrackingTrail");
+        public string SectionAWSS3 => GetString("SectionAWSS3");
+        public string SectionAWSIoT => GetString("SectionAWSIoT");
+        public string SectionAWSLambda => GetString("SectionAWSLambda");
+        public string SectionModbusTCP => GetString("SectionModbusTCP");
+        public string SectionOPCUA => GetString("SectionOPCUA");
+        public string SectionBarcodeScanner => GetString("SectionBarcodeScanner");
+        public string SectionWorkReport => GetString("SectionWorkReport");
+        public string SectionApplicationLog => GetString("SectionApplicationLog");
+        public string SectionResult => GetString("SectionResult");
+        public string SectionTemplateFeature => GetString("SectionTemplateFeature");
+
+        // ---- Field Labels ----
+        public string FieldSource => GetString("FieldSource");
+        public string FieldIP => GetString("FieldIP");
+        public string FieldPort => GetString("FieldPort");
+        public string FieldConfidence => GetString("FieldConfidence");
+        public string FieldBucket => GetString("FieldBucket");
+        public string FieldRegion => GetString("FieldRegion");
+        public string FieldEndpoint => GetString("FieldEndpoint");
+        public string FieldTopicPrefix => GetString("FieldTopicPrefix");
+        public string FieldFunction => GetString("FieldFunction");
+        public string FieldIPAddress => GetString("FieldIPAddress");
+        public string FieldUnitID => GetString("FieldUnitID");
+        public string FieldRegisterAddress => GetString("FieldRegisterAddress");
+        public string FieldNodeID => GetString("FieldNodeID");
+        public string FieldScanSource => GetString("FieldScanSource");
+        public string FieldWorkOrder => GetString("FieldWorkOrder");
+        public string FieldPLCRegister => GetString("FieldPLCRegister");
+        public string FieldTodayCount => GetString("FieldTodayCount");
+        public string FieldLastBarcode => GetString("FieldLastBarcode");
+        public string FieldMaxTrailLength => GetString("MaxTrailLength");
+        public string FieldMatchThreshold => GetString("MatchThreshold");
+        public string FieldBaudRate => GetString("BaudRate");
+
+        // ---- Status ----
+        public string StatusNotLoaded => GetString("NotLoaded");
+        public string StatusNotConfigured => GetString("NotConfigured");
+        public string StatusNoSignal => GetString("NoSignal");
+        public string StatusNoModelLoaded => GetString("NoModelLoaded");
+        public string StatusNoDetections => GetString("NoDetections");
+        public string StatusServicesNotInit => GetString("ServicesNotInit");
+
+        // ---- Buttons ----
+        public string BtnEnable => GetString("BtnEnable");
+        public string BtnSendAlert => GetString("BtnSendAlert");
+        public string BtnPublishStats => GetString("BtnPublishStats");
+        public string BtnInvoke => GetString("BtnInvoke");
+        public string BtnInitializeAll => GetString("BtnInitializeAll");
+        public string BtnExportCSV => GetString("BtnExportCSV");
+        public string BtnClear => GetString("BtnClear");
+        public string BtnUploadScreenshot => GetString("BtnUploadScreenshot");
+
+        // ---- Other ----
+        public string DisabledLabel => GetString("DisabledLabel");
+        public string SerialPort => GetString("SerialPort");
+        public string SerialConfig => GetString("SerialConfig");
+        public string TCPConfig => GetString("TCPConfig");
+        public string FrameCount => GetString("FrameCount");
+        public string ActiveTracks => GetString("ActiveTracks");
+        public string LostTracks => GetString("LostTracks");
+        public string AdaptiveInterval => GetString("AdaptiveInterval");
+        public string ROIRegions => GetString("ROIRegions");
+        public string RecentUploads => GetString("RecentUploads");
+        public string LastResult => GetString("LastResult");
+        public string SectionPLCLink => GetString("SectionPLCLink");
+        public string SettingsLabel => GetString("Settings");
+        public string LanguageLabel => GetString("Language");
+        public string DisplayLanguage => GetString("DisplayLanguage");
+        public string About => GetString("About");
 
         /// <summary>扫码源名称列表（供报工面板下拉框使用）</summary>
         public string[] ScanSourceNames => new[]

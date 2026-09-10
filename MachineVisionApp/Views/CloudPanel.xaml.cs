@@ -74,6 +74,9 @@ public partial class CloudPanel : UserControl
         CloudPublishStatsButton.Content = "Publish Stats";
         LambdaInvokeButton.Content = "Invoke";
         CloudInitButton.Content = "Initialize All";
+        SectionS3Title.Text = t.SectionAWSS3;
+        SectionIoTTitle.Text = t.SectionAWSIoT;
+        SectionLambdaTitle.Text = t.SectionAWSLambda;
     }
 
     public void SetS3Status(bool connected, string text)

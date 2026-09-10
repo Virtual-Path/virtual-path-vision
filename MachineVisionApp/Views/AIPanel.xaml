@@ -36,7 +36,8 @@
                                      Margin="0,0,10,0"
                                      VerticalAlignment="Center" />
 
-                            <TextBlock Grid.Column="1"
+                            <TextBlock x:Name="SectionAITitle"
+                                       Grid.Column="1"
                                        Text="AI Detection (YOLO)"
                                        FontSize="18"
                                        FontWeight="Bold"
@@ -176,7 +177,8 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Column="0"
+                            <TextBlock x:Name="SectionDigitalTwinTitle"
+                                       Grid.Column="0"
                                        Text="Digital Twin"
                                        FontSize="15"
                                        FontWeight="SemiBold"
@@ -271,7 +273,8 @@
                 <Border Style="{StaticResource GlassPanel}" Padding="20">
                     <StackPanel>
 
-                        <TextBlock Text="Active Perception"
+                        <TextBlock x:Name="SectionActivePerceptionTitle"
+                                   Text="Active Perception"
                                    FontSize="18"
                                    FontWeight="Bold"
                                    Foreground="{StaticResource TextPrimaryBrush}"
@@ -392,7 +395,8 @@
 
                         <!-- Per-Class Detection Breakdown -->
                         <StackPanel Margin="0,0,0,16">
-                            <TextBlock Text="Detection Breakdown"
+                            <TextBlock x:Name="SectionBreakdownTitle"
+                                       Text="Detection Breakdown"
                                        FontSize="14"
                                        FontWeight="SemiBold"
                                        Foreground="{StaticResource TextSecondaryBrush}"
@@ -418,7 +422,8 @@
 
                         <!-- Tracking Trail Section -->
                         <StackPanel>
-                            <TextBlock Text="Tracking Trail"
+                            <TextBlock x:Name="SectionTrackingTitle"
+                                       Text="Tracking Trail"
                                        FontSize="14"
                                        FontWeight="SemiBold"
                                        Foreground="{StaticResource TextSecondaryBrush}"

@@ -40,7 +40,8 @@
                                  Margin="0,0,10,0"
                                  VerticalAlignment="Center" />
 
-                        <TextBlock Grid.Column="1"
+                        <TextBlock x:Name="SectionS3Title"
+                                   Grid.Column="1"
                                    Text="AWS S3 Storage"
                                    FontSize="18"
                                    FontWeight="Bold"
@@ -155,7 +156,8 @@
                                  Margin="0,0,10,0"
                                  VerticalAlignment="Center" />
 
-                        <TextBlock Grid.Column="1"
+                        <TextBlock x:Name="SectionIoTTitle"
+                                   Grid.Column="1"
                                    Text="AWS IoT Core"
                                    FontSize="18"
                                    FontWeight="Bold"
@@ -253,7 +255,8 @@
                                  Margin="0,0,10,0"
                                  VerticalAlignment="Center" />
 
-                        <TextBlock Grid.Column="1"
+                        <TextBlock x:Name="SectionLambdaTitle"
+                                   Grid.Column="1"
                                    Text="AWS Lambda"
                                    FontSize="18"
                                    FontWeight="Bold"

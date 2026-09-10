@@ -373,4 +373,250 @@
   <data name="CsvExported" xml:space="preserve">
     <value>CSV exported to</value>
   </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="DisplayLanguage" xml:space="preserve">
+    <value>Display Language</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="CompetitionInfo" xml:space="preserve">
+    <value>OpenCV AI Competition 2026</value>
+  </data>
+  <data name="SectionCamera" xml:space="preserve">
+    <value>Camera</value>
+  </data>
+  <data name="SectionImageProcessing" xml:space="preserve">
+    <value>Image Processing</value>
+  </data>
+  <data name="SectionAIDetection" xml:space="preserve">
+    <value>AI Detection (YOLO)</value>
+  </data>
+  <data name="SectionDigitalTwin" xml:space="preserve">
+    <value>Digital Twin</value>
+  </data>
+  <data name="SectionActivePerception" xml:space="preserve">
+    <value>Active Perception</value>
+  </data>
+  <data name="SectionDetectionBreakdown" xml:space="preserve">
+    <value>Detection Breakdown</value>
+  </data>
+  <data name="SectionTrackingTrail" xml:space="preserve">
+    <value>Tracking Trail</value>
+  </data>
+  <data name="SectionAWSS3" xml:space="preserve">
+    <value>AWS S3 Storage</value>
+  </data>
+  <data name="SectionAWSIoT" xml:space="preserve">
+    <value>AWS IoT Core</value>
+  </data>
+  <data name="SectionAWSLambda" xml:space="preserve">
+    <value>AWS Lambda</value>
+  </data>
+  <data name="SectionModbusTCP" xml:space="preserve">
+    <value>Modbus TCP</value>
+  </data>
+  <data name="SectionOPCUA" xml:space="preserve">
+    <value>OPC-UA</value>
+  </data>
+  <data name="SectionBarcodeScanner" xml:space="preserve">
+    <value>Barcode Scanner</value>
+  </data>
+  <data name="SectionWorkReport" xml:space="preserve">
+    <value>Work Report</value>
+  </data>
+  <data name="SectionApplicationLog" xml:space="preserve">
+    <value>Application Log</value>
+  </data>
+  <data name="SectionResult" xml:space="preserve">
+    <value>Processing Result</value>
+  </data>
+  <data name="SectionTemplateFeature" xml:space="preserve">
+    <value>Template / Feature</value>
+  </data>
+  <data name="FieldSource" xml:space="preserve">
+    <value>Source:</value>
+  </data>
+  <data name="FieldIP" xml:space="preserve">
+    <value>IP:</value>
+  </data>
+  <data name="FieldPort" xml:space="preserve">
+    <value>Port:</value>
+  </data>
+  <data name="FieldConfidence" xml:space="preserve">
+    <value>Confidence:</value>
+  </data>
+  <data name="FieldBucket" xml:space="preserve">
+    <value>Bucket:</value>
+  </data>
+  <data name="FieldRegion" xml:space="preserve">
+    <value>Region:</value>
+  </data>
+  <data name="FieldEndpoint" xml:space="preserve">
+    <value>Endpoint:</value>
+  </data>
+  <data name="FieldTopicPrefix" xml:space="preserve">
+    <value>Topic Prefix:</value>
+  </data>
+  <data name="FieldFunction" xml:space="preserve">
+    <value>Function:</value>
+  </data>
+  <data name="FieldIPAddress" xml:space="preserve">
+    <value>IP Address:</value>
+  </data>
+  <data name="FieldUnitID" xml:space="preserve">
+    <value>Unit ID:</value>
+  </data>
+  <data name="FieldRegisterAddress" xml:space="preserve">
+    <value>Register Address:</value>
+  </data>
+  <data name="FieldNodeID" xml:space="preserve">
+    <value>Node ID:</value>
+  </data>
+  <data name="FieldScanSource" xml:space="preserve">
+    <value>Scan Source:</value>
+  </data>
+  <data name="FieldWorkOrder" xml:space="preserve">
+    <value>Work Order:</value>
+  </data>
+  <data name="FieldPLCRegister" xml:space="preserve">
+    <value>PLC Register:</value>
+  </data>
+  <data name="FieldTodayCount" xml:space="preserve">
+    <value>Today Output:</value>
+  </data>
+  <data name="FieldLastBarcode" xml:space="preserve">
+    <value>Last Barcode:</value>
+  </data>
+  <data name="FieldMaxTrailLength" xml:space="preserve">
+    <value>Max Trail Length:</value>
+  </data>
+  <data name="FieldMatchThreshold" xml:space="preserve">
+    <value>Match Threshold:</value>
+  </data>
+  <data name="StatusDisconnected_zh" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
+  <data name="StatusNotLoaded" xml:space="preserve">
+    <value>Not Loaded</value>
+  </data>
+  <data name="StatusNotConfigured" xml:space="preserve">
+    <value>Not Configured</value>
+  </data>
+  <data name="StatusNoSignal" xml:space="preserve">
+    <value>No Signal</value>
+  </data>
+  <data name="StatusNoModelLoaded" xml:space="preserve">
+    <value>No Model Loaded</value>
+  </data>
+  <data name="StatusNoDetections" xml:space="preserve">
+    <value>No Detections</value>
+  </data>
+  <data name="StatusServicesNotInit" xml:space="preserve">
+    <value>Services Not Initialized</value>
+  </data>
+  <data name="BtnEnable" xml:space="preserve">
+    <value>Enable</value>
+  </data>
+  <data name="BtnDisable" xml:space="preserve">
+    <value>Disable</value>
+  </data>
+  <data name="BtnSendAlert" xml:space="preserve">
+    <value>Send Alert</value>
+  </data>
+  <data name="BtnPublishStats" xml:space="preserve">
+    <value>Publish Stats</value>
+  </data>
+  <data name="BtnInvoke" xml:space="preserve">
+    <value>Invoke</value>
+  </data>
+  <data name="BtnInitializeAll" xml:space="preserve">
+    <value>Initialize All</value>
+  </data>
+  <data name="BtnExportCSV" xml:space="preserve">
+    <value>Export CSV</value>
+  </data>
+  <data name="BtnClear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="BtnUploadScreenshot" xml:space="preserve">
+    <value>Upload Screenshot</value>
+  </data>
+  <data name="Disabled_zh" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="SerialPort" xml:space="preserve">
+    <value>Serial Port</value>
+  </data>
+  <data name="SerialConfig" xml:space="preserve">
+    <value>Serial Config</value>
+  </data>
+  <data name="TCPConfig" xml:space="preserve">
+    <value>TCP Config</value>
+  </data>
+  <data name="BaudRate" xml:space="preserve">
+    <value>Baud Rate</value>
+  </data>
+  <data name="FrameCount" xml:space="preserve">
+    <value>Frame Count:</value>
+  </data>
+  <data name="ActiveTracks" xml:space="preserve">
+    <value>Active Tracks:</value>
+  </data>
+  <data name="LostTracks" xml:space="preserve">
+    <value>Lost Tracks:</value>
+  </data>
+  <data name="AdaptiveInterval" xml:space="preserve">
+    <value>Adaptive Interval:</value>
+  </data>
+  <data name="ROIRegions" xml:space="preserve">
+    <value>ROI Regions:</value>
+  </data>
+  <data name="RecentUploads" xml:space="preserve">
+    <value>Recent Uploads</value>
+  </data>
+  <data name="LastResult" xml:space="preserve">
+    <value>Last Result</value>
+  </data>
+  <data name="SectionPLCLink" xml:space="preserve">
+    <value>PLC Link</value>
+  </data>
+  <data name="CameraReport_zh" xml:space="preserve">
+    <value>Camera Reporting</value>
+  </data>
+  <data name="DisabledLabel" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="MaxTrailLength" xml:space="preserve">
+    <value>Max Trail Length:</value>
+  </data>
+  <data name="MatchThreshold" xml:space="preserve">
+    <value>Match Threshold:</value>
+  </data>
+  <data name="NoSignal" xml:space="preserve">
+    <value>No Signal</value>
+  </data>
+  <data name="NotLoaded" xml:space="preserve">
+    <value>Not Loaded</value>
+  </data>
+  <data name="NotConfigured" xml:space="preserve">
+    <value>Not Configured</value>
+  </data>
+  <data name="NoModelLoaded" xml:space="preserve">
+    <value>No Model Loaded</value>
+  </data>
+  <data name="NoDetections" xml:space="preserve">
+    <value>No Detections</value>
+  </data>
+  <data name="ServicesNotInit" xml:space="preserve">
+    <value>Services Not Initialized</value>
+  </data>
 </root>

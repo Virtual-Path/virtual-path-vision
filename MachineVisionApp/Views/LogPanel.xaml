@@ -28,7 +28,8 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0"
+                <TextBlock x:Name="SectionLogTitle"
+                           Grid.Column="0"
                            Text="Application Log"
                            FontSize="18"
                            FontWeight="Bold"

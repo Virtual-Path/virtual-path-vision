@@ -22,7 +22,8 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0"
+                        <TextBlock x:Name="SectionTitleText"
+                                   Grid.Column="0"
                                    Text="Camera"
                                    FontSize="22"
                                    FontWeight="Bold"
@@ -60,7 +61,8 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0"
+                        <TextBlock x:Name="SourceLabel"
+                                   Grid.Column="0"
                                    Text="Source:"
                                    FontSize="14"
                                    Foreground="{StaticResource TextSecondaryBrush}"

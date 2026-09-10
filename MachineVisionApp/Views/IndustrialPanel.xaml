@@ -41,7 +41,8 @@
                                  Margin="0,0,10,0"
                                  VerticalAlignment="Center" />
 
-                        <TextBlock Grid.Column="1"
+                        <TextBlock x:Name="SectionModbusTitle"
+                                   Grid.Column="1"
                                    Text="Modbus TCP"
                                    FontSize="18"
                                    FontWeight="Bold"
@@ -223,7 +224,8 @@
                                  Margin="0,0,10,0"
                                  VerticalAlignment="Center" />
 
-                        <TextBlock Grid.Column="1"
+                        <TextBlock x:Name="SectionOPCUATitle"
+                                   Grid.Column="1"
                                    Text="OPC-UA"
                                    FontSize="18"
                                    FontWeight="Bold"
@@ -349,7 +351,8 @@
                 <StackPanel>
 
                     <!-- Header -->
-                    <TextBlock Text="Barcode Scanner"
+                    <TextBlock x:Name="SectionBarcodeTitle"
+                               Text="Barcode Scanner"
                                FontSize="18"
                                FontWeight="Bold"
                                Foreground="{StaticResource TextPrimaryBrush}"
@@ -471,7 +474,8 @@
                 <StackPanel>
 
                     <!-- Header -->
-                    <TextBlock Text="Work Report"
+                    <TextBlock x:Name="SectionReportTitle"
+                               Text="Work Report"
                                FontSize="18"
                                FontWeight="Bold"
                                Foreground="{StaticResource TextPrimaryBrush}"

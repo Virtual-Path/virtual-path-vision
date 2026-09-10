@@ -373,4 +373,250 @@
   <data name="CsvExported" xml:space="preserve">
     <value>CSV 已导出到</value>
   </data>
+  <data name="Settings" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="DisplayLanguage" xml:space="preserve">
+    <value>显示语言</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>版本</value>
+  </data>
+  <data name="CompetitionInfo" xml:space="preserve">
+    <value>OpenCV AI Competition 2026</value>
+  </data>
+  <data name="SectionCamera" xml:space="preserve">
+    <value>摄像头</value>
+  </data>
+  <data name="SectionImageProcessing" xml:space="preserve">
+    <value>图像处理</value>
+  </data>
+  <data name="SectionAIDetection" xml:space="preserve">
+    <value>AI 检测 (YOLO)</value>
+  </data>
+  <data name="SectionDigitalTwin" xml:space="preserve">
+    <value>数字孪生</value>
+  </data>
+  <data name="SectionActivePerception" xml:space="preserve">
+    <value>主动感知</value>
+  </data>
+  <data name="SectionDetectionBreakdown" xml:space="preserve">
+    <value>检测分布</value>
+  </data>
+  <data name="SectionTrackingTrail" xml:space="preserve">
+    <value>跟踪轨迹</value>
+  </data>
+  <data name="SectionAWSS3" xml:space="preserve">
+    <value>AWS S3 存储</value>
+  </data>
+  <data name="SectionAWSIoT" xml:space="preserve">
+    <value>AWS IoT Core</value>
+  </data>
+  <data name="SectionAWSLambda" xml:space="preserve">
+    <value>AWS Lambda</value>
+  </data>
+  <data name="SectionModbusTCP" xml:space="preserve">
+    <value>Modbus TCP</value>
+  </data>
+  <data name="SectionOPCUA" xml:space="preserve">
+    <value>OPC-UA</value>
+  </data>
+  <data name="SectionBarcodeScanner" xml:space="preserve">
+    <value>条码扫描器</value>
+  </data>
+  <data name="SectionWorkReport" xml:space="preserve">
+    <value>报工</value>
+  </data>
+  <data name="SectionApplicationLog" xml:space="preserve">
+    <value>应用日志</value>
+  </data>
+  <data name="SectionResult" xml:space="preserve">
+    <value>处理结果</value>
+  </data>
+  <data name="SectionTemplateFeature" xml:space="preserve">
+    <value>模板 / 特征</value>
+  </data>
+  <data name="FieldSource" xml:space="preserve">
+    <value>信号源:</value>
+  </data>
+  <data name="FieldIP" xml:space="preserve">
+    <value>IP:</value>
+  </data>
+  <data name="FieldPort" xml:space="preserve">
+    <value>端口:</value>
+  </data>
+  <data name="FieldConfidence" xml:space="preserve">
+    <value>置信度:</value>
+  </data>
+  <data name="FieldBucket" xml:space="preserve">
+    <value>存储桶:</value>
+  </data>
+  <data name="FieldRegion" xml:space="preserve">
+    <value>区域:</value>
+  </data>
+  <data name="FieldEndpoint" xml:space="preserve">
+    <value>端点:</value>
+  </data>
+  <data name="FieldTopicPrefix" xml:space="preserve">
+    <value>主题前缀:</value>
+  </data>
+  <data name="FieldFunction" xml:space="preserve">
+    <value>函数:</value>
+  </data>
+  <data name="FieldIPAddress" xml:space="preserve">
+    <value>IP 地址:</value>
+  </data>
+  <data name="FieldUnitID" xml:space="preserve">
+    <value>从站 ID:</value>
+  </data>
+  <data name="FieldRegisterAddress" xml:space="preserve">
+    <value>寄存器地址:</value>
+  </data>
+  <data name="FieldNodeID" xml:space="preserve">
+    <value>节点 ID:</value>
+  </data>
+  <data name="FieldScanSource" xml:space="preserve">
+    <value>扫码源:</value>
+  </data>
+  <data name="FieldWorkOrder" xml:space="preserve">
+    <value>工单:</value>
+  </data>
+  <data name="FieldPLCRegister" xml:space="preserve">
+    <value>PLC 寄存器:</value>
+  </data>
+  <data name="FieldTodayCount" xml:space="preserve">
+    <value>今日产量:</value>
+  </data>
+  <data name="FieldLastBarcode" xml:space="preserve">
+    <value>最近条码:</value>
+  </data>
+  <data name="FieldMaxTrailLength" xml:space="preserve">
+    <value>最大轨迹长度:</value>
+  </data>
+  <data name="FieldMatchThreshold" xml:space="preserve">
+    <value>匹配阈值:</value>
+  </data>
+  <data name="StatusDisconnected_zh" xml:space="preserve">
+    <value>未连接</value>
+  </data>
+  <data name="StatusNotLoaded" xml:space="preserve">
+    <value>未加载</value>
+  </data>
+  <data name="StatusNotConfigured" xml:space="preserve">
+    <value>未配置</value>
+  </data>
+  <data name="StatusNoSignal" xml:space="preserve">
+    <value>无信号</value>
+  </data>
+  <data name="StatusNoModelLoaded" xml:space="preserve">
+    <value>未加载模型</value>
+  </data>
+  <data name="StatusNoDetections" xml:space="preserve">
+    <value>暂无检测</value>
+  </data>
+  <data name="StatusServicesNotInit" xml:space="preserve">
+    <value>服务未初始化</value>
+  </data>
+  <data name="BtnEnable" xml:space="preserve">
+    <value>启用</value>
+  </data>
+  <data name="BtnDisable" xml:space="preserve">
+    <value>禁用</value>
+  </data>
+  <data name="BtnSendAlert" xml:space="preserve">
+    <value>发送警报</value>
+  </data>
+  <data name="BtnPublishStats" xml:space="preserve">
+    <value>发布统计</value>
+  </data>
+  <data name="BtnInvoke" xml:space="preserve">
+    <value>调用</value>
+  </data>
+  <data name="BtnInitializeAll" xml:space="preserve">
+    <value>初始化全部</value>
+  </data>
+  <data name="BtnExportCSV" xml:space="preserve">
+    <value>导出 CSV</value>
+  </data>
+  <data name="BtnClear" xml:space="preserve">
+    <value>清空</value>
+  </data>
+  <data name="BtnUploadScreenshot" xml:space="preserve">
+    <value>上传截图</value>
+  </data>
+  <data name="Disabled_zh" xml:space="preserve">
+    <value>禁用</value>
+  </data>
+  <data name="SerialPort" xml:space="preserve">
+    <value>串口</value>
+  </data>
+  <data name="SerialConfig" xml:space="preserve">
+    <value>串口配置</value>
+  </data>
+  <data name="TCPConfig" xml:space="preserve">
+    <value>TCP 配置</value>
+  </data>
+  <data name="BaudRate" xml:space="preserve">
+    <value>波特率</value>
+  </data>
+  <data name="FrameCount" xml:space="preserve">
+    <value>帧计数:</value>
+  </data>
+  <data name="ActiveTracks" xml:space="preserve">
+    <value>活跃跟踪:</value>
+  </data>
+  <data name="LostTracks" xml:space="preserve">
+    <value>丢失跟踪:</value>
+  </data>
+  <data name="AdaptiveInterval" xml:space="preserve">
+    <value>自适应间隔:</value>
+  </data>
+  <data name="ROIRegions" xml:space="preserve">
+    <value>ROI 区域:</value>
+  </data>
+  <data name="RecentUploads" xml:space="preserve">
+    <value>最近上传</value>
+  </data>
+  <data name="LastResult" xml:space="preserve">
+    <value>最近结果</value>
+  </data>
+  <data name="SectionPLCLink" xml:space="preserve">
+    <value>PLC 联动</value>
+  </data>
+  <data name="CameraReport_zh" xml:space="preserve">
+    <value>摄像头报工</value>
+  </data>
+  <data name="DisabledLabel" xml:space="preserve">
+    <value>禁用</value>
+  </data>
+  <data name="MaxTrailLength" xml:space="preserve">
+    <value>最大轨迹长度:</value>
+  </data>
+  <data name="MatchThreshold" xml:space="preserve">
+    <value>匹配阈值:</value>
+  </data>
+  <data name="NoSignal" xml:space="preserve">
+    <value>无信号</value>
+  </data>
+  <data name="NotLoaded" xml:space="preserve">
+    <value>未加载</value>
+  </data>
+  <data name="NotConfigured" xml:space="preserve">
+    <value>未配置</value>
+  </data>
+  <data name="NoModelLoaded" xml:space="preserve">
+    <value>未加载模型</value>
+  </data>
+  <data name="NoDetections" xml:space="preserve">
+    <value>暂无检测</value>
+  </data>
+  <data name="ServicesNotInit" xml:space="preserve">
+    <value>服务未初始化</value>
+  </data>
 </root>

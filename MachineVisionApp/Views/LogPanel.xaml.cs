@@ -19,6 +19,7 @@ public partial class LogPanel : UserControl
     public void RefreshTexts()
     {
         ClearLogButton.Content = TranslationService.Instance.ClearLog;
+        SectionLogTitle.Text = TranslationService.Instance.SectionApplicationLog;
     }
 
     public void SetLogSource(IEnumerable source)
