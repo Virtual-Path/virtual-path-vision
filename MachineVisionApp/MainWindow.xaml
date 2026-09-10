@@ -14,58 +14,88 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="84"/>
+            <ColumnDefinition Width="88"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
         <!-- ===== Sidebar ===== -->
-        <Border Grid.Column="0" Background="{StaticResource SidebarBgBrush}"
-                BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="0,0,1,0">
+        <Border Grid.Column="0" BorderThickness="0,0,1,0"
+                BorderBrush="{StaticResource GlassBorderBrush}">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#D9080C14" Offset="0"/>
+                    <GradientStop Color="#CC0D1119" Offset="0.5"/>
+                    <GradientStop Color="#D9080C14" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
             <DockPanel>
                 <!-- Logo -->
-                <Border DockPanel.Dock="Top" Height="70" Margin="0,16,0,20"
+                <Border DockPanel.Dock="Top" Height="80" Margin="0,12,0,8"
                         MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="MV" FontSize="22" FontWeight="Black" Foreground="{StaticResource AccentBrush}"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="V I S I O N" FontSize="8" Foreground="{StaticResource TextMutedBrush}"
-                                   HorizontalAlignment="Center" Margin="0,2,0,0"/>
-                    </StackPanel>
+                    <Grid>
+                        <Grid.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#00FAE20A" Offset="0"/>
+                                <GradientStop Color="#0DFAE20A" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Grid.Background>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Border Width="36" Height="36" CornerRadius="10"
+                                    HorizontalAlignment="Center" Margin="0,0,0,6"
+                                    Background="#1AFAE20A" BorderBrush="#33FAE20A"
+                                    BorderThickness="1.5">
+                                <TextBlock Text="MV" FontSize="13" FontWeight="Black"
+                                           Foreground="{StaticResource AccentBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="V I S I O N" FontSize="7" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
                 </Border>
+
+                <!-- Separator -->
+                <Border DockPanel.Dock="Top" Height="1" Margin="16,0,16,8"
+                        Background="{StaticResource GlassDividerBrush}"/>
 
                 <!-- Nav Icons -->
                 <StackPanel DockPanel.Dock="Top">
                     <RadioButton x:Name="NavVision" Content="&#xE8B4;" FontFamily="Segoe MDL2 Assets"
-                                 FontSize="20" IsChecked="True" GroupName="Nav"
+                                 FontSize="18" IsChecked="True" GroupName="Nav"
                                  Click="NavButton_Click" Tag="Vision"
-                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,8"/>
+                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,4"/>
                     <RadioButton x:Name="NavProcessing" Content="&#xE74F;" FontFamily="Segoe MDL2 Assets"
-                                 FontSize="20" GroupName="Nav"
+                                 FontSize="18" GroupName="Nav"
                                  Click="NavButton_Click" Tag="Processing"
-                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,8"/>
+                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,4"/>
                     <RadioButton x:Name="NavAI" Content="&#xE99A;" FontFamily="Segoe MDL2 Assets"
-                                 FontSize="20" GroupName="Nav"
+                                 FontSize="18" GroupName="Nav"
                                  Click="NavButton_Click" Tag="AI"
-                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,8"/>
+                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,4"/>
                     <RadioButton x:Name="NavCloud" Content="&#xE753;" FontFamily="Segoe MDL2 Assets"
-                                 FontSize="20" GroupName="Nav"
+                                 FontSize="18" GroupName="Nav"
                                  Click="NavButton_Click" Tag="Cloud"
-                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,8"/>
+                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,4"/>
                     <RadioButton x:Name="NavIndustrial" Content="&#xE774;" FontFamily="Segoe MDL2 Assets"
-                                 FontSize="20" GroupName="Nav"
+                                 FontSize="18" GroupName="Nav"
                                  Click="NavButton_Click" Tag="Industrial"
-                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,8"/>
+                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,4"/>
                     <RadioButton x:Name="NavLog" Content="&#xE7BA;" FontFamily="Segoe MDL2 Assets"
-                                 FontSize="20" GroupName="Nav"
+                                 FontSize="18" GroupName="Nav"
                                  Click="NavButton_Click" Tag="Log"
-                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,8"/>
+                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,4"/>
                 </StackPanel>
 
-                <!-- Language Switch + Settings -->
-                <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,20"
+                <!-- Spacer -->
+                <Border DockPanel.Dock="Top" Height="1" Margin="16,0,16,0"
+                        Background="{StaticResource GlassDividerBrush}"/>
+
+                <!-- Settings at bottom -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,16"
                             HorizontalAlignment="Center">
                     <Button x:Name="SettingsButton" Content="&#xE713;" FontFamily="Segoe MDL2 Assets"
-                            FontSize="18" Style="{StaticResource SidebarIconButton}"
+                            FontSize="16" Style="{StaticResource SidebarIconButton}"
                             Click="SettingsButton_Click" ToolTip="Settings"/>
                 </StackPanel>
             </DockPanel>
@@ -74,21 +104,28 @@
         <!-- ===== Main Content Area ===== -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="44"/>
+                <RowDefinition Height="40"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Title Bar (draggable) -->
-            <Grid Grid.Row="0" Background="{StaticResource TitleBarBgBrush}"
-                  MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Grid Grid.Row="0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#B00D1119" Offset="0"/>
+                        <GradientStop Color="#800D1119" Offset="0.5"/>
+                        <GradientStop Color="#B00D1119" Offset="1"/>
+                    </LinearGradientBrush>
+                </Grid.Background>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
-                    <Ellipse x:Name="ConnectionIndicator" Width="8" Height="8" Fill="#484F58" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="StatusText" Text="Disconnected" Foreground="{StaticResource TextMutedBrush}" FontSize="12" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                    <Ellipse x:Name="ConnectionIndicator" Width="7" Height="7" Fill="#484F58" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="StatusText" Text="Disconnected" Foreground="{StaticResource TextMutedBrush}"
+                               FontSize="12" VerticalAlignment="Center" FontWeight="Regular"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Content="&#xE949;" FontFamily="Segoe MDL2 Assets" FontSize="10"
@@ -101,7 +138,14 @@
             </Grid>
 
             <!-- Content Panels -->
-            <Grid Grid.Row="1" Margin="8">
+            <Grid Grid.Row="1" Margin="6">
+                <Grid.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#050A12" Offset="0"/>
+                        <GradientStop Color="#0B0E14" Offset="0.5"/>
+                        <GradientStop Color="#050A12" Offset="1"/>
+                    </LinearGradientBrush>
+                </Grid.Background>
                 <views:CameraPanel x:Name="CameraPanelCtrl" Visibility="Visible"/>
                 <views:ProcessingPanel x:Name="ProcessingPanelCtrl" Visibility="Collapsed"/>
                 <views:AIPanel x:Name="AIPanelCtrl" Visibility="Collapsed"/>
@@ -111,9 +155,15 @@
             </Grid>
 
             <!-- Status Bar -->
-            <Border Grid.Row="2" Background="{StaticResource StatusBarBgBrush}"
-                    BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="0,1,0,0"
-                    Padding="20,8" CornerRadius="0,0,8,8">
+            <Border Grid.Row="2" BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="0,1,0,0"
+                    Padding="16,6,16,6" CornerRadius="0,0,8,8">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#D9080C14" Offset="0"/>
+                        <GradientStop Color="#E60A0E16" Offset="0.5"/>
+                        <GradientStop Color="#D9080C14" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -125,19 +175,25 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
-                        <Ellipse x:Name="StatusIndicator" Width="6" Height="6" Fill="#484F58" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock x:Name="StatusTextFooter" Text="Ready" Foreground="{StaticResource TextMutedBrush}" FontSize="11" VerticalAlignment="Center"/>
+                        <Ellipse x:Name="StatusIndicator" Width="5" Height="5" Fill="#484F58"
+                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock x:Name="StatusTextFooter" Text="Ready"
+                                   Foreground="{StaticResource TextMutedBrush}" FontSize="11"
+                                   VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <TextBlock Grid.Column="1" x:Name="FpsTextBlock" Text="0 FPS" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"
-                               VerticalAlignment="Center" Margin="20,0,0,0" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="2" x:Name="ProcessTimeTextBlock" Text="0 ms" Foreground="{StaticResource TextMutedBrush}" FontSize="11"
-                               VerticalAlignment="Center" Margin="12,0,0,0"/>
-                    <TextBlock Grid.Column="3" x:Name="CameraDataTextBlock" Text="" Foreground="{StaticResource TextMutedBrush}" FontSize="11"
-                               VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    <TextBlock Grid.Column="1" x:Name="FpsTextBlock" Text="0 FPS"
+                               Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"
+                               VerticalAlignment="Center" Margin="16,0,0,0" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="2" x:Name="ProcessTimeTextBlock" Text="0 ms"
+                               Foreground="{StaticResource TextMutedBrush}" FontSize="11"
+                               VerticalAlignment="Center" Margin="10,0,0,0"/>
+                    <TextBlock Grid.Column="3" x:Name="CameraDataTextBlock" Text=""
+                               Foreground="{StaticResource TextMutedBrush}" FontSize="11"
+                               VerticalAlignment="Center" Margin="10,0,0,0"/>
 
-                    <TextBlock Grid.Column="5" Text="OpenCV 5 + AWS" Foreground="#484F58" FontSize="10"
-                               VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="5" Text="OpenCV 5 + AWS" Foreground="#33FFFFFF"
+                               FontSize="10" VerticalAlignment="Center" FontWeight="Light"/>
                 </Grid>
             </Border>
         </Grid>
@@ -147,8 +203,10 @@
                 Background="#40EF4444" BorderBrush="{StaticResource DangerBrush}" BorderThickness="0,0,0,2"
                 Padding="16,8" Visibility="Collapsed" Panel.ZIndex="100" CornerRadius="0,0,8,8">
             <StackPanel Orientation="Horizontal">
-                <TextBlock x:Name="ErrorMessageTextBlock" Text="" Foreground="{StaticResource DangerBrush}" FontSize="12" VerticalAlignment="Center"/>
-                <Button Content="X" Margin="12,0,0,0" Background="Transparent" Foreground="{StaticResource DangerBrush}"
+                <TextBlock x:Name="ErrorMessageTextBlock" Text="" Foreground="{StaticResource DangerBrush}"
+                           FontSize="12" VerticalAlignment="Center"/>
+                <Button Content="X" Margin="12,0,0,0" Background="Transparent"
+                        Foreground="{StaticResource DangerBrush}"
                         BorderThickness="0" Cursor="Hand" FontSize="12" FontWeight="Bold"
                         Click="HideErrorButton_Click"/>
             </StackPanel>

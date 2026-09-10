@@ -728,8 +728,8 @@
          SidebarNavRadio (Navigation RadioButton)
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="SidebarNavRadio" TargetType="RadioButton">
-        <Setter Property="Width" Value="52" />
-        <Setter Property="Height" Value="52" />
+        <Setter Property="Width" Value="56" />
+        <Setter Property="Height" Value="44" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
         <Setter Property="BorderBrush" Value="Transparent" />
@@ -744,36 +744,42 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="16"
+                            CornerRadius="14"
                             SnapsToDevicePixels="True">
                         <Border.Effect>
                             <DropShadowEffect x:Name="glow"
                                               Color="Transparent" ShadowDepth="0"
                                               BlurRadius="0" Opacity="0" />
                         </Border.Effect>
-                        <ContentPresenter x:Name="contentPresenter"
-                                          HorizontalAlignment="Center"
-                                          VerticalAlignment="Center" />
+                        <Grid>
+                            <Border x:Name="pill" Width="3" Height="0" CornerRadius="2"
+                                    HorizontalAlignment="Left" Margin="2,0,0,0"
+                                    Background="{StaticResource AccentBrush}"/>
+                            <ContentPresenter x:Name="contentPresenter"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#14FFFFFF" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#33FFFFFF" />
+                            <Setter TargetName="border" Property="Background" Value="#12FFFFFF" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#18FFFFFF" />
                             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#19FAE20A" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            <Setter TargetName="border" Property="Background" Value="#1AFAE20A" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#33FAE20A" />
                             <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                            <Setter TargetName="pill" Property="Height" Value="20" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetName="glow"
                                                          Storyboard.TargetProperty="Opacity"
-                                                         To="0.5" Duration="0:0:0.2" />
+                                                         To="0.4" Duration="0:0:0.2" />
                                         <DoubleAnimation Storyboard.TargetName="glow"
                                                          Storyboard.TargetProperty="BlurRadius"
-                                                         To="16" Duration="0:0:0.2" />
+                                                         To="12" Duration="0:0:0.2" />
                                         <ColorAnimation Storyboard.TargetName="glow"
                                                         Storyboard.TargetProperty="Color"
                                                         To="#FAE20A" Duration="0:0:0.2" />
@@ -809,25 +815,32 @@
          SidebarIconButton (Bottom settings)
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="SidebarIconButton" TargetType="Button">
-        <Setter Property="Width" Value="40" />
-        <Setter Property="Height" Value="40" />
+        <Setter Property="Width" Value="38" />
+        <Setter Property="Height" Value="38" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
-        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="border"
                             Background="{TemplateBinding Background}"
-                            CornerRadius="12"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="10"
                             SnapsToDevicePixels="True">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="border" Property="Background" Value="#14FFFFFF" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#18FFFFFF" />
                             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#22FFFFFF" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -840,7 +853,7 @@
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="TitleBarButton" TargetType="Button">
         <Setter Property="Width" Value="46" />
-        <Setter Property="Height" Value="32" />
+        <Setter Property="Height" Value="28" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
         <Setter Property="BorderThickness" Value="0" />
@@ -852,13 +865,17 @@
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="border"
                             Background="{TemplateBinding Background}"
+                            CornerRadius="6"
                             SnapsToDevicePixels="True">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#14FFFFFF" />
+                            <Setter TargetName="border" Property="Background" Value="#18FFFFFF" />
                             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#22FFFFFF" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
