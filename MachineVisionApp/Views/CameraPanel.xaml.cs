@@ -60,6 +60,7 @@ public partial class CameraPanel : UserControl
     // ── Event Handlers ───────────────────────────────────────────────
     private void SourceTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (NetworkConfigPanel == null) return;
         if (SourceTypeComboBox.SelectedIndex == 1)
         {
             NetworkConfigPanel.Visibility = Visibility.Visible;

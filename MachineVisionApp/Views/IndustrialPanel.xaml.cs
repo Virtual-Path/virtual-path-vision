@@ -180,6 +180,7 @@ public partial class IndustrialPanel : UserControl
 
     private void ScanSourceComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (SerialScanPanel == null || TcpScanPanel == null) return;
         int index = ScanSourceComboBox.SelectedIndex;
 
         SerialScanPanel.Visibility = index == 1 ? Visibility.Visible : Visibility.Collapsed;

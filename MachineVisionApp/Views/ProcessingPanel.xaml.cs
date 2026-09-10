@@ -68,7 +68,7 @@ public partial class ProcessingPanel : UserControl
     // ── Event Handlers ───────────────────────────────────────────────
     private void Threshold1Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (_suppressEvents) return;
+        if (_suppressEvents || Threshold1TextBox == null || Threshold2Slider == null) return;
 
         Threshold1TextBox.Text = ((int)Threshold1Slider.Value).ToString();
         ThresholdsChanged?.Invoke((int)Threshold1Slider.Value, (int)Threshold2Slider.Value);
@@ -76,7 +76,7 @@ public partial class ProcessingPanel : UserControl
 
     private void Threshold2Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (_suppressEvents) return;
+        if (_suppressEvents || Threshold2TextBox == null || Threshold1Slider == null) return;
 
         Threshold2TextBox.Text = ((int)Threshold2Slider.Value).ToString();
         ThresholdsChanged?.Invoke((int)Threshold1Slider.Value, (int)Threshold2Slider.Value);
