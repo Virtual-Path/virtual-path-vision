@@ -16,6 +16,11 @@ public partial class LogPanel : UserControl
         InitializeComponent();
     }
 
+    public void RefreshTexts()
+    {
+        ClearLogButton.Content = TranslationService.Instance.ClearLog;
+    }
+
     public void SetLogSource(IEnumerable source)
     {
         LogListBox.ItemsSource = source;

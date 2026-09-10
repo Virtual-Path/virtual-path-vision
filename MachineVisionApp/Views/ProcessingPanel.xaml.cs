@@ -49,6 +49,14 @@ public partial class ProcessingPanel : UserControl
         ModeLabelText.Text = name;
     }
 
+    public void RefreshTexts()
+    {
+        var t = TranslationService.Instance;
+        ApplyThresholdsButton.Content = t.Apply;
+        LoadTemplateButton.Content = t.LoadTemplate;
+        PickColorHintText.Text = t.PickColorHint;
+    }
+
     public void SetResultTitle(string title)
     {
         ResultTitleText.Text = title;

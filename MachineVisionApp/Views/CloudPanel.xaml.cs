@@ -66,6 +66,16 @@ public partial class CloudPanel : UserControl
 
     // ── Public Methods ───────────────────────────────────────────────
 
+    public void RefreshTexts()
+    {
+        var t = TranslationService.Instance;
+        CloudUploadScreenshotButton.Content = t.SaveScreenshot;
+        CloudAlertButton.Content = "Send Alert";
+        CloudPublishStatsButton.Content = "Publish Stats";
+        LambdaInvokeButton.Content = "Invoke";
+        CloudInitButton.Content = "Initialize All";
+    }
+
     public void SetS3Status(bool connected, string text)
     {
         S3StatusDot.Fill = connected

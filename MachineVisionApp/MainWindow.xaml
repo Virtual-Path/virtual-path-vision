@@ -64,11 +64,9 @@
                 <!-- Language Switch + Settings -->
                 <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,20"
                             HorizontalAlignment="Center">
-                    <Button x:Name="LangSwitchButton" Content="EN" FontSize="11" FontWeight="Bold"
-                            Style="{StaticResource SidebarIconButton}" Click="LangSwitchButton_Click"
-                            ToolTip="Switch Language" Margin="0,0,0,8"/>
                     <Button x:Name="SettingsButton" Content="&#xE713;" FontFamily="Segoe MDL2 Assets"
-                            FontSize="18" Style="{StaticResource SidebarIconButton}"/>
+                            FontSize="18" Style="{StaticResource SidebarIconButton}"
+                            Click="SettingsButton_Click" ToolTip="Settings"/>
                 </StackPanel>
             </DockPanel>
         </Border>

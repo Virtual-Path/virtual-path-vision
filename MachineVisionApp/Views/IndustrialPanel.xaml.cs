@@ -104,6 +104,23 @@ public partial class IndustrialPanel : UserControl
 
     // ── Public Methods ───────────────────────────────────────────────
 
+    public void RefreshTexts()
+    {
+        var t = TranslationService.Instance;
+        ModbusConnectButton.Content = t.Connect;
+        ModbusDisconnectButton.Content = t.Disconnect;
+        ModbusReadButton.Content = t.Read;
+        ModbusWriteButton.Content = t.Write;
+        OpcUaConnectButton.Content = t.Connect;
+        OpcUaDisconnectButton.Content = t.Disconnect;
+        OpcUaReadButton.Content = t.Read;
+        OpcUaWriteButton.Content = t.Write;
+        SerialToggleButton.Content = t.Start;
+        TcpToggleButton.Content = t.Start;
+        ExportCsvButton.Content = t.ExportCsv;
+        ClearReportButton.Content = t.ClearLog;
+    }
+
     public void SetModbusState(bool connected, string statusText)
     {
         ModbusStatusDot.Fill = connected

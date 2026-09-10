@@ -51,6 +51,13 @@ public partial class AIPanel : UserControl
 
     // ── Public Helpers ───────────────────────────────────────────────
 
+    public void RefreshTexts()
+    {
+        var t = TranslationService.Instance;
+        LoadYoloModelButton.Content = t.LoadImage;
+        AiEnableCheckBox.Content = "Enable";
+    }
+
     public void SetModelStatus(bool loaded, string path)
     {
         AiStatusDot.Fill = loaded

@@ -45,6 +45,18 @@ public partial class CameraPanel : UserControl
     }
 
     // ── Public Helpers ───────────────────────────────────────────────
+    public void RefreshTexts()
+    {
+        var t = TranslationService.Instance;
+        ConnectButton.Content = t.Connect;
+        DisconnectButton.Content = t.Disconnect;
+        LoadImageButton.Content = t.LoadImage;
+        StartCameraButton.Content = t.StartCamera;
+        StopCameraButton.Content = t.StopCamera;
+        SaveScreenshotButton.Content = t.SaveScreenshot;
+        RecordButton.Content = t.StartRecording;
+    }
+
     public void SetConnected(bool connected, string statusText)
     {
         if (ConnectionDot == null || ConnectionStatusText == null || ConnectButton == null || DisconnectButton == null || StartCameraButton == null) return;

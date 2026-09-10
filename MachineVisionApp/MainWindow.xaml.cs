@@ -230,13 +230,11 @@ namespace MachineVisionApp
             }
         }
 
-        /// <summary>切换中英文</summary>
-        private void LangSwitchButton_Click(object sender, RoutedEventArgs e)
+        /// <summary>打开设置窗口</summary>
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            string current = System.Globalization.CultureInfo.CurrentUICulture.Name;
-            string next = current.StartsWith("zh") ? "en-US" : "zh-CN";
-            TranslationService.Instance.ChangeLanguage(next);
-            LangSwitchButton.Content = next.StartsWith("zh") ? "EN" : "中";
+            var settings = new SettingsWindow(this) { Owner = this };
+            settings.ShowDialog();
         }
 
         // ==================== 语言切换 ====================
@@ -246,7 +244,21 @@ namespace MachineVisionApp
         /// </summary>
         private void OnLanguageChangedHandler(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            Dispatcher.Invoke(RefreshLocalizedControls);
+            Dispatcher.Invoke(RefreshAllTexts);
+        }
+
+        /// <summary>
+        /// 刷新所有面板的文本（语言切换时调用）。
+        /// </summary>
+        public void RefreshAllTexts()
+        {
+            RefreshLocalizedControls();
+            CameraPanelCtrl.RefreshTexts();
+            ProcessingPanelCtrl.RefreshTexts();
+            AIPanelCtrl.RefreshTexts();
+            CloudPanelCtrl.RefreshTexts();
+            IndustrialPanelCtrl.RefreshTexts();
+            LogPanelCtrl.RefreshTexts();
         }
 
         /// <summary>
