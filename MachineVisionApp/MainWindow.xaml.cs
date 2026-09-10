@@ -8,6 +8,7 @@ using System.Windows.Media;
 using MachineVisionApp.AI;
 using MachineVisionApp.Cloud;
 using MachineVisionApp.Industrial;
+using MachineVisionApp.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using OpenCvSharp;
@@ -62,9 +63,9 @@ namespace MachineVisionApp
         private int _threshold1 = 100;
         private int _threshold2 = 200;
         private bool _networkConfigured;
-        private string? _lastDecodedText; // 最近一次记录到日志的识别文本（去重）
-        private bool _suppressSelectionEvents; // 语言切换重建下拉框时抑制 SelectionChanged 副作用
-        private Mat? _lastOriginalFrame; // 最近一帧原始图像（用于点击取色）
+        private string? _lastDecodedText;
+        private bool _suppressSelectionEvents;
+        private Mat? _lastOriginalFrame;
 
         // ---- 性能追踪 ----
         private readonly Stopwatch _frameStopwatch = new();
@@ -83,9 +84,11 @@ namespace MachineVisionApp
                 System.IO.Path.Combine(AppContext.BaseDirectory, "face_detection_yunet_2023mar.onnx"));
             _imageProcessingComponent = new Components.ImageProcessingComponent();
             _videoCaptureComponent = new Components.VideoCaptureComponent();
-            _imageDisplayComponent = new Components.ImageDisplayComponent(OriginalImage, EdgeImage);
+            _imageDisplayComponent = new Components.ImageDisplayComponent(
+                CameraPanelCtrl.OriginalImageEl, CameraPanelCtrl.EdgeImageEl);
             _thresholdParameterComponent = new Components.ThresholdParameterComponent(
-                Threshold1TextBox, Threshold2TextBox, ApplyThresholdsButton);
+                ProcessingPanelCtrl.Threshold1TextBoxEl, ProcessingPanelCtrl.Threshold2TextBoxEl,
+                ProcessingPanelCtrl.ApplyThresholdsButtonEl);
             _recordingComponent = new Components.RecordingComponent();
             _barcodeDetectionComponent = new Components.BarcodeDetectionComponent();
             _colorDetectionComponent = new Components.ColorDetectionComponent();
@@ -123,9 +126,96 @@ namespace MachineVisionApp
 
             TranslationService.Instance.PropertyChanged += OnLanguageChangedHandler;
 
+            // ---- UserControl 事件订阅 ----
+            CameraPanelCtrl.ConnectRequested += CameraPanelCtrl_ConnectRequested;
+            CameraPanelCtrl.DisconnectRequested += CameraPanelCtrl_DisconnectRequested;
+            CameraPanelCtrl.LoadImageRequested += CameraPanelCtrl_LoadImageRequested;
+            CameraPanelCtrl.StartCameraRequested += CameraPanelCtrl_StartCameraRequested;
+            CameraPanelCtrl.StopCameraRequested += CameraPanelCtrl_StopCameraRequested;
+            CameraPanelCtrl.ScreenshotRequested += CameraPanelCtrl_ScreenshotRequested;
+            CameraPanelCtrl.RecordRequested += CameraPanelCtrl_RecordRequested;
+
+            ProcessingPanelCtrl.ThresholdsChanged += ProcessingPanelCtrl_ThresholdsChanged;
+            ProcessingPanelCtrl.ModeChanged += ProcessingPanelCtrl_ModeChanged;
+            ProcessingPanelCtrl.ColorChanged += ProcessingPanelCtrl_ColorChanged;
+            ProcessingPanelCtrl.LoadTemplateRequested += ProcessingPanelCtrl_LoadTemplateRequested;
+
+            AIPanelCtrl.LoadModelRequested += AIPanelCtrl_LoadModelRequested;
+            AIPanelCtrl.EnableChanged += AIPanelCtrl_EnableChanged;
+
+            CloudPanelCtrl.InitRequested += CloudPanelCtrl_InitRequested;
+            CloudPanelCtrl.UploadScreenshotRequested += CloudPanelCtrl_UploadScreenshotRequested;
+            CloudPanelCtrl.SendAlertRequested += CloudPanelCtrl_SendAlertRequested;
+            CloudPanelCtrl.PublishStatsRequested += CloudPanelCtrl_PublishStatsRequested;
+            CloudPanelCtrl.LambdaInvokeRequested += CloudPanelCtrl_LambdaInvokeRequested;
+
+            IndustrialPanelCtrl.ModbusConnectRequested += IndustrialPanelCtrl_ModbusConnectRequested;
+            IndustrialPanelCtrl.ModbusDisconnectRequested += IndustrialPanelCtrl_ModbusDisconnectRequested;
+            IndustrialPanelCtrl.ModbusReadRequested += IndustrialPanelCtrl_ModbusReadRequested;
+            IndustrialPanelCtrl.ModbusWriteRequested += IndustrialPanelCtrl_ModbusWriteRequested;
+            IndustrialPanelCtrl.OpcUaConnectRequested += IndustrialPanelCtrl_OpcUaConnectRequested;
+            IndustrialPanelCtrl.OpcUaDisconnectRequested += IndustrialPanelCtrl_OpcUaDisconnectRequested;
+            IndustrialPanelCtrl.OpcUaReadRequested += IndustrialPanelCtrl_OpcUaReadRequested;
+            IndustrialPanelCtrl.OpcUaWriteRequested += IndustrialPanelCtrl_OpcUaWriteRequested;
+            IndustrialPanelCtrl.SerialToggleRequested += IndustrialPanelCtrl_SerialToggleRequested;
+            IndustrialPanelCtrl.TcpToggleRequested += IndustrialPanelCtrl_TcpToggleRequested;
+            IndustrialPanelCtrl.ExportCsvRequested += IndustrialPanelCtrl_ExportCsvRequested;
+            IndustrialPanelCtrl.ClearReportRequested += IndustrialPanelCtrl_ClearReportRequested;
+            IndustrialPanelCtrl.ScanSourceChanged += IndustrialPanelCtrl_ScanSourceChanged;
+
+            LogPanelCtrl.ClearRequested += LogPanelCtrl_ClearRequested;
+
             Loaded += MainWindow_Loaded;
             Closed += MainWindow_Closed;
         }
+
+        // ==================== 侧边栏导航 ====================
+
+        /// <summary>
+        /// 侧边栏导航按钮点击：切换面板可见性。
+        /// </summary>
+        private void NavButton_Click(object sender, RoutedEventArgs e)
+        {
+            var btn = sender as RadioButton;
+            string tag = btn?.Tag as string ?? "";
+
+            CameraPanelCtrl.Visibility = tag == "Vision" ? Visibility.Visible : Visibility.Collapsed;
+            ProcessingPanelCtrl.Visibility = tag == "Processing" ? Visibility.Visible : Visibility.Collapsed;
+            AIPanelCtrl.Visibility = tag == "AI" ? Visibility.Visible : Visibility.Collapsed;
+            CloudPanelCtrl.Visibility = tag == "Cloud" ? Visibility.Visible : Visibility.Collapsed;
+            IndustrialPanelCtrl.Visibility = tag == "Industrial" ? Visibility.Visible : Visibility.Collapsed;
+            LogPanelCtrl.Visibility = tag == "Log" ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        // ==================== 窗口控制按钮 ====================
+
+        /// <summary>最小化窗口</summary>
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        /// <summary>最大化/还原窗口</summary>
+        private void MaximizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState == WindowState.Maximized
+                ? WindowState.Normal
+                : WindowState.Maximized;
+        }
+
+        /// <summary>关闭窗口</summary>
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        /// <summary>隐藏错误横幅</summary>
+        private void HideErrorButton_Click(object sender, RoutedEventArgs e)
+        {
+            HideError();
+        }
+
+        // ==================== 语言切换 ====================
 
         /// <summary>
         /// 语言切换处理：重建所有本地化控件文本。
@@ -143,16 +233,16 @@ namespace MachineVisionApp
             _suppressSelectionEvents = true;
             try
             {
-                int srcIndex = SourceTypeComboBox.SelectedIndex;
-                SourceTypeComboBox.ItemsSource = new string[]
+                int srcIndex = CameraPanelCtrl.SourceTypeComboBoxEl.SelectedIndex;
+                CameraPanelCtrl.SourceTypeComboBoxEl.ItemsSource = new string[]
                 {
                     TranslationService.Instance.LocalCamera,
                     TranslationService.Instance.NetworkStream
                 };
-                SourceTypeComboBox.SelectedIndex = srcIndex < 0 ? 0 : srcIndex;
+                CameraPanelCtrl.SourceTypeComboBoxEl.SelectedIndex = srcIndex < 0 ? 0 : srcIndex;
 
-                int modeIndex = ProcessingModeComboBox.SelectedIndex;
-                ProcessingModeComboBox.ItemsSource = new string[]
+                int modeIndex = ProcessingPanelCtrl.ProcessingModeComboBoxEl.SelectedIndex;
+                ProcessingPanelCtrl.ProcessingModeComboBoxEl.ItemsSource = new string[]
                 {
                     TranslationService.Instance.ModeCanny,
                     TranslationService.Instance.ModeSobel,
@@ -166,26 +256,26 @@ namespace MachineVisionApp
                     TranslationService.Instance.ModeFeatureMatch,
                     TranslationService.Instance.ModeEnhancement
                 };
-                ProcessingModeComboBox.SelectedIndex = modeIndex < 0 ? 0 : modeIndex;
+                ProcessingPanelCtrl.ProcessingModeComboBoxEl.SelectedIndex = modeIndex < 0 ? 0 : modeIndex;
 
-                int colorIndex = ColorComboBox.SelectedIndex;
-                ColorComboBox.ItemsSource = TranslationService.Instance.ColorNames;
-                ColorComboBox.SelectedIndex = colorIndex < 0 ? 0 : colorIndex;
+                int colorIndex = ProcessingPanelCtrl.ColorComboBoxEl.SelectedIndex;
+                ProcessingPanelCtrl.ColorComboBoxEl.ItemsSource = TranslationService.Instance.ColorNames;
+                ProcessingPanelCtrl.ColorComboBoxEl.SelectedIndex = colorIndex < 0 ? 0 : colorIndex;
 
-                int scanIndex = ScanSourceComboBox.SelectedIndex;
-                ScanSourceComboBox.ItemsSource = TranslationService.Instance.ScanSourceNames;
-                ScanSourceComboBox.SelectedIndex = scanIndex < 0 ? 0 : scanIndex;
+                int scanIndex = IndustrialPanelCtrl.ScanSourceComboBoxEl.SelectedIndex;
+                IndustrialPanelCtrl.ScanSourceComboBoxEl.ItemsSource = TranslationService.Instance.ScanSourceNames;
+                IndustrialPanelCtrl.ScanSourceComboBoxEl.SelectedIndex = scanIndex < 0 ? 0 : scanIndex;
             }
             finally
             {
                 _suppressSelectionEvents = false;
             }
 
-            ModeLabelText.Text = GetModeName(_currentMode);
-            ResultTitleText.Text = GetResultTitle(_currentMode);
-            TemplateStatusText.Text = _templateMatchComponent.HasTemplate
+            ProcessingPanelCtrl.SetModeName(GetModeName(_currentMode));
+            ProcessingPanelCtrl.SetResultTitle(GetResultTitle(_currentMode));
+            ProcessingPanelCtrl.SetTemplateStatus(_templateMatchComponent.HasTemplate
                 ? $"{TranslationService.Instance.TemplateLoaded} ({_templateMatchComponent.TemplateWidth}x{_templateMatchComponent.TemplateHeight})"
-                : TranslationService.Instance.NoTemplate;
+                : TranslationService.Instance.NoTemplate);
         }
 
         /// <summary>获取模式显示名称</summary>
@@ -222,42 +312,38 @@ namespace MachineVisionApp
             };
         }
 
+        // ==================== 窗口生命周期 ====================
+
         /// <summary>
-        /// 窗口加载完成：初始化下拉框和网络面板状态。
+        /// 窗口加载完成：初始化下拉框和面板状态。
         /// </summary>
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             RefreshLocalizedControls();
 
-            NetworkConfigPanel.IsEnabled = false;
-            NetworkConfigPanel.Opacity = 0.4;
+            // 日志面板
+            LogPanelCtrl.SetLogSource(AppLogger.Instance.Entries);
 
-            LogListBox.ItemsSource = AppLogger.Instance.Entries;
-
-            // 新日志自动滚动到底部
             AppLogger.Instance.OnLogAdded += entry => Dispatcher.Invoke(() =>
             {
-                if (LogPanel.Visibility == Visibility.Visible)
-                    LogListBox.ScrollIntoView(entry);
+                if (LogPanelCtrl.Visibility == Visibility.Visible)
+                    LogPanelCtrl.ScrollToBottom();
             });
 
             // ---- 工业互联面板初始化 ----
-            ScanSourceComboBox.ItemsSource = TranslationService.Instance.ScanSourceNames;
-            ScanSourceComboBox.SelectedIndex = 0;
-            SerialPortComboBox.ItemsSource = Industrial.SerialScanDriver.GetPortNames();
-            SerialBaudComboBox.ItemsSource = new[] { "9600", "19200", "38400", "57600", "115200" };
-            SerialBaudComboBox.SelectedIndex = 0;
-            ReportListBox.ItemsSource = _workReportService.Records;
-            TodayCountTextBlock.Text = _workReportService.TodayCount.ToString();
+            IndustrialPanelCtrl.SetSerialPortNames(Industrial.SerialScanDriver.GetPortNames());
+            IndustrialPanelCtrl.SetSerialBaudRates(new[] { "9600", "19200", "38400", "57600", "115200" });
+            IndustrialPanelCtrl.ReportListBoxEl.ItemsSource = _workReportService.Records;
+            IndustrialPanelCtrl.UpdateReportStats(_workReportService.TodayCount, "--");
 
             // 配置回填
-            ModbusIpTextBox.Text = _industrialConfig.Modbus.Ip;
-            ModbusPortTextBox.Text = _industrialConfig.Modbus.Port.ToString();
-            ModbusUnitTextBox.Text = _industrialConfig.Modbus.UnitId.ToString();
-            OpcUaEndpointTextBox.Text = _industrialConfig.OpcUa.Endpoint;
-            TcpScanPortTextBox.Text = _industrialConfig.TcpScanner.Port.ToString();
-            PlcRegisterTextBox.Text = _industrialConfig.Report.PlcCountRegister.ToString();
-            ModbusLinkCheckBox.IsChecked = _industrialConfig.Report.PlcReportEnable;
+            IndustrialPanelCtrl.ModbusIpTextBoxEl.Text = _industrialConfig.Modbus.Ip;
+            IndustrialPanelCtrl.ModbusPortTextBoxEl.Text = _industrialConfig.Modbus.Port.ToString();
+            IndustrialPanelCtrl.ModbusUnitTextBoxEl.Text = _industrialConfig.Modbus.UnitId.ToString();
+            IndustrialPanelCtrl.OpcUaEndpointTextBoxEl.Text = _industrialConfig.OpcUa.Endpoint;
+            IndustrialPanelCtrl.TcpScanPortTextBoxEl.Text = _industrialConfig.TcpScanner.Port.ToString();
+            IndustrialPanelCtrl.PlcRegisterTextBoxEl.Text = _industrialConfig.Report.PlcCountRegister.ToString();
+            IndustrialPanelCtrl.ModbusLinkCheckBoxEl.IsChecked = _industrialConfig.Report.PlcReportEnable;
         }
 
         /// <summary>
@@ -286,38 +372,22 @@ namespace MachineVisionApp
             _lambdaClient?.Dispose();
         }
 
-        /// <summary>
-        /// 信号源类型切换：显示/隐藏网络配置面板。
-        /// </summary>
-        private void SourceTypeComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            if (_suppressSelectionEvents) return;
-
-            bool isNetwork = SourceTypeComboBox.SelectedIndex == 1;
-            NetworkConfigPanel.IsEnabled = isNetwork;
-            NetworkConfigPanel.Opacity = isNetwork ? 1.0 : 0.4;
-
-            _videoCaptureComponent.SourceType = isNetwork
-                ? Components.VideoSourceType.NetworkStream
-                : Components.VideoSourceType.LocalCamera;
-
-            if (isNetwork)
-                BuildNetworkUrl();
-        }
+        // ==================== 信号源 & 连接 ====================
 
         /// <summary>根据 IP 和端口构建网络流 URL</summary>
         private void BuildNetworkUrl()
         {
-            string ip = IPTextBox.Text.Trim();
-            string port = PortTextBox.Text.Trim();
+            string ip = CameraPanelCtrl.IPTextBoxEl.Text.Trim();
+            string port = CameraPanelCtrl.PortTextBoxEl.Text.Trim();
             _videoCaptureComponent.NetworkUrl = $"http://{ip}:{port}/video";
             _networkConfigured = !string.IsNullOrWhiteSpace(ip) && !string.IsNullOrWhiteSpace(port);
         }
 
-        /// <summary>连接按钮：启动视频采集</summary>
-        private void ConnectButton_Click(object sender, RoutedEventArgs e)
+        // ==================== CameraPanel 事件处理 ====================
+
+        private void CameraPanelCtrl_ConnectRequested(object? sender, EventArgs e)
         {
-            if (SourceTypeComboBox.SelectedIndex == 1)
+            if (CameraPanelCtrl.SourceTypeComboBoxEl.SelectedIndex == 1)
             {
                 BuildNetworkUrl();
                 if (!_networkConfigured)
@@ -332,204 +402,49 @@ namespace MachineVisionApp
             bool success = _videoCaptureComponent.StartCapture();
             if (success)
             {
-                ConnectButton.IsEnabled = false;
-                DisconnectButton.IsEnabled = true;
+                CameraPanelCtrl.ConnectButtonEl.IsEnabled = false;
+                CameraPanelCtrl.DisconnectButtonEl.IsEnabled = true;
                 AppLogger.Instance.Info("视频采集已启动");
             }
             else
             {
-                ConnectButton.IsEnabled = true;
-                DisconnectButton.IsEnabled = false;
+                CameraPanelCtrl.ConnectButtonEl.IsEnabled = true;
+                CameraPanelCtrl.DisconnectButtonEl.IsEnabled = false;
                 AppLogger.Instance.Error("视频采集启动失败");
             }
         }
 
-        /// <summary>断开按钮：停止视频采集</summary>
-        private void DisconnectButton_Click(object sender, RoutedEventArgs e)
+        private void CameraPanelCtrl_DisconnectRequested(object? sender, EventArgs e)
         {
             _videoCaptureComponent.StopCapture();
             AppLogger.Instance.Info("视频采集已断开");
         }
 
-        /// <summary>开启摄像头按钮</summary>
-        private void StartCameraButton_Click(object sender, RoutedEventArgs e)
+        private void CameraPanelCtrl_StartCameraRequested(object? sender, EventArgs e)
         {
             HideError();
             bool success = _videoCaptureComponent.StartCapture();
             if (success)
             {
-                StartCameraButton.IsEnabled = false;
-                StopCameraButton.IsEnabled = true;
+                CameraPanelCtrl.StartCameraButtonEl.IsEnabled = false;
+                CameraPanelCtrl.StopCameraButtonEl.IsEnabled = true;
                 AppLogger.Instance.Info("摄像头已启动");
             }
             else
             {
-                StartCameraButton.IsEnabled = true;
-                StopCameraButton.IsEnabled = false;
+                CameraPanelCtrl.StartCameraButtonEl.IsEnabled = true;
+                CameraPanelCtrl.StopCameraButtonEl.IsEnabled = false;
                 AppLogger.Instance.Error("摄像头启动失败");
             }
         }
 
-        /// <summary>关闭摄像头按钮</summary>
-        private void StopCameraButton_Click(object sender, RoutedEventArgs e)
+        private void CameraPanelCtrl_StopCameraRequested(object? sender, EventArgs e)
         {
             _videoCaptureComponent.StopCapture();
             AppLogger.Instance.Info("摄像头已关闭");
         }
 
-        /// <summary>
-        /// 处理模式切换：更新当前处理模式，显示/隐藏对应的参数面板。
-        /// </summary>
-        private void ProcessingModeComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            if (_suppressSelectionEvents) return;
-
-            _currentMode = ProcessingModeComboBox.SelectedIndex switch
-            {
-                1 => Components.ProcessingMode.Sobel,
-                2 => Components.ProcessingMode.Laplacian,
-                3 => Components.ProcessingMode.Binary,
-                4 => Components.ProcessingMode.Contour,
-                5 => Components.ProcessingMode.QRCode,
-                6 => Components.ProcessingMode.ColorDetection,
-                7 => Components.ProcessingMode.TemplateMatch,
-                8 => Components.ProcessingMode.ShapeDetection,
-                9 => Components.ProcessingMode.FeatureMatch,
-                10 => Components.ProcessingMode.Enhancement,
-                _ => Components.ProcessingMode.Canny
-            };
-
-            ModeLabelText.Text = GetModeName(_currentMode);
-
-            bool showThreshold = _currentMode is Components.ProcessingMode.Canny or Components.ProcessingMode.Contour;
-            ThresholdPanel.Visibility = showThreshold ? Visibility.Visible : Visibility.Collapsed;
-            ColorPanel.Visibility = _currentMode == Components.ProcessingMode.ColorDetection
-                ? Visibility.Visible : Visibility.Collapsed;
-            bool showTemplatePanel = _currentMode is Components.ProcessingMode.TemplateMatch or Components.ProcessingMode.FeatureMatch;
-            TemplatePanel.Visibility = showTemplatePanel ? Visibility.Visible : Visibility.Collapsed;
-
-            // 颜色检测模式下点击画面可取色
-            OriginalImage.Cursor = _currentMode == Components.ProcessingMode.ColorDetection
-                ? System.Windows.Input.Cursors.Cross : System.Windows.Input.Cursors.Arrow;
-            UpdatePickColorHint();
-
-            ResultTitleText.Text = GetResultTitle(_currentMode);
-
-            _lastDecodedText = null;
-            ModeResultTextBlock.Text = "";
-            AppLogger.Instance.Info($"处理模式切换为: {ModeLabelText.Text}");
-        }
-
-        /// <summary>
-        /// 目标颜色切换：更新颜色检测组件的目标颜色。
-        /// </summary>
-        private void ColorComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            if (_suppressSelectionEvents) return;
-
-            _colorDetectionComponent.Target = ColorComboBox.SelectedIndex switch
-            {
-                1 => Components.ColorDetectionComponent.TargetColor.Green,
-                2 => Components.ColorDetectionComponent.TargetColor.Blue,
-                3 => Components.ColorDetectionComponent.TargetColor.Yellow,
-                4 => Components.ColorDetectionComponent.TargetColor.Orange,
-                5 => Components.ColorDetectionComponent.TargetColor.Purple,
-                6 => Components.ColorDetectionComponent.TargetColor.Cyan,
-                7 => Components.ColorDetectionComponent.TargetColor.White,
-                8 => Components.ColorDetectionComponent.TargetColor.Black,
-                9 => Components.ColorDetectionComponent.TargetColor.Custom,
-                _ => Components.ColorDetectionComponent.TargetColor.Red
-            };
-            UpdatePickColorHint();
-            AppLogger.Instance.Info($"目标颜色切换为: {ColorComboBox.SelectedItem}");
-        }
-
-        /// <summary>更新取色提示的显示状态（仅颜色检测 + 自定义取色时显示）</summary>
-        private void UpdatePickColorHint()
-        {
-            PickColorHintText.Visibility =
-                _currentMode == Components.ProcessingMode.ColorDetection &&
-                _colorDetectionComponent.Target == Components.ColorDetectionComponent.TargetColor.Custom
-                    ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        /// <summary>
-        /// 点击左侧画面取色：将点击位置的像素颜色设为颜色检测的自定义目标。
-        /// </summary>
-        private void OriginalViewGrid_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            if (_currentMode != Components.ProcessingMode.ColorDetection || _lastOriginalFrame == null)
-                return;
-
-            try
-            {
-                // 将控件坐标映射回原始图像像素坐标（考虑 Uniform 缩放和黑边）
-                var pos = e.GetPosition(OriginalImage);
-                double srcW = _lastOriginalFrame.Width;
-                double srcH = _lastOriginalFrame.Height;
-                double elemW = OriginalImage.ActualWidth;
-                double elemH = OriginalImage.ActualHeight;
-                if (srcW <= 0 || srcH <= 0 || elemW <= 0 || elemH <= 0)
-                    return;
-
-                double scale = Math.Min(elemW / srcW, elemH / srcH);
-                double offsetX = (elemW - srcW * scale) / 2;
-                double offsetY = (elemH - srcH * scale) / 2;
-                double px = (pos.X - offsetX) / scale;
-                double py = (pos.Y - offsetY) / scale;
-                if (px < 0 || py < 0 || px >= srcW || py >= srcH)
-                    return;
-
-                using Mat hsv = new Mat();
-                Cv2.CvtColor(_lastOriginalFrame, hsv, ColorConversionCodes.BGR2HSV);
-                var pixel = hsv.At<Vec3b>((int)py, (int)px);
-                _colorDetectionComponent.SetCustomRange(pixel.Item0, pixel.Item1, pixel.Item2);
-
-                _suppressSelectionEvents = true;
-                ColorComboBox.SelectedIndex = 9; // 自定义(取色)
-                _suppressSelectionEvents = false;
-                _colorDetectionComponent.Target = Components.ColorDetectionComponent.TargetColor.Custom;
-                UpdatePickColorHint();
-
-                AppLogger.Instance.Info($"已取色: HSV({pixel.Item0}, {pixel.Item1}, {pixel.Item2})");
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Instance.Error($"取色失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 加载模板按钮：打开图片文件作为模板匹配/特征点匹配的模板。
-        /// </summary>
-        private void LoadTemplateButton_Click(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog openFileDialog = new OpenFileDialog
-            {
-                Filter = TranslationService.GetStringStatic("ImageFilter")
-            };
-            if (openFileDialog.ShowDialog() == true)
-            {
-                bool okTemplate = _templateMatchComponent.LoadTemplate(openFileDialog.FileName);
-                bool okFeature = _featureMatchComponent.LoadTemplate(openFileDialog.FileName);
-
-                if (okTemplate || okFeature)
-                {
-                    TemplateStatusText.Text =
-                        $"{TranslationService.Instance.TemplateLoaded} ({_templateMatchComponent.TemplateWidth}x{_templateMatchComponent.TemplateHeight})";
-                    AppLogger.Instance.Info($"{TranslationService.Instance.TemplateLoaded}: {openFileDialog.FileName}");
-                }
-                else
-                {
-                    ShowError(TranslationService.GetStringStatic("TemplateLoadFailed"));
-                }
-            }
-        }
-
-        /// <summary>
-        /// 保存截图：将当前原始帧保存为 PNG 文件。
-        /// </summary>
-        private void SaveScreenshotButton_Click(object sender, RoutedEventArgs e)
+        private void CameraPanelCtrl_ScreenshotRequested(object? sender, EventArgs e)
         {
             try
             {
@@ -539,7 +454,7 @@ namespace MachineVisionApp
                 string path = System.IO.Path.Combine(dir,
                     $"Screenshot_{DateTime.Now:yyyyMMdd_HHmmss}.png");
 
-                var source = OriginalImage.Source as System.Windows.Media.Imaging.BitmapSource;
+                var source = CameraPanelCtrl.OriginalImageEl.Source as System.Windows.Media.Imaging.BitmapSource;
                 if (source == null)
                 {
                     ShowError(TranslationService.GetStringStatic("SaveFailed"));
@@ -560,16 +475,13 @@ namespace MachineVisionApp
             }
         }
 
-        /// <summary>
-        /// 录制按钮：切换录制状态（开始/停止）。
-        /// </summary>
-        private void RecordButton_Click(object sender, RoutedEventArgs e)
+        private void CameraPanelCtrl_RecordRequested(object? sender, EventArgs e)
         {
             if (_recordingComponent.IsRecording)
             {
                 _recordingComponent.StopRecording();
-                RecordButton.Content = TranslationService.Instance.StartRecording;
-                RecordButton.ClearValue(Button.BackgroundProperty);
+                CameraPanelCtrl.RecordButtonEl.Content = TranslationService.Instance.StartRecording;
+                CameraPanelCtrl.RecordButtonEl.ClearValue(Button.BackgroundProperty);
                 AppLogger.Instance.Info(TranslationService.Instance.RecordingStopped);
             }
             else
@@ -592,8 +504,8 @@ namespace MachineVisionApp
                 bool started = _recordingComponent.StartRecording(path, 15.0, width, height);
                 if (started)
                 {
-                    RecordButton.Content = TranslationService.Instance.StopRecording;
-                    RecordButton.Background = new SolidColorBrush(Color.FromRgb(0xF8, 0x51, 0x49));
+                    CameraPanelCtrl.RecordButtonEl.Content = TranslationService.Instance.StopRecording;
+                    CameraPanelCtrl.RecordButtonEl.Background = new SolidColorBrush(Color.FromRgb(0xF8, 0x51, 0x49));
                     AppLogger.Instance.Info($"{TranslationService.Instance.RecordingStarted} {path}");
                 }
                 else
@@ -604,119 +516,425 @@ namespace MachineVisionApp
             }
         }
 
-        /// <summary>
-        /// 日志切换按钮：显示/隐藏日志面板。
-        /// </summary>
-        private void LogToggleButton_Click(object sender, RoutedEventArgs e)
+        // ==================== ProcessingPanel 事件处理 ====================
+
+        private void ProcessingPanelCtrl_ThresholdsChanged(int t1, int t2)
         {
-            bool isVisible = LogPanel.Visibility == Visibility.Visible;
-            LogPanel.Visibility = isVisible ? Visibility.Collapsed : Visibility.Visible;
+            _threshold1 = t1;
+            _threshold2 = t2;
+            AppLogger.Instance.Info($"阈值更新: {t1} ~ {t2}");
         }
 
-        // ==================== 工业互联（企业化） ====================
-
-        /// <summary>工业互联面板开关</summary>
-        private void IndustrialToggleButton_Click(object sender, RoutedEventArgs e)
+        private void ProcessingPanelCtrl_ModeChanged(int index)
         {
-            IndustrialPanel.Visibility = IndustrialPanel.Visibility == Visibility.Visible
-                ? Visibility.Collapsed : Visibility.Visible;
+            if (_suppressSelectionEvents) return;
+
+            _currentMode = index switch
+            {
+                1 => Components.ProcessingMode.Sobel,
+                2 => Components.ProcessingMode.Laplacian,
+                3 => Components.ProcessingMode.Binary,
+                4 => Components.ProcessingMode.Contour,
+                5 => Components.ProcessingMode.QRCode,
+                6 => Components.ProcessingMode.ColorDetection,
+                7 => Components.ProcessingMode.TemplateMatch,
+                8 => Components.ProcessingMode.ShapeDetection,
+                9 => Components.ProcessingMode.FeatureMatch,
+                10 => Components.ProcessingMode.Enhancement,
+                _ => Components.ProcessingMode.Canny
+            };
+
+            ProcessingPanelCtrl.SetModeName(GetModeName(_currentMode));
+
+            bool showThreshold = _currentMode is Components.ProcessingMode.Canny or Components.ProcessingMode.Contour;
+            ProcessingPanelCtrl.ThresholdPanelEl.Visibility = showThreshold ? Visibility.Visible : Visibility.Collapsed;
+            ProcessingPanelCtrl.ColorPanelEl.Visibility = _currentMode == Components.ProcessingMode.ColorDetection
+                ? Visibility.Visible : Visibility.Collapsed;
+            bool showTemplatePanel = _currentMode is Components.ProcessingMode.TemplateMatch or Components.ProcessingMode.FeatureMatch;
+            ProcessingPanelCtrl.TemplatePanelEl.Visibility = showTemplatePanel ? Visibility.Visible : Visibility.Collapsed;
+
+            CameraPanelCtrl.OriginalImageEl.Cursor = _currentMode == Components.ProcessingMode.ColorDetection
+                ? System.Windows.Input.Cursors.Cross : System.Windows.Input.Cursors.Arrow;
+            UpdatePickColorHint();
+
+            ProcessingPanelCtrl.SetResultTitle(GetResultTitle(_currentMode));
+
+            _lastDecodedText = null;
+            ProcessingPanelCtrl.UpdateResults(0, 0, "", "");
+            AppLogger.Instance.Info($"处理模式切换为: {GetModeName(_currentMode)}");
         }
 
-        /// <summary>更新 Modbus 状态指示</summary>
-        private void UpdateModbusState(DeviceDriverState state)
+        private void ProcessingPanelCtrl_ColorChanged(int index)
         {
-            Color color = state switch
+            if (_suppressSelectionEvents) return;
+
+            _colorDetectionComponent.Target = index switch
             {
-                DeviceDriverState.Connected => Color.FromRgb(0x3F, 0xB9, 0x50),
-                DeviceDriverState.Connecting => Color.FromRgb(0xD2, 0x99, 0x22),
-                DeviceDriverState.Failed => Color.FromRgb(0xF8, 0x51, 0x49),
-                _ => Color.FromRgb(0x48, 0x4F, 0x58)
+                1 => Components.ColorDetectionComponent.TargetColor.Green,
+                2 => Components.ColorDetectionComponent.TargetColor.Blue,
+                3 => Components.ColorDetectionComponent.TargetColor.Yellow,
+                4 => Components.ColorDetectionComponent.TargetColor.Orange,
+                5 => Components.ColorDetectionComponent.TargetColor.Purple,
+                6 => Components.ColorDetectionComponent.TargetColor.Cyan,
+                7 => Components.ColorDetectionComponent.TargetColor.White,
+                8 => Components.ColorDetectionComponent.TargetColor.Black,
+                9 => Components.ColorDetectionComponent.TargetColor.Custom,
+                _ => Components.ColorDetectionComponent.TargetColor.Red
             };
-            ModbusStatusDot.Fill = new SolidColorBrush(color);
-            ModbusStatusText.Text = state switch
-            {
-                DeviceDriverState.Connected => TranslationService.GetStringStatic("StatusConnected"),
-                DeviceDriverState.Connecting => TranslationService.GetStringStatic("StatusConnecting"),
-                DeviceDriverState.Failed => TranslationService.GetStringStatic("StatusFailed"),
-                _ => TranslationService.GetStringStatic("StatusDisconnected")
-            };
-            ModbusConnectButton.IsEnabled = state != DeviceDriverState.Connected;
-            ModbusDisconnectButton.IsEnabled = state == DeviceDriverState.Connected;
+            UpdatePickColorHint();
+            AppLogger.Instance.Info($"目标颜色切换为: {ProcessingPanelCtrl.ColorComboBoxEl.SelectedItem}");
         }
 
-        /// <summary>更新 OPC-UA 状态指示</summary>
-        private void UpdateOpcUaState(DeviceDriverState state)
+        private void ProcessingPanelCtrl_LoadTemplateRequested(object? sender, EventArgs e)
         {
-            Color color = state switch
+            OpenFileDialog openFileDialog = new OpenFileDialog
             {
-                DeviceDriverState.Connected => Color.FromRgb(0x3F, 0xB9, 0x50),
-                DeviceDriverState.Connecting => Color.FromRgb(0xD2, 0x99, 0x22),
-                DeviceDriverState.Failed => Color.FromRgb(0xF8, 0x51, 0x49),
-                _ => Color.FromRgb(0x48, 0x4F, 0x58)
+                Filter = TranslationService.GetStringStatic("ImageFilter")
             };
-            OpcUaStatusDot.Fill = new SolidColorBrush(color);
-            OpcUaStatusText.Text = state switch
+            if (openFileDialog.ShowDialog() == true)
             {
-                DeviceDriverState.Connected => TranslationService.GetStringStatic("StatusConnected"),
-                DeviceDriverState.Connecting => TranslationService.GetStringStatic("StatusConnecting"),
-                DeviceDriverState.Failed => TranslationService.GetStringStatic("StatusFailed"),
-                _ => TranslationService.GetStringStatic("StatusDisconnected")
-            };
-            OpcUaConnectButton.IsEnabled = state != DeviceDriverState.Connected;
-            OpcUaDisconnectButton.IsEnabled = state == DeviceDriverState.Connected;
-        }
+                bool okTemplate = _templateMatchComponent.LoadTemplate(openFileDialog.FileName);
+                bool okFeature = _featureMatchComponent.LoadTemplate(openFileDialog.FileName);
 
-        /// <summary>
-        /// 报工登记：条码 → 报工记录（SQLite 持久化 + 今日产量 + PLC 联动）。
-        /// 必须在 UI 线程调用。
-        /// </summary>
-        private void AddReport(string barcode, string source)
-        {
-            if (string.IsNullOrWhiteSpace(barcode)) return;
-
-            var record = _workReportService.AddRecord(WorkOrderTextBox.Text.Trim(), barcode, source);
-            TodayCountTextBlock.Text = _workReportService.TodayCount.ToString();
-            LastBarcodeTextBlock.Text = barcode;
-            ReportListBox.ScrollIntoView(record);
-            AppLogger.Instance.Info($"{TranslationService.Instance.WorkReport}: {barcode} ({source})");
-
-            // PLC 联动：将今日产量写入 Modbus 保持寄存器
-            if (ModbusLinkCheckBox.IsChecked == true)
-            {
-                try
+                if (okTemplate || okFeature)
                 {
-                    if (_modbusDriver.State != DeviceDriverState.Connected)
-                    {
-                        AppLogger.Instance.Warn(TranslationService.GetStringStatic("ModbusNotConnected"));
-                        return;
-                    }
-                    if (ushort.TryParse(PlcRegisterTextBox.Text, out ushort register))
-                    {
-                        _modbusDriver.WriteSingleRegister(register, (ushort)_workReportService.TodayCount);
-                        AppLogger.Instance.Info($"PLC联动: [{register}] = {_workReportService.TodayCount}");
-                    }
+                    ProcessingPanelCtrl.SetTemplateStatus(
+                        $"{TranslationService.Instance.TemplateLoaded} ({_templateMatchComponent.TemplateWidth}x{_templateMatchComponent.TemplateHeight})");
+                    AppLogger.Instance.Info($"{TranslationService.Instance.TemplateLoaded}: {openFileDialog.FileName}");
                 }
-                catch (Exception ex)
+                else
                 {
-                    AppLogger.Instance.Error($"PLC联动失败: {ex.Message}");
+                    ShowError(TranslationService.GetStringStatic("TemplateLoadFailed"));
                 }
             }
         }
 
-        /// <summary>Modbus 连接按钮</summary>
-        private async void ModbusConnectButton_Click(object sender, RoutedEventArgs e)
+        /// <summary>更新取色提示的显示状态（仅颜色检测 + 自定义取色时显示）</summary>
+        private void UpdatePickColorHint()
         {
-            if (!byte.TryParse(ModbusUnitTextBox.Text, out byte unitId) ||
-                !int.TryParse(ModbusPortTextBox.Text, out int port) ||
-                string.IsNullOrWhiteSpace(ModbusIpTextBox.Text))
+            ProcessingPanelCtrl.PickColorHintTextEl.Visibility =
+                _currentMode == Components.ProcessingMode.ColorDetection &&
+                _colorDetectionComponent.Target == Components.ColorDetectionComponent.TargetColor.Custom
+                    ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        /// <summary>
+        /// 点击左侧画面取色：将点击位置的像素颜色设为颜色检测的自定义目标。
+        /// </summary>
+        private void OriginalViewGrid_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (_currentMode != Components.ProcessingMode.ColorDetection || _lastOriginalFrame == null)
+                return;
+
+            try
+            {
+                var pos = e.GetPosition(CameraPanelCtrl.OriginalImageEl);
+                double srcW = _lastOriginalFrame.Width;
+                double srcH = _lastOriginalFrame.Height;
+                double elemW = CameraPanelCtrl.OriginalImageEl.ActualWidth;
+                double elemH = CameraPanelCtrl.OriginalImageEl.ActualHeight;
+                if (srcW <= 0 || srcH <= 0 || elemW <= 0 || elemH <= 0)
+                    return;
+
+                double scale = Math.Min(elemW / srcW, elemH / srcH);
+                double offsetX = (elemW - srcW * scale) / 2;
+                double offsetY = (elemH - srcH * scale) / 2;
+                double px = (pos.X - offsetX) / scale;
+                double py = (pos.Y - offsetY) / scale;
+                if (px < 0 || py < 0 || px >= srcW || py >= srcH)
+                    return;
+
+                using Mat hsv = new Mat();
+                Cv2.CvtColor(_lastOriginalFrame, hsv, ColorConversionCodes.BGR2HSV);
+                var pixel = hsv.At<Vec3b>((int)py, (int)px);
+                _colorDetectionComponent.SetCustomRange(pixel.Item0, pixel.Item1, pixel.Item2);
+
+                _suppressSelectionEvents = true;
+                ProcessingPanelCtrl.ColorComboBoxEl.SelectedIndex = 9;
+                _suppressSelectionEvents = false;
+                _colorDetectionComponent.Target = Components.ColorDetectionComponent.TargetColor.Custom;
+                UpdatePickColorHint();
+
+                AppLogger.Instance.Info($"已取色: HSV({pixel.Item0}, {pixel.Item1}, {pixel.Item2})");
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Instance.Error($"取色失败: {ex.Message}");
+            }
+        }
+
+        // ==================== AIPanel 事件处理 ====================
+
+        private void AIPanelCtrl_LoadModelRequested(object? sender, EventArgs e)
+        {
+            var dlg = new OpenFileDialog
+            {
+                Filter = "ONNX Model (*.onnx)|*.onnx|All Files (*.*)|*.*"
+            };
+            if (dlg.ShowDialog() != true) return;
+
+            try
+            {
+                float conf = 0.5f;
+                float.TryParse(AIPanelCtrl.ConfThresholdTextBoxEl.Text, out conf);
+
+                lock (_aiLock)
+                {
+                    _yoloComponent?.Dispose();
+                    _yoloComponent = new AI.YoloDetectionComponent(
+                        dlg.FileName, confidenceThreshold: conf);
+
+                    _kalmanTracker = new AI.KalmanTrackerComponent();
+                    _activePerception = new AI.ActivePerceptionEngine(_yoloComponent, _kalmanTracker);
+                    _digitalTwin?.Dispose();
+                    _digitalTwin = new AI.DigitalTwinRenderer();
+                }
+
+                AIPanelCtrl.SetModelStatus(true, Path.GetFileName(dlg.FileName));
+                AppLogger.Instance.Info($"YOLO 模型已加载: {dlg.FileName}");
+            }
+            catch (Exception ex)
+            {
+                AIPanelCtrl.SetModelStatus(false, "Load Failed");
+                ShowError($"YOLO 模型加载失败: {ex.Message}");
+                AppLogger.Instance.Error($"YOLO 模型加载失败: {ex.Message}");
+            }
+        }
+
+        private void AIPanelCtrl_EnableChanged(object? sender, EventArgs e)
+        {
+            if (!IsLoaded) return;
+            _aiEnabled = AIPanelCtrl.AiEnableCheckBoxEl.IsChecked == true;
+
+            if (_aiEnabled && (_yoloComponent == null || !_yoloComponent.IsModelLoaded))
+            {
+                ShowError("请先加载 YOLO 模型");
+                AIPanelCtrl.AiEnableCheckBoxEl.IsChecked = false;
+                _aiEnabled = false;
+                return;
+            }
+
+            if (_aiEnabled)
+            {
+                lock (_aiLock) { _activePerception?.Reset(); }
+                AIPanelCtrl.SetModelStatus(true, AIPanelCtrl.YoloModelPathTextEl.Text);
+                _detectionTotalCount = 0;
+                _detectionDefectCount = 0;
+                AppLogger.Instance.Info("AI 主动感知已启用");
+            }
+            else
+            {
+                AppLogger.Instance.Info("AI 主动感知已禁用");
+            }
+        }
+
+        // ==================== CloudPanel 事件处理 ====================
+
+        private async void CloudPanelCtrl_InitRequested(object? sender, EventArgs e)
+        {
+            string region = CloudPanelCtrl.AwsRegionTextBoxEl.Text.Trim();
+            string bucket = CloudPanelCtrl.S3BucketTextBoxEl.Text.Trim();
+            string iotEndpoint = CloudPanelCtrl.IoTEndpointTextBoxEl.Text.Trim();
+            string lambdaFunc = CloudPanelCtrl.LambdaFuncTextBoxEl.Text.Trim();
+
+            if (string.IsNullOrEmpty(region))
+            {
+                ShowError("请输入 AWS Region");
+                return;
+            }
+
+            try
+            {
+                if (!string.IsNullOrEmpty(bucket))
+                {
+                    _s3Service?.Dispose();
+                    _s3Service = new S3Service(region, bucket);
+                    _s3Service.OnUploadSuccess += key =>
+                        Dispatcher.Invoke(() => AppLogger.Instance.Info($"S3 上传成功: {key}"));
+                    _s3Service.OnUploadError += (key, ex) =>
+                        Dispatcher.Invoke(() => AppLogger.Instance.Error($"S3 上传失败: {key} - {ex.Message}"));
+                    CloudPanelCtrl.SetS3Status(true, "Connected");
+                    AppLogger.Instance.Info($"S3 服务已初始化: {bucket} ({region})");
+                }
+
+                if (!string.IsNullOrEmpty(iotEndpoint))
+                {
+                    string certPath = Path.Combine(AppContext.BaseDirectory, "certs", "device-certificate.pem.crt");
+                    string keyPath = Path.Combine(AppContext.BaseDirectory, "certs", "private.pem.key");
+
+                    _iotService?.Dispose();
+                    if (File.Exists(certPath) && File.Exists(keyPath))
+                    {
+                        _iotService = new IoTService(iotEndpoint, certPath, keyPath);
+                    }
+                    else
+                    {
+                        var handler = new System.Net.Http.HttpClientHandler();
+                        _iotService = new IoTService(
+                            new System.Net.Http.HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) },
+                            iotEndpoint);
+                        AppLogger.Instance.Warn("IoT: 未找到设备证书，使用无认证模式（仅限测试）");
+                    }
+                    _iotService.OnPublishSuccess += topic =>
+                        Dispatcher.Invoke(() => AppLogger.Instance.Info($"IoT 发布成功: {topic}"));
+                    _iotService.OnPublishError += (topic, ex) =>
+                        Dispatcher.Invoke(() => AppLogger.Instance.Error($"IoT 发布失败: {topic} - {ex.Message}"));
+                    CloudPanelCtrl.SetIoTStatus(true, "Connected");
+                    AppLogger.Instance.Info($"IoT 服务已初始化: {iotEndpoint}");
+                }
+
+                if (!string.IsNullOrEmpty(lambdaFunc))
+                {
+                    _lambdaClient?.Dispose();
+                    _lambdaClient = new LambdaClient(region);
+                    _lambdaClient.OnInvocationSuccess += fn =>
+                        Dispatcher.Invoke(() => AppLogger.Instance.Info($"Lambda 调用成功: {fn}"));
+                    _lambdaClient.OnInvocationError += (fn, ex) =>
+                        Dispatcher.Invoke(() => AppLogger.Instance.Error($"Lambda 调用失败: {fn} - {ex.Message}"));
+                    CloudPanelCtrl.SetLambdaStatus(true, "Ready");
+                    AppLogger.Instance.Info($"Lambda 客户端已初始化: {lambdaFunc}");
+                }
+
+                CloudPanelCtrl.SetCloudOverallStatus("Connected");
+                HideError();
+            }
+            catch (Exception ex)
+            {
+                CloudPanelCtrl.SetCloudOverallStatus("Init Failed");
+                ShowError($"Cloud 初始化失败: {ex.Message}");
+                AppLogger.Instance.Error($"Cloud 初始化失败: {ex.Message}");
+            }
+
+            await Task.CompletedTask;
+        }
+
+        private async void CloudPanelCtrl_UploadScreenshotRequested(object? sender, EventArgs e)
+        {
+            if (_s3Service == null)
+            {
+                ShowError("请先初始化 S3 服务");
+                return;
+            }
+
+            try
+            {
+                var source = CameraPanelCtrl.OriginalImageEl.Source as System.Windows.Media.Imaging.BitmapSource;
+                if (source == null)
+                {
+                    ShowError("没有可上传的截图");
+                    return;
+                }
+
+                int w = source.PixelWidth;
+                int h = source.PixelHeight;
+                int stride = w * 4;
+                byte[] pixels = new byte[stride * h];
+                source.CopyPixels(pixels, stride, 0);
+
+                using var mat = new Mat(h, w, MatType.CV_8UC4);
+                System.Runtime.InteropServices.Marshal.Copy(pixels, 0, mat.Data, pixels.Length);
+                using var bgr = new Mat();
+                Cv2.CvtColor(mat, bgr, ColorConversionCodes.BGRA2BGR);
+
+                string key = await _s3Service.UploadDetectionScreenshotAsync(bgr, _currentMode.ToString());
+                CloudPanelCtrl.AddUploadRecord(key);
+                AppLogger.Instance.Info($"截图已上传 S3: {key}");
+            }
+            catch (Exception ex)
+            {
+                ShowError($"S3 上传失败: {ex.Message}");
+                AppLogger.Instance.Error($"S3 上传失败: {ex.Message}");
+            }
+        }
+
+        private async void CloudPanelCtrl_SendAlertRequested(object? sender, EventArgs e)
+        {
+            if (_iotService == null)
+            {
+                ShowError("请先初始化 IoT 服务");
+                return;
+            }
+
+            try
+            {
+                await _iotService.PublishAlertAsync(
+                    "manual_alert", 3,
+                    $"手动告警 - 站点: {Environment.MachineName}, 模式: {_currentMode}");
+                AppLogger.Instance.Info("告警已发送到 IoT Core");
+            }
+            catch (Exception ex)
+            {
+                ShowError($"IoT 告警发送失败: {ex.Message}");
+                AppLogger.Instance.Error($"IoT 告警发送失败: {ex.Message}");
+            }
+        }
+
+        private async void CloudPanelCtrl_PublishStatsRequested(object? sender, EventArgs e)
+        {
+            if (_iotService == null)
+            {
+                ShowError("请先初始化 IoT 服务");
+                return;
+            }
+
+            try
+            {
+                int total = _workReportService.TodayCount;
+                double passRate = total > 0 ? (double)(total - _detectionDefectCount) / total : 1.0;
+                await _iotService.PublishProductionStatsAsync(total, _detectionDefectCount, passRate);
+                AppLogger.Instance.Info($"生产统计已发布: 总数={total}, 缺陷={_detectionDefectCount}, 合格率={passRate:P1}");
+            }
+            catch (Exception ex)
+            {
+                ShowError($"IoT 统计发布失败: {ex.Message}");
+                AppLogger.Instance.Error($"IoT 统计发布失败: {ex.Message}");
+            }
+        }
+
+        private async void CloudPanelCtrl_LambdaInvokeRequested(object? sender, EventArgs e)
+        {
+            if (_lambdaClient == null)
+            {
+                ShowError("请先初始化 Lambda 客户端");
+                return;
+            }
+
+            try
+            {
+                string funcName = CloudPanelCtrl.LambdaFuncTextBoxEl.Text.Trim();
+                var payload = new { mode = _currentMode.ToString(), detections = _detectionTotalCount };
+                await _lambdaClient.InvokeAsync(funcName, payload);
+                CloudPanelCtrl.LambdaResultTextEl.Text = "Invoked successfully";
+                AppLogger.Instance.Info($"Lambda 调用成功: {funcName}");
+            }
+            catch (Exception ex)
+            {
+                ShowError($"Lambda 调用失败: {ex.Message}");
+                AppLogger.Instance.Error($"Lambda 调用失败: {ex.Message}");
+            }
+        }
+
+        // ==================== IndustrialPanel 事件处理 ====================
+
+        private void IndustrialPanelCtrl_ScanSourceChanged(int index)
+        {
+            IndustrialPanelCtrl.SerialScanPanelEl.Visibility = index == 1 ? Visibility.Visible : Visibility.Collapsed;
+            IndustrialPanelCtrl.TcpScanPanelEl.Visibility = index == 2 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private async void IndustrialPanelCtrl_ModbusConnectRequested(object? sender, EventArgs e)
+        {
+            if (!byte.TryParse(IndustrialPanelCtrl.ModbusUnitTextBoxEl.Text, out byte unitId) ||
+                !int.TryParse(IndustrialPanelCtrl.ModbusPortTextBoxEl.Text, out int port) ||
+                string.IsNullOrWhiteSpace(IndustrialPanelCtrl.ModbusIpTextBoxEl.Text))
             {
                 ShowError(TranslationService.GetStringStatic("InvalidThreshold"));
                 return;
             }
 
             HideError();
-            _modbusDriver.UpdateSettings(ModbusIpTextBox.Text.Trim(), port, unitId);
-            ModbusConnectButton.IsEnabled = false;
+            _modbusDriver.UpdateSettings(IndustrialPanelCtrl.ModbusIpTextBoxEl.Text.Trim(), port, unitId);
+            IndustrialPanelCtrl.ModbusConnectButtonEl.IsEnabled = false;
             bool ok = await _modbusDriver.ConnectAsync();
             if (ok)
             {
@@ -724,58 +942,54 @@ namespace MachineVisionApp
             }
         }
 
-        /// <summary>Modbus 断开按钮</summary>
-        private void ModbusDisconnectButton_Click(object sender, RoutedEventArgs e)
+        private void IndustrialPanelCtrl_ModbusDisconnectRequested(object? sender, EventArgs e)
         {
             _modbusDriver.Disconnect();
             AppLogger.Instance.Info("Modbus 已断开");
         }
 
-        /// <summary>Modbus 读取保持寄存器</summary>
-        private void ModbusReadButton_Click(object sender, RoutedEventArgs e)
+        private void IndustrialPanelCtrl_ModbusReadRequested(object? sender, EventArgs e)
         {
             try
             {
-                if (!ushort.TryParse(ModbusAddrTextBox.Text, out ushort address))
+                if (!ushort.TryParse(IndustrialPanelCtrl.ModbusAddrTextBoxEl.Text, out ushort address))
                     return;
                 ushort[] values = _modbusDriver.ReadHoldingRegisters(address, 1);
-                ModbusResultText.Text = $"= {values[0]}";
+                IndustrialPanelCtrl.UpdateModbusResult($"= {values[0]}");
                 AppLogger.Instance.Info($"Modbus 读取: [{address}] = {values[0]}");
             }
             catch (Exception ex)
             {
-                ModbusResultText.Text = "";
+                IndustrialPanelCtrl.UpdateModbusResult("");
                 AppLogger.Instance.Error($"Modbus 读取失败: {ex.Message}");
             }
         }
 
-        /// <summary>Modbus 写单个保持寄存器</summary>
-        private void ModbusWriteButton_Click(object sender, RoutedEventArgs e)
+        private void IndustrialPanelCtrl_ModbusWriteRequested(object? sender, EventArgs e)
         {
             try
             {
-                if (!ushort.TryParse(ModbusAddrTextBox.Text, out ushort address) ||
-                    !ushort.TryParse(ModbusValueTextBox.Text, out ushort value))
+                if (!ushort.TryParse(IndustrialPanelCtrl.ModbusAddrTextBoxEl.Text, out ushort address) ||
+                    !ushort.TryParse(IndustrialPanelCtrl.ModbusValueTextBoxEl.Text, out ushort value))
                     return;
                 _modbusDriver.WriteSingleRegister(address, value);
-                ModbusResultText.Text = "OK";
+                IndustrialPanelCtrl.UpdateModbusResult("OK");
                 AppLogger.Instance.Info($"Modbus 写入: [{address}] = {value}");
             }
             catch (Exception ex)
             {
-                ModbusResultText.Text = "";
+                IndustrialPanelCtrl.UpdateModbusResult("");
                 AppLogger.Instance.Error($"Modbus 写入失败: {ex.Message}");
             }
         }
 
-        /// <summary>OPC-UA 连接按钮</summary>
-        private async void OpcUaConnectButton_Click(object sender, RoutedEventArgs e)
+        private async void IndustrialPanelCtrl_OpcUaConnectRequested(object? sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(OpcUaEndpointTextBox.Text)) return;
+            if (string.IsNullOrWhiteSpace(IndustrialPanelCtrl.OpcUaEndpointTextBoxEl.Text)) return;
 
             HideError();
-            _opcUaDriver.UpdateSettings(OpcUaEndpointTextBox.Text.Trim());
-            OpcUaConnectButton.IsEnabled = false;
+            _opcUaDriver.UpdateSettings(IndustrialPanelCtrl.OpcUaEndpointTextBoxEl.Text.Trim());
+            IndustrialPanelCtrl.OpcUaConnectButtonEl.IsEnabled = false;
             bool ok = await _opcUaDriver.ConnectAsync();
             if (ok)
             {
@@ -783,105 +997,91 @@ namespace MachineVisionApp
             }
         }
 
-        /// <summary>OPC-UA 断开按钮</summary>
-        private void OpcUaDisconnectButton_Click(object sender, RoutedEventArgs e)
+        private void IndustrialPanelCtrl_OpcUaDisconnectRequested(object? sender, EventArgs e)
         {
             _opcUaDriver.Disconnect();
             AppLogger.Instance.Info("OPC-UA 已断开");
         }
 
-        /// <summary>OPC-UA 读取节点</summary>
-        private async void OpcUaReadButton_Click(object sender, RoutedEventArgs e)
+        private async void IndustrialPanelCtrl_OpcUaReadRequested(object? sender, EventArgs e)
         {
             try
             {
-                string? result = await _opcUaDriver.ReadNodeAsync(OpcUaNodeTextBox.Text.Trim());
-                OpcUaResultText.Text = $"{OpcUaNodeTextBox.Text.Trim()} = {result}";
-                AppLogger.Instance.Info($"OPC-UA 读取: {OpcUaNodeTextBox.Text.Trim()} = {result}");
+                string? result = await _opcUaDriver.ReadNodeAsync(IndustrialPanelCtrl.OpcUaNodeTextBoxEl.Text.Trim());
+                IndustrialPanelCtrl.UpdateOpcUaResult($"{IndustrialPanelCtrl.OpcUaNodeTextBoxEl.Text.Trim()} = {result}");
+                AppLogger.Instance.Info($"OPC-UA 读取: {IndustrialPanelCtrl.OpcUaNodeTextBoxEl.Text.Trim()} = {result}");
             }
             catch (Exception ex)
             {
-                OpcUaResultText.Text = "";
+                IndustrialPanelCtrl.UpdateOpcUaResult("");
                 AppLogger.Instance.Error($"OPC-UA 读取失败: {ex.Message}");
             }
         }
 
-        /// <summary>OPC-UA 写入节点（数值优先按 double 解析，否则按字符串写入）</summary>
-        private async void OpcUaWriteButton_Click(object sender, RoutedEventArgs e)
+        private async void IndustrialPanelCtrl_OpcUaWriteRequested(object? sender, EventArgs e)
         {
             try
             {
-                object value = double.TryParse(OpcUaValueTextBox.Text, out double number)
-                    ? number : OpcUaValueTextBox.Text;
-                await _opcUaDriver.WriteNodeAsync(OpcUaNodeTextBox.Text.Trim(), value);
-                OpcUaResultText.Text = "OK";
-                AppLogger.Instance.Info($"OPC-UA 写入: {OpcUaNodeTextBox.Text.Trim()} = {value}");
+                object value = double.TryParse(IndustrialPanelCtrl.OpcUaValueTextBoxEl.Text, out double number)
+                    ? number : IndustrialPanelCtrl.OpcUaValueTextBoxEl.Text;
+                await _opcUaDriver.WriteNodeAsync(IndustrialPanelCtrl.OpcUaNodeTextBoxEl.Text.Trim(), value);
+                IndustrialPanelCtrl.UpdateOpcUaResult("OK");
+                AppLogger.Instance.Info($"OPC-UA 写入: {IndustrialPanelCtrl.OpcUaNodeTextBoxEl.Text.Trim()} = {value}");
             }
             catch (Exception ex)
             {
-                OpcUaResultText.Text = "";
+                IndustrialPanelCtrl.UpdateOpcUaResult("");
                 AppLogger.Instance.Error($"OPC-UA 写入失败: {ex.Message}");
             }
         }
 
-        /// <summary>扫码源切换：显示对应配置面板</summary>
-        private void ScanSourceComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            if (ScanSourceComboBox.SelectedIndex < 0) return;
-            SerialScanPanel.Visibility = ScanSourceComboBox.SelectedIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
-            TcpScanPanel.Visibility = ScanSourceComboBox.SelectedIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        /// <summary>串口扫码开关</summary>
-        private async void SerialToggleButton_Click(object sender, RoutedEventArgs e)
+        private async void IndustrialPanelCtrl_SerialToggleRequested(object? sender, EventArgs e)
         {
             if (_serialDriver.IsRunning)
             {
                 _serialDriver.Stop();
-                SerialToggleButton.Content = TranslationService.Instance.Start;
+                IndustrialPanelCtrl.SerialToggleButtonEl.Content = TranslationService.Instance.Start;
                 AppLogger.Instance.Info("串口扫码已停止");
                 return;
             }
 
-            string? portName = SerialPortComboBox.SelectedItem as string;
+            string? portName = IndustrialPanelCtrl.SerialPortComboBoxEl.SelectedItem as string;
             if (string.IsNullOrEmpty(portName)) return;
             _serialDriver.PortName = portName;
-            if (int.TryParse(SerialBaudComboBox.SelectedItem as string, out int baud))
+            if (int.TryParse(IndustrialPanelCtrl.SerialBaudComboBoxEl.SelectedItem as string, out int baud))
                 _serialDriver.BaudRate = baud;
 
             bool ok = await _serialDriver.StartAsync();
             if (ok)
             {
-                SerialToggleButton.Content = TranslationService.Instance.Stop;
+                IndustrialPanelCtrl.SerialToggleButtonEl.Content = TranslationService.Instance.Stop;
                 AppLogger.Instance.Info($"串口扫码已启动: {portName} @ {_serialDriver.BaudRate}");
             }
         }
 
-        /// <summary>TCP 扫码开关</summary>
-        private async void TcpToggleButton_Click(object sender, RoutedEventArgs e)
+        private async void IndustrialPanelCtrl_TcpToggleRequested(object? sender, EventArgs e)
         {
             if (_tcpDriver.IsRunning)
             {
                 _tcpDriver.Stop();
-                TcpToggleButton.Content = TranslationService.Instance.Start;
+                IndustrialPanelCtrl.TcpToggleButtonEl.Content = TranslationService.Instance.Start;
                 AppLogger.Instance.Info("TCP 扫码已停止");
                 return;
             }
 
-            if (!int.TryParse(TcpScanPortTextBox.Text, out int port) || port <= 0 || port > 65535)
+            if (!int.TryParse(IndustrialPanelCtrl.TcpScanPortTextBoxEl.Text, out int port) || port <= 0 || port > 65535)
                 return;
             _tcpDriver.Port = port;
 
             bool ok = await _tcpDriver.StartAsync();
             if (ok)
             {
-                TcpToggleButton.Content = TranslationService.Instance.Stop;
+                IndustrialPanelCtrl.TcpToggleButtonEl.Content = TranslationService.Instance.Stop;
                 AppLogger.Instance.Info($"TCP 扫码已启动: 端口 {port}");
             }
         }
 
-        /// <summary>导出报工记录 CSV</summary>
-        private void ExportCsvButton_Click(object sender, RoutedEventArgs e)
+        private void IndustrialPanelCtrl_ExportCsvRequested(object? sender, EventArgs e)
         {
             try
             {
@@ -896,20 +1096,88 @@ namespace MachineVisionApp
             }
         }
 
-        /// <summary>清空今日报工记录</summary>
-        private void ClearReportButton_Click(object sender, RoutedEventArgs e)
+        private void IndustrialPanelCtrl_ClearReportRequested(object? sender, EventArgs e)
         {
             _workReportService.ClearToday();
-            TodayCountTextBlock.Text = "0";
-            LastBarcodeTextBlock.Text = "--";
+            IndustrialPanelCtrl.UpdateReportStats(0, "--");
             AppLogger.Instance.Info("今日报工记录已清空");
         }
 
-        /// <summary>清空日志按钮：清空所有日志条目</summary>
-        private void ClearLogButton_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// 报工登记：条码 → 报工记录（SQLite 持久化 + 今日产量 + PLC 联动）。
+        /// 必须在 UI 线程调用。
+        /// </summary>
+        private void AddReport(string barcode, string source)
+        {
+            if (string.IsNullOrWhiteSpace(barcode)) return;
+
+            var record = _workReportService.AddRecord(
+                IndustrialPanelCtrl.WorkOrderTextBoxEl.Text.Trim(), barcode, source);
+            IndustrialPanelCtrl.UpdateReportStats(_workReportService.TodayCount, barcode);
+            IndustrialPanelCtrl.ReportListBoxEl.ScrollIntoView(record);
+            AppLogger.Instance.Info($"{TranslationService.Instance.WorkReport}: {barcode} ({source})");
+
+            // PLC 联动：将今日产量写入 Modbus 保持寄存器
+            if (IndustrialPanelCtrl.ModbusLinkCheckBoxEl.IsChecked == true)
+            {
+                try
+                {
+                    if (_modbusDriver.State != DeviceDriverState.Connected)
+                    {
+                        AppLogger.Instance.Warn(TranslationService.GetStringStatic("ModbusNotConnected"));
+                        return;
+                    }
+                    if (ushort.TryParse(IndustrialPanelCtrl.PlcRegisterTextBoxEl.Text, out ushort register))
+                    {
+                        _modbusDriver.WriteSingleRegister(register, (ushort)_workReportService.TodayCount);
+                        AppLogger.Instance.Info($"PLC联动: [{register}] = {_workReportService.TodayCount}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Instance.Error($"PLC联动失败: {ex.Message}");
+                }
+            }
+        }
+
+        // ==================== Modbus / OPC-UA 状态更新 ====================
+
+        /// <summary>更新 Modbus 状态指示</summary>
+        private void UpdateModbusState(DeviceDriverState state)
+        {
+            string statusText = state switch
+            {
+                DeviceDriverState.Connected => TranslationService.GetStringStatic("StatusConnected"),
+                DeviceDriverState.Connecting => TranslationService.GetStringStatic("StatusConnecting"),
+                DeviceDriverState.Failed => TranslationService.GetStringStatic("StatusFailed"),
+                _ => TranslationService.GetStringStatic("StatusDisconnected")
+            };
+            bool connected = state == DeviceDriverState.Connected;
+            IndustrialPanelCtrl.SetModbusState(connected, statusText);
+        }
+
+        /// <summary>更新 OPC-UA 状态指示</summary>
+        private void UpdateOpcUaState(DeviceDriverState state)
+        {
+            string statusText = state switch
+            {
+                DeviceDriverState.Connected => TranslationService.GetStringStatic("StatusConnected"),
+                DeviceDriverState.Connecting => TranslationService.GetStringStatic("StatusConnecting"),
+                DeviceDriverState.Failed => TranslationService.GetStringStatic("StatusFailed"),
+                _ => TranslationService.GetStringStatic("StatusDisconnected")
+            };
+            bool connected = state == DeviceDriverState.Connected;
+            IndustrialPanelCtrl.SetOpcUaState(connected, statusText);
+        }
+
+        // ==================== LogPanel 事件处理 ====================
+
+        private void LogPanelCtrl_ClearRequested(object? sender, EventArgs e)
         {
             AppLogger.Instance.Clear();
         }
+
+        // ==================== 连接状态 & 帧处理 ====================
 
         /// <summary>
         /// 连接状态变更处理：更新指示灯颜色、按钮启用状态、空状态遮罩。
@@ -918,39 +1186,31 @@ namespace MachineVisionApp
         {
             Dispatcher.Invoke(() =>
             {
-                Color color = state switch
-                {
-                    Components.ConnectionState.Connected => Color.FromRgb(0x3F, 0xB9, 0x50),
-                    Components.ConnectionState.Connecting => Color.FromRgb(0xD2, 0x99, 0x22),
-                    Components.ConnectionState.Failed => Color.FromRgb(0xF8, 0x51, 0x49),
-                    _ => Color.FromRgb(0x48, 0x4F, 0x58)
-                };
+                string statusText = TranslationService.Instance.GetConnectionStatusText(state);
+                bool connected = state == Components.ConnectionState.Connected;
 
-                var brush = new SolidColorBrush(color);
-                ConnectionIndicator.Fill = brush;
-                StatusIndicator.Fill = brush;
-                StatusText.Text = TranslationService.Instance.GetConnectionStatusText(state);
-                StatusTextFooter.Text = TranslationService.Instance.GetConnectionStatusText(state);
+                CameraPanelCtrl.SetConnected(connected, statusText);
 
-                if (state == Components.ConnectionState.Connected)
+                ConnectionIndicator.Fill = connected
+                    ? new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50))
+                    : new SolidColorBrush(Color.FromRgb(0x48, 0x4F, 0x58));
+                StatusIndicator.Fill = connected
+                    ? new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50))
+                    : new SolidColorBrush(Color.FromRgb(0x48, 0x4F, 0x58));
+                StatusText.Text = statusText;
+                StatusTextFooter.Text = statusText;
+
+                if (connected)
                 {
-                    ConnectButton.IsEnabled = false;
-                    DisconnectButton.IsEnabled = true;
-                    StartCameraButton.IsEnabled = false;
-                    StopCameraButton.IsEnabled = true;
-                    EmptyOverlayLeft.Visibility = Visibility.Collapsed;
-                    EmptyOverlayRight.Visibility = Visibility.Collapsed;
+                    CameraPanelCtrl.EmptyOverlayLeftEl.Visibility = Visibility.Collapsed;
+                    CameraPanelCtrl.EmptyOverlayRightEl.Visibility = Visibility.Collapsed;
                     StatusTextFooter.Foreground = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
                     AppLogger.Instance.Info("设备已连接");
                 }
                 else if (state == Components.ConnectionState.Disconnected)
                 {
-                    ConnectButton.IsEnabled = true;
-                    DisconnectButton.IsEnabled = false;
-                    StartCameraButton.IsEnabled = true;
-                    StopCameraButton.IsEnabled = false;
-                    EmptyOverlayLeft.Visibility = Visibility.Visible;
-                    EmptyOverlayRight.Visibility = Visibility.Visible;
+                    CameraPanelCtrl.EmptyOverlayLeftEl.Visibility = Visibility.Visible;
+                    CameraPanelCtrl.EmptyOverlayRightEl.Visibility = Visibility.Visible;
                     StatusTextFooter.Foreground = new SolidColorBrush(Color.FromRgb(0x48, 0x4F, 0x58));
                 }
                 else if (state == Components.ConnectionState.Failed)
@@ -967,10 +1227,6 @@ namespace MachineVisionApp
         /// <summary>
         /// 按当前模式处理单帧图像，返回处理结果图像。
         /// </summary>
-        /// <param name="originalFrame">原始彩色帧</param>
-        /// <param name="grayFrame">灰度帧</param>
-        /// <param name="count">输出：目标数量（轮廓数/颜色目标数）</param>
-        /// <param name="modeResult">输出：模式相关结果文本（识别内容/匹配分数）</param>
         private Mat ProcessByMode(Mat originalFrame, Mat grayFrame, out int count, out string modeResult)
         {
             count = 0;
@@ -1023,7 +1279,6 @@ namespace MachineVisionApp
             {
                 _frameStopwatch.Restart();
 
-                // 颜色检测模式下保存最近一帧原始图像，供点击取色使用
                 if (_currentMode == Components.ProcessingMode.ColorDetection)
                 {
                     _lastOriginalFrame?.Dispose();
@@ -1048,12 +1303,10 @@ namespace MachineVisionApp
                             aiDetCount = _activePerception.CurrentDetections.Count;
                             aiTrackCount = _activePerception.CurrentTracks.Count;
 
-                            // 统计
                             _detectionTotalCount += aiDetCount;
                             int defects = _activePerception.CurrentDetections.Count(d => d.Confidence > 0.8f);
                             _detectionDefectCount += defects;
 
-                            // 异步发布到云端（每 30 帧一次，避免过频）
                             if (_iotService != null && _detectionTotalCount % 30 == 0)
                             {
                                 var iot = _iotService;
@@ -1083,10 +1336,8 @@ namespace MachineVisionApp
                     {
                         Dispatcher.Invoke(() =>
                         {
-                            AiDetectionsText.Text = $"Detections: {aiDetCount}";
-                            AiTracksText.Text = $"Tracks: {aiTrackCount}";
-                            if (_activePerception != null)
-                                AiSampleText.Text = $"Interval: {_activePerception.AdaptiveInterval}";
+                            AIPanelCtrl.UpdateDetectionStats(aiDetCount, aiTrackCount,
+                                _activePerception?.AdaptiveInterval ?? 0);
                         });
                     }
                 }
@@ -1109,13 +1360,12 @@ namespace MachineVisionApp
 
                 Dispatcher.Invoke(() =>
                 {
-                    FaceCountTextBlock.Text = $"{faceCount}";
-                    ContourCountTextBlock.Text = $"{contourCount}";
+                    bool showThreshold = _currentMode is Components.ProcessingMode.Canny or Components.ProcessingMode.Contour;
+                    string thresholdInfo = showThreshold ? $"{_threshold1} ~ {_threshold2}" : "";
+                    ProcessingPanelCtrl.UpdateResults(faceCount, contourCount, thresholdInfo, modeResult);
+
                     FpsTextBlock.Text = $"{_currentFps:F1} FPS";
                     ProcessTimeTextBlock.Text = $"{processTimeMs} ms";
-                    bool showThreshold = _currentMode is Components.ProcessingMode.Canny or Components.ProcessingMode.Contour;
-                    ThresholdInfoText.Text = showThreshold ? $"{_threshold1} ~ {_threshold2}" : "";
-                    ModeResultTextBlock.Text = modeResult;
 
                     // QR/条码识别到新内容时记录日志（去重）+ 摄像头扫码报工
                     if (_currentMode == Components.ProcessingMode.QRCode &&
@@ -1123,14 +1373,14 @@ namespace MachineVisionApp
                     {
                         _lastDecodedText = modeResult;
                         AppLogger.Instance.Info($"{TranslationService.Instance.QRDecoded}: {modeResult}");
-                        if (CameraReportCheckBox.IsChecked == true)
+                        if (IndustrialPanelCtrl.CameraReportCheckBoxEl.IsChecked == true)
                             AddReport(modeResult, TranslationService.Instance.ScanCamera);
                     }
 
                     UpdateCameraData();
                 });
 
-                // 数字孪生更新（在 Dispatcher 外收集数据，在 Dispatcher 内更新 UI）
+                // 数字孪生更新
                 if (_aiEnabled && _digitalTwin != null)
                 {
                     Dispatcher.Invoke(UpdateDigitalTwin);
@@ -1151,12 +1401,11 @@ namespace MachineVisionApp
         {
             _threshold1 = threshold1;
             _threshold2 = threshold2;
-            ThresholdInfoText.Text = $"{threshold1} ~ {threshold2}";
             AppLogger.Instance.Info($"阈值更新: {threshold1} ~ {threshold2}");
         }
 
         /// <summary>加载图片按钮：打开本地图片并执行处理管线</summary>
-        private void LoadImageButton_Click(object sender, RoutedEventArgs e)
+        private void CameraPanelCtrl_LoadImageRequested(object? sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
@@ -1179,20 +1428,18 @@ namespace MachineVisionApp
                     using Mat edges = ProcessByMode(image, grayImage, out int contourCount, out string modeResult);
                     int faceCount = _faceDetectionComponent.DetectFaces(image);
                     _imageDisplayComponent.UpdateImages(image, edges, _threshold1, _threshold2);
-                    FaceCountTextBlock.Text = $"{faceCount}";
-                    ContourCountTextBlock.Text = $"{contourCount}";
+
                     bool showThreshold = _currentMode is Components.ProcessingMode.Canny or Components.ProcessingMode.Contour;
-                    ThresholdInfoText.Text = showThreshold ? $"{_threshold1} ~ {_threshold2}" : "";
-                    ModeResultTextBlock.Text = modeResult;
-                    EmptyOverlayLeft.Visibility = Visibility.Collapsed;
-                    EmptyOverlayRight.Visibility = Visibility.Collapsed;
+                    string thresholdInfo = showThreshold ? $"{_threshold1} ~ {_threshold2}" : "";
+                    ProcessingPanelCtrl.UpdateResults(faceCount, contourCount, thresholdInfo, modeResult);
+
+                    CameraPanelCtrl.EmptyOverlayLeftEl.Visibility = Visibility.Collapsed;
+                    CameraPanelCtrl.EmptyOverlayRightEl.Visibility = Visibility.Collapsed;
                     HideError();
 
-                    // 左卡片头部显示已加载图片的文件名
                     CameraDataTextBlock.Text = System.IO.Path.GetFileName(openFileDialog.FileName);
-                    SourceInfoText.Text = openFileDialog.FileName;
+                    CameraPanelCtrl.SourceInfoTextEl.Text = openFileDialog.FileName;
 
-                    // 更新最近帧引用，供颜色检测取色使用
                     _lastOriginalFrame?.Dispose();
                     _lastOriginalFrame = image.Clone();
                     image.Dispose();
@@ -1214,7 +1461,7 @@ namespace MachineVisionApp
             System.Windows.Size resolution = _videoCaptureComponent.GetResolution();
             CameraDataTextBlock.Text = TranslationService.Instance.FormatCameraData(
                 frameRate, resolution.Width, resolution.Height);
-            SourceInfoText.Text = _videoCaptureComponent.GetSourceInfo();
+            CameraPanelCtrl.SourceInfoTextEl.Text = _videoCaptureComponent.GetSourceInfo();
         }
 
         /// <summary>捕获停止事件处理：清空画面、重置状态</summary>
@@ -1225,21 +1472,20 @@ namespace MachineVisionApp
                 if (_recordingComponent.IsRecording)
                 {
                     _recordingComponent.StopRecording();
-                    RecordButton.Content = TranslationService.Instance.StartRecording;
-                    RecordButton.ClearValue(Button.BackgroundProperty);
+                    CameraPanelCtrl.RecordButtonEl.Content = TranslationService.Instance.StartRecording;
+                    CameraPanelCtrl.RecordButtonEl.ClearValue(Button.BackgroundProperty);
                 }
 
-                OriginalImage.Source = null;
-                EdgeImage.Source = null;
+                CameraPanelCtrl.OriginalImageEl.Source = null;
+                CameraPanelCtrl.EdgeImageEl.Source = null;
                 CameraDataTextBlock.Text = "";
-                FaceCountTextBlock.Text = "0";
-                ContourCountTextBlock.Text = "0";
+                ProcessingPanelCtrl.UpdateResults(0, 0, "", "");
                 FpsTextBlock.Text = "0 FPS";
                 ProcessTimeTextBlock.Text = "0 ms";
-                EmptyOverlayLeft.Visibility = Visibility.Visible;
-                EmptyOverlayRight.Visibility = Visibility.Visible;
-                StopCameraButton.IsEnabled = false;
-                StartCameraButton.IsEnabled = true;
+                CameraPanelCtrl.EmptyOverlayLeftEl.Visibility = Visibility.Visible;
+                CameraPanelCtrl.EmptyOverlayRightEl.Visibility = Visibility.Visible;
+                CameraPanelCtrl.StopCameraButtonEl.IsEnabled = false;
+                CameraPanelCtrl.StartCameraButtonEl.IsEnabled = true;
 
                 if (!string.IsNullOrEmpty(reason))
                 {
@@ -1260,6 +1506,8 @@ namespace MachineVisionApp
             });
         }
 
+        // ==================== 错误提示 ====================
+
         /// <summary>显示错误信息</summary>
         private void ShowError(string message)
         {
@@ -1274,251 +1522,7 @@ namespace MachineVisionApp
             ErrorMessageTextBlock.Text = "";
         }
 
-        // ==================== AI + Cloud ====================
-
-        /// <summary>AI / Cloud 面板开关</summary>
-        private void AiCloudToggleButton_Click(object sender, RoutedEventArgs e)
-        {
-            AiCloudPanel.Visibility = AiCloudPanel.Visibility == Visibility.Visible
-                ? Visibility.Collapsed : Visibility.Visible;
-        }
-
-        /// <summary>加载 YOLO 模型</summary>
-        private void LoadYoloModelButton_Click(object sender, RoutedEventArgs e)
-        {
-            var dlg = new OpenFileDialog
-            {
-                Filter = "ONNX Model (*.onnx)|*.onnx|All Files (*.*)|*.*"
-            };
-            if (dlg.ShowDialog() != true) return;
-
-            try
-            {
-                float conf = 0.5f;
-                float.TryParse(ConfThresholdTextBox.Text, out conf);
-
-                lock (_aiLock)
-                {
-                    _yoloComponent?.Dispose();
-                    _yoloComponent = new AI.YoloDetectionComponent(
-                        dlg.FileName, confidenceThreshold: conf);
-
-                    _kalmanTracker = new AI.KalmanTrackerComponent();
-                    _activePerception = new AI.ActivePerceptionEngine(_yoloComponent, _kalmanTracker);
-                    _digitalTwin?.Dispose();
-                    _digitalTwin = new AI.DigitalTwinRenderer();
-                }
-
-                YoloModelPathText.Text = Path.GetFileName(dlg.FileName);
-                AiStatusDot.Fill = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
-                AiStatusText.Text = "Model Loaded";
-                AiStatusText.Foreground = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
-                AppLogger.Instance.Info($"YOLO 模型已加载: {dlg.FileName}");
-            }
-            catch (Exception ex)
-            {
-                AiStatusDot.Fill = new SolidColorBrush(Color.FromRgb(0xF8, 0x51, 0x49));
-                AiStatusText.Text = "Load Failed";
-                ShowError($"YOLO 模型加载失败: {ex.Message}");
-                AppLogger.Instance.Error($"YOLO 模型加载失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>AI 启用/禁用</summary>
-        private void AiEnableCheckBox_Changed(object sender, RoutedEventArgs e)
-        {
-            if (!IsLoaded) return;
-            _aiEnabled = AiEnableCheckBox.IsChecked == true;
-
-            if (_aiEnabled && (_yoloComponent == null || !_yoloComponent.IsModelLoaded))
-            {
-                ShowError("请先加载 YOLO 模型");
-                AiEnableCheckBox.IsChecked = false;
-                _aiEnabled = false;
-                return;
-            }
-
-            if (_aiEnabled)
-            {
-                lock (_aiLock) { _activePerception?.Reset(); }
-                AiStatusDot.Fill = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
-                _detectionTotalCount = 0;
-                _detectionDefectCount = 0;
-                AppLogger.Instance.Info("AI 主动感知已启用");
-            }
-            else
-            {
-                AiStatusDot.Fill = new SolidColorBrush(Color.FromRgb(0x48, 0x4F, 0x58));
-                AppLogger.Instance.Info("AI 主动感知已禁用");
-            }
-        }
-
-        /// <summary>初始化 Cloud 服务</summary>
-        private async void CloudInitButton_Click(object sender, RoutedEventArgs e)
-        {
-            string region = AwsRegionTextBox.Text.Trim();
-            string bucket = S3BucketTextBox.Text.Trim();
-            string iotEndpoint = IoTEndpointTextBox.Text.Trim();
-            string lambdaFunc = LambdaFuncTextBox.Text.Trim();
-
-            if (string.IsNullOrEmpty(region))
-            {
-                ShowError("请输入 AWS Region");
-                return;
-            }
-
-            try
-            {
-                if (!string.IsNullOrEmpty(bucket))
-                {
-                    _s3Service?.Dispose();
-                    _s3Service = new S3Service(region, bucket);
-                    _s3Service.OnUploadSuccess += key =>
-                        Dispatcher.Invoke(() => AppLogger.Instance.Info($"S3 上传成功: {key}"));
-                    _s3Service.OnUploadError += (key, ex) =>
-                        Dispatcher.Invoke(() => AppLogger.Instance.Error($"S3 上传失败: {key} - {ex.Message}"));
-                    CloudUploadScreenshotButton.IsEnabled = true;
-                    AppLogger.Instance.Info($"S3 服务已初始化: {bucket} ({region})");
-                }
-
-                if (!string.IsNullOrEmpty(iotEndpoint))
-                {
-                    string certPath = Path.Combine(AppContext.BaseDirectory, "certs", "device-certificate.pem.crt");
-                    string keyPath = Path.Combine(AppContext.BaseDirectory, "certs", "private.pem.key");
-
-                    _iotService?.Dispose();
-                    if (File.Exists(certPath) && File.Exists(keyPath))
-                    {
-                        _iotService = new IoTService(iotEndpoint, certPath, keyPath);
-                    }
-                    else
-                    {
-                        var handler = new System.Net.Http.HttpClientHandler();
-                        _iotService = new IoTService(
-                            new System.Net.Http.HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) },
-                            iotEndpoint);
-                        AppLogger.Instance.Warn("IoT: 未找到设备证书，使用无认证模式（仅限测试）");
-                    }
-                    _iotService.OnPublishSuccess += topic =>
-                        Dispatcher.Invoke(() => AppLogger.Instance.Info($"IoT 发布成功: {topic}"));
-                    _iotService.OnPublishError += (topic, ex) =>
-                        Dispatcher.Invoke(() => AppLogger.Instance.Error($"IoT 发布失败: {topic} - {ex.Message}"));
-                    CloudAlertButton.IsEnabled = true;
-                    CloudPublishStatsButton.IsEnabled = true;
-                    AppLogger.Instance.Info($"IoT 服务已初始化: {iotEndpoint}");
-                }
-
-                if (!string.IsNullOrEmpty(lambdaFunc))
-                {
-                    _lambdaClient?.Dispose();
-                    _lambdaClient = new LambdaClient(region);
-                    _lambdaClient.OnInvocationSuccess += fn =>
-                        Dispatcher.Invoke(() => AppLogger.Instance.Info($"Lambda 调用成功: {fn}"));
-                    _lambdaClient.OnInvocationError += (fn, ex) =>
-                        Dispatcher.Invoke(() => AppLogger.Instance.Error($"Lambda 调用失败: {fn} - {ex.Message}"));
-                    AppLogger.Instance.Info($"Lambda 客户端已初始化: {lambdaFunc}");
-                }
-
-                CloudStatusDot.Fill = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
-                CloudStatusText.Text = "Connected";
-                CloudStatusText.Foreground = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
-                HideError();
-            }
-            catch (Exception ex)
-            {
-                CloudStatusDot.Fill = new SolidColorBrush(Color.FromRgb(0xF8, 0x51, 0x49));
-                CloudStatusText.Text = "Init Failed";
-                ShowError($"Cloud 初始化失败: {ex.Message}");
-                AppLogger.Instance.Error($"Cloud 初始化失败: {ex.Message}");
-            }
-
-            await Task.CompletedTask;
-        }
-
-        /// <summary>上传截图到 S3</summary>
-        private async void CloudUploadScreenshotButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (_s3Service == null)
-            {
-                ShowError("请先初始化 S3 服务");
-                return;
-            }
-
-            try
-            {
-                var source = OriginalImage.Source as System.Windows.Media.Imaging.BitmapSource;
-                if (source == null)
-                {
-                    ShowError("没有可上传的截图");
-                    return;
-                }
-
-                int w = source.PixelWidth;
-                int h = source.PixelHeight;
-                int stride = w * 4;
-                byte[] pixels = new byte[stride * h];
-                source.CopyPixels(pixels, stride, 0);
-
-                using var mat = new Mat(h, w, MatType.CV_8UC4);
-                System.Runtime.InteropServices.Marshal.Copy(pixels, 0, mat.Data, pixels.Length);
-                using var bgr = new Mat();
-                Cv2.CvtColor(mat, bgr, ColorConversionCodes.BGRA2BGR);
-
-                string key = await _s3Service.UploadDetectionScreenshotAsync(bgr, _currentMode.ToString());
-                AppLogger.Instance.Info($"截图已上传 S3: {key}");
-            }
-            catch (Exception ex)
-            {
-                ShowError($"S3 上传失败: {ex.Message}");
-                AppLogger.Instance.Error($"S3 上传失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>发送告警到 IoT</summary>
-        private async void CloudAlertButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (_iotService == null)
-            {
-                ShowError("请先初始化 IoT 服务");
-                return;
-            }
-
-            try
-            {
-                await _iotService.PublishAlertAsync(
-                    "manual_alert", 3,
-                    $"手动告警 - 站点: {Environment.MachineName}, 模式: {_currentMode}");
-                AppLogger.Instance.Info("告警已发送到 IoT Core");
-            }
-            catch (Exception ex)
-            {
-                ShowError($"IoT 告警发送失败: {ex.Message}");
-                AppLogger.Instance.Error($"IoT 告警发送失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>发布生产统计到 IoT</summary>
-        private async void CloudPublishStatsButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (_iotService == null)
-            {
-                ShowError("请先初始化 IoT 服务");
-                return;
-            }
-
-            try
-            {
-                int total = _workReportService.TodayCount;
-                double passRate = total > 0 ? (double)(total - _detectionDefectCount) / total : 1.0;
-                await _iotService.PublishProductionStatsAsync(total, _detectionDefectCount, passRate);
-                AppLogger.Instance.Info($"生产统计已发布: 总数={total}, 缺陷={_detectionDefectCount}, 合格率={passRate:P1}");
-            }
-            catch (Exception ex)
-            {
-                ShowError($"IoT 统计发布失败: {ex.Message}");
-                AppLogger.Instance.Error($"IoT 统计发布失败: {ex.Message}");
-            }
-        }
+        // ==================== 数字孪生 ====================
 
         /// <summary>数字孪生视图更新（每帧 ProcessFrame 后更新）</summary>
         private void UpdateDigitalTwin()
@@ -1530,9 +1534,9 @@ namespace MachineVisionApp
                 using Mat twin = _digitalTwin.Render(
                     _activePerception.CurrentTracks,
                     _activePerception.CurrentDetections);
-                DigitalTwinImage.Dispatcher.Invoke(() =>
+                AIPanelCtrl.DigitalTwinImageEl.Dispatcher.Invoke(() =>
                 {
-                    DigitalTwinImage.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(twin);
+                    AIPanelCtrl.DigitalTwinImageEl.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(twin);
                 });
 
                 int det = _activePerception.CurrentDetections.Count;
@@ -1541,15 +1545,7 @@ namespace MachineVisionApp
                     ? (double)(_detectionTotalCount - _detectionDefectCount) / _detectionTotalCount * 100
                     : 100;
 
-                TwinDetectionsText.Text = $"Detections: {det}";
-                TwinDefectsText.Text = $"Defects: {defects}";
-                TwinPassRateText.Text = $"Pass: {passRate:F1}%";
-
-                if (_aiEnabled)
-                {
-                    TwinStatusDot.Fill = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
-                    TwinStatusText.Text = "Active";
-                }
+                AIPanelCtrl.UpdateTwinStats(det, defects, passRate);
             }
             catch { }
         }

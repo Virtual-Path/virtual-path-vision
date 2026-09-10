@@ -1,0 +1,415 @@
+<UserControl x:Class="MachineVisionApp.Views.ProcessingPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource BgDarkBrush}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+        <Border Style="{StaticResource GlassPanel}"
+                Margin="0"
+                Padding="28">
+
+            <StackPanel>
+
+                <!-- ═══ Mode Selection ═══ -->
+                <StackPanel >
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Image Processing"
+                                   FontSize="22"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center" />
+
+                        <Border Grid.Column="1"
+                                Background="#0DFFFFFF"
+                                CornerRadius="{StaticResource CornerSm}"
+                                Padding="14,6"
+                                BorderBrush="{StaticResource GlassBorderBrush}"
+                                BorderThickness="1">
+                            <TextBlock x:Name="ModeLabelText"
+                                       Text="Canny"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource AccentBrush}" />
+                        </Border>
+                    </Grid>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="70" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Mode:"
+                                   FontSize="14"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   VerticalAlignment="Center" />
+
+                        <ComboBox x:Name="ProcessingModeComboBox"
+                                  Grid.Column="1"
+                                  Style="{StaticResource GlassComboBox}"
+                                  SelectedIndex="0"
+                                  SelectionChanged="ProcessingModeComboBox_SelectionChanged">
+                            <ComboBoxItem Content="Canny"
+                                          Style="{StaticResource GlassComboBoxItem}"
+                                          IsSelected="True" />
+                            <ComboBoxItem Content="Sobel"
+                                          Style="{StaticResource GlassComboBoxItem}" />
+                            <ComboBoxItem Content="Laplacian"
+                                          Style="{StaticResource GlassComboBoxItem}" />
+                            <ComboBoxItem Content="Binary"
+                                          Style="{StaticResource GlassComboBoxItem}" />
+                            <ComboBoxItem Content="Contour"
+                                          Style="{StaticResource GlassComboBoxItem}" />
+                            <ComboBoxItem Content="QR Code"
+                                          Style="{StaticResource GlassComboBoxItem}" />
+                            <ComboBoxItem Content="Color Detection"
+                                          Style="{StaticResource GlassComboBoxItem}" />
+                            <ComboBoxItem Content="Template Match"
+                                          Style="{StaticResource GlassComboBoxItem}" />
+                            <ComboBoxItem Content="Shape Detection"
+                                          Style="{StaticResource GlassComboBoxItem}" />
+                            <ComboBoxItem Content="Feature Match"
+                                          Style="{StaticResource GlassComboBoxItem}" />
+                            <ComboBoxItem Content="Image Enhancement"
+                                          Style="{StaticResource GlassComboBoxItem}" />
+                        </ComboBox>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Thin divider -->
+                <Border Height="1"
+                        Background="{StaticResource GlassBorderBrush}"
+                        Margin="0,2" />
+
+                <!-- ═══ Threshold Panel ═══ -->
+                <Border x:Name="ThresholdPanel"
+                        Background="#0DFFFFFF"
+                        CornerRadius="{StaticResource CornerMd}"
+                        Padding="18"
+                        BorderBrush="{StaticResource GlassBorderBrush}"
+                        BorderThickness="1"
+                        Visibility="Visible">
+                    <StackPanel >
+
+                        <TextBlock Text="Thresholds"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+
+                        <!-- Threshold 1 -->
+                        <StackPanel >
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0"
+                                           Text="Threshold 1"
+                                           FontSize="13"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center" />
+
+                                <TextBox x:Name="Threshold1TextBox"
+                                         Grid.Column="1"
+                                         Text="100"
+                                         Style="{StaticResource GlassTextBox}"
+                                         Width="60"
+                                         VerticalContentAlignment="Center"
+                                         HorizontalContentAlignment="Center" />
+                            </Grid>
+
+                            <Slider x:Name="Threshold1Slider"
+                                    Minimum="0"
+                                    Maximum="255"
+                                    Value="100"
+                                    IsSnapToTickEnabled="True"
+                                    TickFrequency="1"
+                                    ValueChanged="Threshold1Slider_ValueChanged" />
+                        </StackPanel>
+
+                        <!-- Threshold 2 -->
+                        <StackPanel >
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0"
+                                           Text="Threshold 2"
+                                           FontSize="13"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center" />
+
+                                <TextBox x:Name="Threshold2TextBox"
+                                         Grid.Column="1"
+                                         Text="200"
+                                         Style="{StaticResource GlassTextBox}"
+                                         Width="60"
+                                         VerticalContentAlignment="Center"
+                                         HorizontalContentAlignment="Center" />
+                            </Grid>
+
+                            <Slider x:Name="Threshold2Slider"
+                                    Minimum="0"
+                                    Maximum="255"
+                                    Value="200"
+                                    IsSnapToTickEnabled="True"
+                                    TickFrequency="1"
+                                    ValueChanged="Threshold2Slider_ValueChanged" />
+                        </StackPanel>
+
+                        <!-- Apply Button -->
+                        <Button x:Name="ApplyThresholdsButton"
+                                Content="Apply"
+                                Style="{StaticResource GlassButton}"
+                                Click="ApplyThresholdsButton_Click"
+                                HorizontalAlignment="Stretch" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ Color Panel ═══ -->
+                <Border x:Name="ColorPanel"
+                        Background="#0DFFFFFF"
+                        CornerRadius="{StaticResource CornerMd}"
+                        Padding="18"
+                        BorderBrush="{StaticResource GlassBorderBrush}"
+                        BorderThickness="1"
+                        Visibility="Collapsed">
+                    <StackPanel >
+
+                        <TextBlock Text="Color Detection"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="70" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0"
+                                       Text="Color:"
+                                       FontSize="14"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" />
+
+                            <ComboBox x:Name="ColorComboBox"
+                                      Grid.Column="1"
+                                      Style="{StaticResource GlassComboBox}"
+                                      SelectedIndex="0"
+                                      SelectionChanged="ColorComboBox_SelectionChanged">
+                                <ComboBoxItem Content="Red"
+                                              Style="{StaticResource GlassComboBoxItem}"
+                                              IsSelected="True" />
+                                <ComboBoxItem Content="Green"
+                                              Style="{StaticResource GlassComboBoxItem}" />
+                                <ComboBoxItem Content="Blue"
+                                              Style="{StaticResource GlassComboBoxItem}" />
+                                <ComboBoxItem Content="Yellow"
+                                              Style="{StaticResource GlassComboBoxItem}" />
+                                <ComboBoxItem Content="Cyan"
+                                              Style="{StaticResource GlassComboBoxItem}" />
+                                <ComboBoxItem Content="Magenta"
+                                              Style="{StaticResource GlassComboBoxItem}" />
+                                <ComboBoxItem Content="Orange"
+                                              Style="{StaticResource GlassComboBoxItem}" />
+                                <ComboBoxItem Content="Custom"
+                                              Style="{StaticResource GlassComboBoxItem}" />
+                            </ComboBox>
+                        </Grid>
+
+                        <TextBlock x:Name="PickColorHintText"
+                                   Text="Click image to pick color"
+                                   FontSize="13"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Visibility="Collapsed" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ Template Panel ═══ -->
+                <Border x:Name="TemplatePanel"
+                        Background="#0DFFFFFF"
+                        CornerRadius="{StaticResource CornerMd}"
+                        Padding="18"
+                        BorderBrush="{StaticResource GlassBorderBrush}"
+                        BorderThickness="1"
+                        Visibility="Collapsed">
+                    <StackPanel >
+
+                        <TextBlock Text="Template / Feature"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+
+                        <Button x:Name="LoadTemplateButton"
+                                Content="Load Template"
+                                Style="{StaticResource GlassButton}"
+                                Click="LoadTemplateButton_Click"
+                                HorizontalAlignment="Stretch" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0"
+                                       Text="Status:"
+                                       FontSize="13"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0" />
+
+                            <TextBlock x:Name="TemplateStatusText"
+                                       Grid.Column="1"
+                                       Text="No Template"
+                                       FontSize="13"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+
+                        <TextBlock x:Name="FeatureMatchText"
+                                   Text=""
+                                   FontSize="13"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ Result Panel ═══ -->
+                <Border Background="#0DFFFFFF"
+                        CornerRadius="{StaticResource CornerMd}"
+                        Padding="18"
+                        BorderBrush="{StaticResource GlassBorderBrush}"
+                        BorderThickness="1">
+                    <StackPanel >
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0"
+                                       Text="Result"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}" />
+
+                            <Border Grid.Column="1"
+                                    Background="#0DFFFFFF"
+                                    CornerRadius="{StaticResource CornerSm}"
+                                    Padding="14,6"
+                                    BorderBrush="{StaticResource GlassBorderBrush}"
+                                    BorderThickness="1">
+                                <TextBlock x:Name="ResultTitleText"
+                                           Text="Result"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource AccentBrush}" />
+                            </Border>
+                        </Grid>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <!-- Face Count -->
+                            <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,8,0">
+                                <TextBlock Text="Faces"
+                                           FontSize="12"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                                <Border Background="#0DFFFFFF"
+                                        CornerRadius="{StaticResource CornerSm}"
+                                        Padding="14,8"
+                                        BorderBrush="{StaticResource GlassBorderBrush}"
+                                        BorderThickness="1">
+                                    <TextBlock x:Name="FaceCountTextBlock"
+                                               Text="0"
+                                               FontSize="20"
+                                               FontWeight="Bold"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               HorizontalAlignment="Center" />
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Contour Count -->
+                            <StackPanel Grid.Column="1" Grid.Row="0" Margin="8,0,0,0">
+                                <TextBlock Text="Objects"
+                                           FontSize="12"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                                <Border Background="#0DFFFFFF"
+                                        CornerRadius="{StaticResource CornerSm}"
+                                        Padding="14,8"
+                                        BorderBrush="{StaticResource GlassBorderBrush}"
+                                        BorderThickness="1">
+                                    <TextBlock x:Name="ContourCountTextBlock"
+                                               Text="0"
+                                               FontSize="20"
+                                               FontWeight="Bold"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               HorizontalAlignment="Center" />
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Threshold Info -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0"
+                                       Text="Threshold:"
+                                       FontSize="13"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0" />
+
+                            <TextBlock x:Name="ThresholdInfoText"
+                                       Grid.Column="1"
+                                       Text="100 ~ 200"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+
+                        <!-- Mode Result -->
+                        <Border Background="#0DFFFFFF"
+                                CornerRadius="{StaticResource CornerSm}"
+                                Padding="14,10"
+                                BorderBrush="{StaticResource GlassBorderBrush}"
+                                BorderThickness="1">
+                            <TextBlock x:Name="ModeResultTextBlock"
+                                       Text=""
+                                       FontSize="13"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap" />
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</UserControl>

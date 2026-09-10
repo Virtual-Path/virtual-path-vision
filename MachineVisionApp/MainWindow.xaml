@@ -3,542 +3,163 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:MachineVisionApp"
         xmlns:views="clr-namespace:MachineVisionApp.Views"
-        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        Title="{Binding Source={x:Static local:TranslationService.Instance}, Path=AppTitle}"
-        Height="820" Width="1200" MinWidth="1024" MinHeight="700"
-        WindowStartupLocation="CenterScreen"
-        ResizeMode="CanResize" WindowStyle="None"
-        Background="{StaticResource BgBrush}">
-    <shell:WindowChrome.WindowChrome>
-        <shell:WindowChrome CaptionHeight="48" ResizeBorderThickness="6" CornerRadius="0" GlassFrameThickness="0"/>
-    </shell:WindowChrome.WindowChrome>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="48"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+        Title="MachineVisionApp" WindowState="Maximized"
+        Background="#0A0F19" WindowStyle="None" AllowsTransparency="False"
+        ResizeMode="CanResizeWithGrip">
 
-        <!-- ====== Title Bar ====== -->
-        <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
-            <views:CustomTitleBar/>
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" GlassFrameThickness="0" ResizeBorderThickness="8"
+                      CornerRadius="0" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="84"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ===== Sidebar Navigation ===== -->
+        <Border Grid.Column="0" Background="#C0101624" BorderBrush="#14FFFFFF" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <!-- Logo -->
+                <Border DockPanel.Dock="Top" Height="70" Margin="0,16,0,30">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="MV" FontSize="22" FontWeight="Black" Foreground="#FAE20A"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="V I S I O N" FontSize="8" Foreground="#7A8B9E"
+                                   HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Nav Icons -->
+                <StackPanel DockPanel.Dock="Top" Margin="0,0,0,0">
+                    <RadioButton x:Name="NavVision" Content="&#xE8B4;" FontFamily="Segoe MDL2 Assets"
+                                 FontSize="20" IsChecked="True" GroupName="Nav"
+                                 Click="NavButton_Click" Tag="Vision"
+                                 Width="52" Height="52" Margin="0,0,0,8"
+                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                 Cursor="Hand"/>
+                    <RadioButton x:Name="NavProcessing" Content="&#xE74F;" FontFamily="Segoe MDL2 Assets"
+                                 FontSize="20" GroupName="Nav"
+                                 Click="NavButton_Click" Tag="Processing"
+                                 Width="52" Height="52" Margin="0,0,0,8"
+                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                 Cursor="Hand"/>
+                    <RadioButton x:Name="NavAI" Content="&#xE99A;" FontFamily="Segoe MDL2 Assets"
+                                 FontSize="20" GroupName="Nav"
+                                 Click="NavButton_Click" Tag="AI"
+                                 Width="52" Height="52" Margin="0,0,0,8"
+                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                 Cursor="Hand"/>
+                    <RadioButton x:Name="NavCloud" Content="&#xE753;" FontFamily="Segoe MDL2 Assets"
+                                 FontSize="20" GroupName="Nav"
+                                 Click="NavButton_Click" Tag="Cloud"
+                                 Width="52" Height="52" Margin="0,0,0,8"
+                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                 Cursor="Hand"/>
+                    <RadioButton x:Name="NavIndustrial" Content="&#xE774;" FontFamily="Segoe MDL2 Assets"
+                                 FontSize="20" GroupName="Nav"
+                                 Click="NavButton_Click" Tag="Industrial"
+                                 Width="52" Height="52" Margin="0,0,0,8"
+                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                 Cursor="Hand"/>
+                    <RadioButton x:Name="NavLog" Content="&#xE7BA;" FontFamily="Segoe MDL2 Assets"
+                                 FontSize="20" GroupName="Nav"
+                                 Click="NavButton_Click" Tag="Log"
+                                 Width="52" Height="52" Margin="0,0,0,8"
+                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                 Cursor="Hand"/>
+                </StackPanel>
+
+                <!-- Bottom icons -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,20"
+                            HorizontalAlignment="Center">
+                    <Button x:Name="SettingsButton" Content="&#xE713;" FontFamily="Segoe MDL2 Assets"
+                            FontSize="18" Width="40" Height="40" Background="Transparent"
+                            Foreground="#7A8B9E" BorderThickness="0" Cursor="Hand"/>
+                </StackPanel>
+            </DockPanel>
         </Border>
 
-        <!-- ====== Main Content ====== -->
-        <Grid Grid.Row="1" Margin="20,16,20,12">
+        <!-- ===== Main Content Area ===== -->
+        <Grid Grid.Column="1">
             <Grid.RowDefinitions>
+                <RowDefinition Height="44"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="20"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
 
-            <!-- Left: Original Stream -->
-            <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource ImageCardStyle}" Padding="0">
+            <!-- Title Bar -->
+            <Grid Grid.Row="0" Background="#80101624">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
+                    <Ellipse x:Name="ConnectionIndicator" Width="8" Height="8" Fill="#484F58" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="StatusText" Text="Disconnected" Foreground="#7A8B9E" FontSize="12" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="&#xE949;" FontFamily="Segoe MDL2 Assets" FontSize="10" Width="46" Height="32"
+                            Background="Transparent" Foreground="#7A8B9E" BorderThickness="0" Click="MinimizeButton_Click" Cursor="Hand"/>
+                    <Button x:Name="MaximizeBtn" Content="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="10" Width="46" Height="32"
+                            Background="Transparent" Foreground="#7A8B9E" BorderThickness="0" Click="MaximizeButton_Click" Cursor="Hand"/>
+                    <Button Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10" Width="46" Height="32"
+                            Background="Transparent" Foreground="#7A8B9E" BorderThickness="0" Click="CloseButton_Click" Cursor="Hand"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Content Panels (switched by sidebar) -->
+            <Grid Grid.Row="1" Margin="0">
+                <views:CameraPanel x:Name="CameraPanelCtrl" Visibility="Visible"/>
+                <views:ProcessingPanel x:Name="ProcessingPanelCtrl" Visibility="Collapsed"/>
+                <views:AIPanel x:Name="AIPanelCtrl" Visibility="Collapsed"/>
+                <views:CloudPanel x:Name="CloudPanelCtrl" Visibility="Collapsed"/>
+                <views:IndustrialPanel x:Name="IndustrialPanelCtrl" Visibility="Collapsed"/>
+                <views:LogPanel x:Name="LogPanelCtrl" Visibility="Collapsed"/>
+            </Grid>
+
+            <!-- Status Bar -->
+            <Border Grid.Row="2" Background="#80101624" BorderBrush="#14FFFFFF" BorderThickness="0,1,0,0"
+                    Padding="20,8">
                 <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="44"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="36"/>
-                    </Grid.RowDefinitions>
-                    <Border Grid.Row="0" Style="{StaticResource ImageCardHeaderStyle}">
-                        <Grid Margin="14,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Ellipse Grid.Column="0" Width="8" Height="8" Fill="{StaticResource SuccessBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=OriginalStream}"
-                                       FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="2" x:Name="CameraDataTextBlock" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
-                        </Grid>
-                    </Border>
-                    <Border Grid.Row="1" Background="{StaticResource BgBrush}" Margin="0" BorderThickness="0">
-                        <Grid x:Name="OriginalViewGrid" MouseLeftButtonDown="OriginalViewGrid_MouseLeftButtonDown">
-                            <Image x:Name="OriginalImage" Stretch="Uniform" Margin="6"/>
-                            <Border x:Name="EmptyOverlayLeft" Background="{StaticResource BgBrush}" Visibility="Visible">
-                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                    <TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets" FontSize="40"
-                                               Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="No Signal" Foreground="{StaticResource TextMutedBrush}" FontSize="14" HorizontalAlignment="Center" Margin="0,10,0,0"/>
-                                    <TextBlock x:Name="SourceInfoText" Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=CameraWaiting}"
-                                               Foreground="{StaticResource TextMutedBrush}" FontSize="11" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-                    </Border>
-                    <Border Grid.Row="2" Style="{StaticResource ImageCardFooterStyle}" Padding="14,0">
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse x:Name="ConnectionIndicator" Width="6" Height="6" Fill="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=StatusDisconnected}" x:Name="StatusTextFooter"
-                                       Style="{StaticResource LabelStyle}" FontSize="11"/>
-                        </StackPanel>
-                    </Border>
-                </Grid>
-            </Border>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-            <!-- Right: Result View -->
-            <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource ImageCardStyle}" Padding="0">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="44"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="36"/>
-                    </Grid.RowDefinitions>
-                    <Border Grid.Row="0" Style="{StaticResource ImageCardHeaderStyle}">
-                        <Grid Margin="14,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Ellipse Grid.Column="0" Width="8" Height="8" Fill="{StaticResource PrimaryBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <TextBlock Grid.Column="1" x:Name="ResultTitleText" Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=ResultView}"
-                                       FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=Faces}" Style="{StaticResource LabelStyle}" FontSize="11" Margin="0,0,4,0"/>
-                                <TextBlock x:Name="FaceCountTextBlock" Text="0" FontSize="12" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" VerticalAlignment="Center"/>
-                                <TextBlock Text=" · " Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="4,0"/>
-                                <TextBlock Text="Cnt:" Style="{StaticResource LabelStyle}" FontSize="11"/>
-                                <TextBlock x:Name="ContourCountTextBlock" Text="0" FontSize="12" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                    <Border Grid.Row="1" Background="{StaticResource BgBrush}" Margin="0" BorderThickness="0">
-                        <Grid>
-                            <Image x:Name="EdgeImage" Stretch="Uniform" Margin="6"/>
-                            <Border x:Name="EmptyOverlayRight" Background="{StaticResource BgBrush}" Visibility="Visible">
-                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                    <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="40"
-                                               Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="No Data" Foreground="{StaticResource TextMutedBrush}" FontSize="14" HorizontalAlignment="Center" Margin="0,10,0,0"/>
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-                    </Border>
-                    <Border Grid.Row="2" Style="{StaticResource ImageCardFooterStyle}" Padding="14,0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock x:Name="ModeLabelText" Text="Canny" Style="{StaticResource ValueStyle}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource PrimaryBrush}"/>
-                            <TextBlock x:Name="ThresholdInfoText" Text="100 ~ 200" Style="{StaticResource ValueStyle}" FontSize="11" FontWeight="Normal" Margin="8,0,0,0"/>
-                            <TextBlock x:Name="ModeResultTextBlock" Text="" Style="{StaticResource ValueStyle}" FontSize="11" FontWeight="Normal" Foreground="{StaticResource SuccessBrush}" Margin="12,0,0,0" TextTrimming="CharacterEllipsis" MaxWidth="200"/>
-                        </StackPanel>
-                    </Border>
-                </Grid>
-            </Border>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <Ellipse x:Name="StatusIndicator" Width="6" Height="6" Fill="#484F58" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock x:Name="StatusTextFooter" Text="Ready" Foreground="#7A8B9E" FontSize="11" VerticalAlignment="Center"/>
+                    </StackPanel>
 
-            <!-- ====== Bottom Control Panel ====== -->
-            <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Style="{StaticResource ImageCardStyle}" Padding="0" Margin="0,12,0,0">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="48"/>
-                        <RowDefinition Height="1"/>
-                        <RowDefinition Height="48"/>
-                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Column="1" x:Name="FpsTextBlock" Text="0 FPS" Foreground="#D1D9E6" FontSize="11"
+                               VerticalAlignment="Center" Margin="20,0,0,0" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="2" x:Name="ProcessTimeTextBlock" Text="0 ms" Foreground="#7A8B9E" FontSize="11"
+                               VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    <TextBlock Grid.Column="3" x:Name="CameraDataTextBlock" Text="" Foreground="#7A8B9E" FontSize="11"
+                               VerticalAlignment="Center" Margin="12,0,0,0"/>
 
-                    <!-- Connection -->
-                    <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" CornerRadius="10,10,0,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0">
-                        <Grid Margin="16,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=SourceType}" Style="{StaticResource LabelStyle}" Margin="0,0,8,0"/>
-                                <ComboBox x:Name="SourceTypeComboBox" Width="130" SelectedIndex="0" Style="{StaticResource ComboBoxStyle}" SelectionChanged="SourceTypeComboBox_SelectionChanged"/>
-                            </StackPanel>
-                            <Rectangle Grid.Column="1" Style="{StaticResource DividerVStyle}" Margin="16,0"/>
-                            <StackPanel Grid.Column="2" x:Name="NetworkConfigPanel" Orientation="Horizontal" VerticalAlignment="Center" IsEnabled="False">
-                                <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=IPAddress}" Style="{StaticResource LabelStyle}" Margin="0,0,6,0"/>
-                                <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
-                                    <TextBox x:Name="IPTextBox" Text="192.168.1.100" Width="135" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="8,5"/>
-                                </Border>
-                                <TextBlock Text=":" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="14" FontWeight="Bold"/>
-                                <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
-                                    <TextBox x:Name="PortTextBox" Text="8080" Width="65" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="8,5"/>
-                                </Border>
-                            </StackPanel>
-                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-                                <Button x:Name="ConnectButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Connect}" Style="{StaticResource PrimaryButtonStyle}" Padding="16,6" FontSize="12" Click="ConnectButton_Click"/>
-                                <Button x:Name="DisconnectButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Disconnect}" Style="{StaticResource DangerButtonStyle}" Padding="16,6" FontSize="12" Margin="6,0,0,0" IsEnabled="False" Click="DisconnectButton_Click"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                                <Ellipse x:Name="StatusIndicator" Width="8" Height="8" Fill="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBlock x:Name="StatusText" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <Border Grid.Column="7" x:Name="ErrorBorder" Visibility="Collapsed" Background="{StaticResource DangerDimBrush}" BorderBrush="{StaticResource DangerBrush}" BorderThickness="1" CornerRadius="6" Padding="10,4" VerticalAlignment="Center" MaxWidth="260">
-                                <TextBlock x:Name="ErrorMessageTextBlock" Text="" FontSize="11" Foreground="{StaticResource DangerBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                            </Border>
-                        </Grid>
-                    </Border>
-
-                    <Rectangle Grid.Row="1" Fill="{StaticResource BorderBrush}"/>
-
-                    <!-- Processing Controls -->
-                    <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}" CornerRadius="0,0,10,10">
-                        <Grid Margin="16,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Mode + Actions -->
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=ProcessingMode}" Style="{StaticResource LabelStyle}" Margin="0,0,8,0"/>
-                                <ComboBox x:Name="ProcessingModeComboBox" Width="150" SelectedIndex="0" Style="{StaticResource ComboBoxStyle}" SelectionChanged="ProcessingModeComboBox_SelectionChanged"/>
-                            </StackPanel>
-
-                            <Rectangle Grid.Column="1" Style="{StaticResource DividerVStyle}" Margin="12,0"/>
-
-                            <!-- Canny Threshold (shown in Canny/Contour modes) -->
-                            <StackPanel x:Name="ThresholdPanel" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=CannyThreshold}" Style="{StaticResource LabelStyle}" Margin="0,0,8,0"/>
-                                <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,4,0">
-                                    <TextBox x:Name="Threshold1TextBox" Text="100" Width="50" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="8,5"/>
-                                </Border>
-                                <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=ThresholdSeparator}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,6,0">
-                                    <TextBox x:Name="Threshold2TextBox" Text="200" Width="50" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="8,5"/>
-                                </Border>
-                                <Button x:Name="ApplyThresholdsButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Apply}" Style="{StaticResource PrimaryButtonStyle}" Padding="12,6" FontSize="12"/>
-                            </StackPanel>
-
-                            <!-- Target Color (shown in Color Detection mode) -->
-                            <StackPanel x:Name="ColorPanel" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
-                                <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=TargetColor}" Style="{StaticResource LabelStyle}" Margin="0,0,8,0"/>
-                                <ComboBox x:Name="ColorComboBox" Width="130" SelectedIndex="0" Style="{StaticResource ComboBoxStyle}" SelectionChanged="ColorComboBox_SelectionChanged"/>
-                                <TextBlock x:Name="PickColorHintText" Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=PickColorHint}"
-                                           Style="{StaticResource LabelStyle}" FontSize="11" Foreground="{StaticResource WarningBrush}" Margin="10,0,0,0" Visibility="Collapsed"/>
-                            </StackPanel>
-
-                            <!-- Template Match (shown in Template Match mode) -->
-                            <StackPanel x:Name="TemplatePanel" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
-                                <Button x:Name="LoadTemplateButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=LoadTemplate}" Style="{StaticResource SecondaryButtonStyle}" Padding="12,6" FontSize="12" Click="LoadTemplateButton_Click"/>
-                                <TextBlock x:Name="TemplateStatusText" Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=NoTemplate}" Style="{StaticResource LabelStyle}" FontSize="11" Margin="10,0,0,0"/>
-                            </StackPanel>
-
-                            <Rectangle Grid.Column="3" Style="{StaticResource DividerVStyle}" Margin="12,0"/>
-
-                            <!-- Main Actions -->
-                            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                <Button x:Name="SaveScreenshotButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=SaveScreenshot}" Style="{StaticResource SecondaryButtonStyle}" Padding="12,8" Click="SaveScreenshotButton_Click"/>
-                                <Button x:Name="RecordButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=StartRecording}" Style="{StaticResource DangerButtonStyle}" Padding="12,8" Margin="6,0" Click="RecordButton_Click"/>
-                                <Rectangle Style="{StaticResource DividerVStyle}" Margin="4,0"/>
-                                <Button x:Name="StartCameraButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=StartCamera}" Style="{StaticResource PrimaryButtonStyle}" Margin="6,0,4,0" Padding="14,8" Click="StartCameraButton_Click"/>
-                                <Button x:Name="StopCameraButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=StopCamera}" Style="{StaticResource DangerButtonStyle}" Margin="0,0,4,0" Padding="14,8" IsEnabled="False" Click="StopCameraButton_Click"/>
-                                <Button x:Name="LoadImageButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=LoadImage}" Style="{StaticResource SecondaryButtonStyle}" Padding="14,8" Click="LoadImageButton_Click"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
+                    <TextBlock Grid.Column="5" Text="OpenCV 5 + AWS" Foreground="#484F58" FontSize="10"
+                               VerticalAlignment="Center"/>
                 </Grid>
             </Border>
         </Grid>
 
-        <!-- ====== Industrial Panel (collapsible) ====== -->
-        <Border Grid.Row="2" x:Name="IndustrialPanel" Background="{StaticResource CardBrush}"
-                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10"
-                Margin="20,0,20,12" Padding="14,10" Visibility="Collapsed">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="1.35*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Modbus PLC -->
-                <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10,8">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <Ellipse x:Name="ModbusStatusDot" Width="8" Height="8" Fill="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=ModbusPLC}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="ModbusStatusText" Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=StatusDisconnected}" Style="{StaticResource LabelStyle}" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,6,0">
-                                <TextBox x:Name="ModbusIpTextBox" Text="127.0.0.1" Width="100" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,6,0">
-                                <TextBox x:Name="ModbusPortTextBox" Text="502" Width="48" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                            <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=UnitId}" Style="{StaticResource LabelStyle}" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
-                                <TextBox x:Name="ModbusUnitTextBox" Text="1" Width="34" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                            <Button x:Name="ModbusConnectButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Connect}" Style="{StaticResource PrimaryButtonStyle}" Padding="10,4" FontSize="11" Click="ModbusConnectButton_Click"/>
-                            <Button x:Name="ModbusDisconnectButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Disconnect}" Style="{StaticResource DangerButtonStyle}" Padding="10,4" FontSize="11" Margin="6,0,0,0" IsEnabled="False" Click="ModbusDisconnectButton_Click"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=RegisterAddress}" Style="{StaticResource LabelStyle}" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,6,0">
-                                <TextBox x:Name="ModbusAddrTextBox" Text="100" Width="48" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                            <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=Value}" Style="{StaticResource LabelStyle}" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
-                                <TextBox x:Name="ModbusValueTextBox" Text="0" Width="48" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                            <Button x:Name="ModbusReadButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Read}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" FontSize="11" Click="ModbusReadButton_Click"/>
-                            <Button x:Name="ModbusWriteButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Write}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" FontSize="11" Margin="6,0,0,0" Click="ModbusWriteButton_Click"/>
-                            <TextBlock x:Name="ModbusResultText" Text="" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource SuccessBrush}" Margin="8,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <CheckBox x:Name="ModbusLinkCheckBox" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=PlcLink}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=PlcCountRegister}" Style="{StaticResource LabelStyle}" FontSize="11" Margin="12,0,6,0" VerticalAlignment="Center"/>
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6">
-                                <TextBox x:Name="PlcRegisterTextBox" Text="100" Width="48" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <!-- OPC-UA -->
-                <Border Grid.Column="2" Background="{StaticResource SurfaceBrush}" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10,8">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <Ellipse x:Name="OpcUaStatusDot" Width="8" Height="8" Fill="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=OpcUa}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="OpcUaStatusText" Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=StatusDisconnected}" Style="{StaticResource LabelStyle}" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
-                                <TextBox x:Name="OpcUaEndpointTextBox" Text="opc.tcp://127.0.0.1:4840" Width="190" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                            <Button x:Name="OpcUaConnectButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Connect}" Style="{StaticResource PrimaryButtonStyle}" Padding="10,4" FontSize="11" Click="OpcUaConnectButton_Click"/>
-                            <Button x:Name="OpcUaDisconnectButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Disconnect}" Style="{StaticResource DangerButtonStyle}" Padding="10,4" FontSize="11" Margin="6,0,0,0" IsEnabled="False" Click="OpcUaDisconnectButton_Click"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <TextBlock Text="NodeId" Style="{StaticResource LabelStyle}" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,6,0">
-                                <TextBox x:Name="OpcUaNodeTextBox" Text="ns=2;s=Temperature" Width="140" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
-                                <TextBox x:Name="OpcUaValueTextBox" Text="0" Width="48" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                            <Button x:Name="OpcUaReadButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Read}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" FontSize="11" Click="OpcUaReadButton_Click"/>
-                            <Button x:Name="OpcUaWriteButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Write}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" FontSize="11" Margin="6,0,0,0" Click="OpcUaWriteButton_Click"/>
-                        </StackPanel>
-                        <TextBlock x:Name="OpcUaResultText" Text="" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource SuccessBrush}" TextTrimming="CharacterEllipsis"/>
-                    </StackPanel>
-                </Border>
-
-                <!-- Work Report -->
-                <Border Grid.Column="4" Background="{StaticResource SurfaceBrush}" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10,8">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
-                            <Ellipse x:Name="ReportStatusDot" Width="8" Height="8" Fill="{StaticResource SuccessBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=WorkReport}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=TodayCount}" Style="{StaticResource LabelStyle}" FontSize="11" Margin="14,0,4,0" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="TodayCountTextBlock" Text="0" FontSize="13" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,6">
-                            <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=WorkOrder}" Style="{StaticResource LabelStyle}" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
-                                <TextBox x:Name="WorkOrderTextBox" Text="WO-0001" Width="80" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                            <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=ScanSource}" Style="{StaticResource LabelStyle}" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="ScanSourceComboBox" Width="96" SelectedIndex="0" Style="{StaticResource ComboBoxStyle}" SelectionChanged="ScanSourceComboBox_SelectionChanged"/>
-                            <CheckBox x:Name="CameraReportCheckBox" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=CameraReport}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="12,0,0,0" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,6">
-                            <StackPanel x:Name="SerialScanPanel" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
-                                <ComboBox x:Name="SerialPortComboBox" Width="76" Style="{StaticResource ComboBoxStyle}"/>
-                                <ComboBox x:Name="SerialBaudComboBox" Width="72" Style="{StaticResource ComboBoxStyle}" Margin="6,0,0,0" SelectedIndex="0"/>
-                                <Button x:Name="SerialToggleButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Start}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" FontSize="11" Margin="8,0,0,0" Click="SerialToggleButton_Click"/>
-                            </StackPanel>
-                            <StackPanel x:Name="TcpScanPanel" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
-                                <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=Port}" Style="{StaticResource LabelStyle}" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
-                                    <TextBox x:Name="TcpScanPortTextBox" Text="9001" Width="56" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                                </Border>
-                                <Button x:Name="TcpToggleButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Start}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" FontSize="11" Click="TcpToggleButton_Click"/>
-                            </StackPanel>
-                            <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=LastBarcode}" Style="{StaticResource LabelStyle}" FontSize="11" Margin="12,0,4,0" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="LastBarcodeTextBlock" Text="--" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource PrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="110"/>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,0,0,0">
-                                <Button x:Name="ExportCsvButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=ExportCsv}" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" FontSize="11" Click="ExportCsvButton_Click"/>
-                                <Button x:Name="ClearReportButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=ClearLog}" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" FontSize="11" Margin="6,0,0,0" Click="ClearReportButton_Click"/>
-                            </StackPanel>
-                        </StackPanel>
-                        <ListBox Grid.Row="3" x:Name="ReportListBox" Background="{StaticResource BgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                                 Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" FontFamily="Consolas" Height="64" Margin="0,6,0,0"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding DisplayText}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Grid>
-                </Border>
-            </Grid>
-        </Border>
-
-        <!-- ====== AI + Cloud Panel (collapsible) ====== -->
-        <Border Grid.Row="3" x:Name="AiCloudPanel" Background="{StaticResource CardBrush}"
-                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10"
-                Margin="20,0,20,12" Padding="14,10" Visibility="Collapsed">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="1.2*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- AI Detection -->
-                <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10,8">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <Ellipse x:Name="AiStatusDot" Width="8" Height="8" Fill="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="AI Detection (YOLO)" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="AiStatusText" Text="Not Loaded" Style="{StaticResource LabelStyle}" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <Button x:Name="LoadYoloModelButton" Content="Load Model" Style="{StaticResource PrimaryButtonStyle}" Padding="10,4" FontSize="11" Click="LoadYoloModelButton_Click"/>
-                            <TextBlock x:Name="YoloModelPathText" Text="No model" Style="{StaticResource LabelStyle}" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="140"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <TextBlock Text="Confidence:" Style="{StaticResource LabelStyle}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
-                                <TextBox x:Name="ConfThresholdTextBox" Text="0.5" Width="42" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                            <CheckBox x:Name="AiEnableCheckBox" Content="Enable" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" IsChecked="False" Checked="AiEnableCheckBox_Changed" Unchecked="AiEnableCheckBox_Changed"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock x:Name="AiDetectionsText" Text="Detections: 0" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource SuccessBrush}"/>
-                            <TextBlock Text=" | " Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="6,0"/>
-                            <TextBlock x:Name="AiTracksText" Text="Tracks: 0" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource PrimaryBrush}"/>
-                            <TextBlock Text=" | " Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="6,0"/>
-                            <TextBlock x:Name="AiSampleText" Text="Interval: 1" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource WarningBrush}"/>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <!-- Cloud Services -->
-                <Border Grid.Column="2" Background="{StaticResource SurfaceBrush}" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10,8">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <Ellipse x:Name="CloudStatusDot" Width="8" Height="8" Fill="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="AWS Cloud" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="CloudStatusText" Text="Not Configured" Style="{StaticResource LabelStyle}" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <TextBlock Text="Region:" Style="{StaticResource LabelStyle}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
-                                <TextBox x:Name="AwsRegionTextBox" Text="ap-northeast-1" Width="120" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                            <TextBlock Text="Bucket:" Style="{StaticResource LabelStyle}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6">
-                                <TextBox x:Name="S3BucketTextBox" Text="" Width="120" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <TextBlock Text="IoT Endpoint:" Style="{StaticResource LabelStyle}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,8,0">
-                                <TextBox x:Name="IoTEndpointTextBox" Text="" Width="180" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                            <TextBlock Text="Lambda:" Style="{StaticResource LabelStyle}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6">
-                                <TextBox x:Name="LambdaFuncTextBox" Text="" Width="120" Style="{StaticResource TextBoxStyle}" BorderThickness="0" Padding="6,4" FontSize="11"/>
-                            </Border>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <Button x:Name="CloudInitButton" Content="Init Services" Style="{StaticResource PrimaryButtonStyle}" Padding="10,4" FontSize="11" Click="CloudInitButton_Click"/>
-                            <Button x:Name="CloudUploadScreenshotButton" Content="Upload Screenshot" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" FontSize="11" Margin="6,0,0,0" Click="CloudUploadScreenshotButton_Click" IsEnabled="False"/>
-                            <Button x:Name="CloudAlertButton" Content="Send Alert" Style="{StaticResource DangerButtonStyle}" Padding="10,4" FontSize="11" Margin="6,0,0,0" Click="CloudAlertButton_Click" IsEnabled="False"/>
-                            <Button x:Name="CloudPublishStatsButton" Content="Publish Stats" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" FontSize="11" Margin="6,0,0,0" Click="CloudPublishStatsButton_Click" IsEnabled="False"/>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <!-- Digital Twin -->
-                <Border Grid.Column="4" Background="{StaticResource SurfaceBrush}" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10,8">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <Ellipse x:Name="TwinStatusDot" Width="8" Height="8" Fill="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="Digital Twin" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="TwinStatusText" Text="Idle" Style="{StaticResource LabelStyle}" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <Grid Height="120">
-                            <Border Background="{StaticResource BgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6">
-                                <Image x:Name="DigitalTwinImage" Stretch="Uniform" Margin="2"/>
-                            </Border>
-                        </Grid>
-                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                            <TextBlock x:Name="TwinDetectionsText" Text="Detections: 0" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource SuccessBrush}"/>
-                            <TextBlock Text=" | " Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="6,0"/>
-                            <TextBlock x:Name="TwinDefectsText" Text="Defects: 0" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource DangerBrush}"/>
-                            <TextBlock Text=" | " Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="6,0"/>
-                            <TextBlock x:Name="TwinPassRateText" Text="Pass: 100%" Style="{StaticResource ValueStyle}" FontSize="11" Foreground="{StaticResource PrimaryBrush}"/>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-            </Grid>
-        </Border>
-
-        <!-- ====== Status Bar ====== -->
-        <Border Grid.Row="3" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="16,4" Height="30">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" x:Name="FpsTextBlock" Text="0 FPS" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center"/>
-                <TextBlock Grid.Column="1" Text="·" Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="8,0" VerticalAlignment="Center"/>
-                <TextBlock Grid.Column="2" x:Name="ProcessTimeTextBlock" Text="0 ms" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center"/>
-                <TextBlock Grid.Column="3" Text="Machine Vision App · v2.3.0" Foreground="{StaticResource TextMutedBrush}" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                <Button Grid.Column="4" x:Name="IndustrialToggleButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Industrial}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,2" FontSize="11" Margin="0,0,6,0" Click="IndustrialToggleButton_Click"/>
-                <Button Grid.Column="5" x:Name="AiCloudToggleButton" Content="AI / Cloud" Style="{StaticResource SecondaryButtonStyle}" Padding="10,2" FontSize="11" Click="AiCloudToggleButton_Click"/>
-                <Button Grid.Column="6" x:Name="LogToggleButton" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=Log}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,2" FontSize="11" Margin="6,0,0,0" Click="LogToggleButton_Click"/>
-            </Grid>
-        </Border>
-
-        <!-- ====== Log Panel (collapsible) ====== -->
-        <Border Grid.Row="5" x:Name="LogPanel" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="8,4" Height="140" Visibility="Collapsed">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=Log}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <Button Grid.Column="1" Content="{Binding Source={x:Static local:TranslationService.Instance}, Path=ClearLog}" Style="{StaticResource SecondaryButtonStyle}" Padding="8,1" FontSize="10" Click="ClearLogButton_Click"/>
-                </Grid>
-                <ListBox Grid.Row="1" x:Name="LogListBox" Background="{StaticResource BgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                         Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" FontFamily="Consolas"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding DisplayText}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Grid>
+        <!-- Error Banner -->
+        <Border x:Name="ErrorBorder" Grid.Column="1" Grid.Row="1" VerticalAlignment="Top"
+                Background="#40F85149" BorderBrush="#F85149" BorderThickness="0,0,0,2"
+                Padding="16,8" Visibility="Collapsed" Panel.ZIndex="100">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="ErrorMessageTextBlock" Text="" Foreground="#F85149" FontSize="12" VerticalAlignment="Center"/>
+                <Button Content="X" Margin="12,0,0,0" Background="Transparent" Foreground="#F85149"
+                        BorderThickness="0" Cursor="Hand" FontSize="12" FontWeight="Bold"
+                        Click="HideErrorButton_Click"/>
+            </StackPanel>
         </Border>
     </Grid>
 </Window>

@@ -4,6 +4,9 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/DarkTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
             <!-- Colors -->
             <Color x:Key="ColorBg">#0B0E14</Color>
             <Color x:Key="ColorSurface">#131820</Color>
