@@ -47,6 +47,7 @@ public partial class CameraPanel : UserControl
     // ── Public Helpers ───────────────────────────────────────────────
     public void SetConnected(bool connected, string statusText)
     {
+        if (ConnectionDot == null || ConnectionStatusText == null || ConnectButton == null || DisconnectButton == null || StartCameraButton == null) return;
         ConnectionStatusText.Text = statusText;
         ConnectionDot.Fill = connected
             ? (Brush)FindResource("SuccessBrush")

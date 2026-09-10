@@ -38,7 +38,9 @@ public partial class ProcessingPanel : UserControl
 
     public ProcessingPanel()
     {
+        _suppressEvents = true;
         InitializeComponent();
+        _suppressEvents = false;
     }
 
     // ── Public Helpers ───────────────────────────────────────────────
@@ -89,9 +91,10 @@ public partial class ProcessingPanel : UserControl
 
     private void ProcessingModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_suppressEvents) return;
+        if (_suppressEvents || ThresholdPanel == null || ColorPanel == null || TemplatePanel == null || ModeLabelText == null) return;
 
         int index = ProcessingModeComboBox.SelectedIndex;
+        if (index < 0 || index >= ProcessingModeComboBox.Items.Count) return;
         string mode = ProcessingModeComboBox.Items[index] is ComboBoxItem item
             ? item.Content?.ToString() ?? ""
             : "";
