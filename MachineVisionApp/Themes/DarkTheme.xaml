@@ -423,10 +423,10 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetName="checkBorder"
-                                                         Storyboard.TargetProperty="RenderTransform.ScaleX"
+                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
                                                          From="0.6" To="1" Duration="0:0:0.15" />
                                         <DoubleAnimation Storyboard.TargetName="checkBorder"
-                                                         Storyboard.TargetProperty="RenderTransform.ScaleY"
+                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
                                                          From="0.6" To="1" Duration="0:0:0.15" />
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -435,10 +435,10 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetName="checkBorder"
-                                                         Storyboard.TargetProperty="RenderTransform.ScaleX"
+                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
                                                          To="1" Duration="0:0:0.1" />
                                         <DoubleAnimation Storyboard.TargetName="checkBorder"
-                                                         Storyboard.TargetProperty="RenderTransform.ScaleY"
+                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
                                                          To="1" Duration="0:0:0.1" />
                                     </Storyboard>
                                 </BeginStoryboard>
