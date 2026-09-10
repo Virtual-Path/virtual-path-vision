@@ -2,7 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- ═══════════════════════════════════════════════════════════════
-         COLOR BRUSHES
+         COLOR BRUSHES — Glassmorphism Palette
          ═══════════════════════════════════════════════════════════════ -->
 
     <!-- Accent -->
@@ -11,13 +11,13 @@
     <SolidColorBrush x:Key="AccentGlowBrush" Color="#59FAE20A" />
     <SolidColorBrush x:Key="TextDarkBrush" Color="#10141C" />
 
-    <!-- Glass surfaces -->
-    <SolidColorBrush x:Key="GlassBgBrush" Color="#8C101624" />
-    <SolidColorBrush x:Key="SidebarBgBrush" Color="#C0101624" />
-    <SolidColorBrush x:Key="TitleBarBgBrush" Color="#80101624" />
+    <!-- Glass surfaces — layered transparency -->
+    <SolidColorBrush x:Key="GlassBgBrush" Color="#73101624" />
+    <SolidColorBrush x:Key="SidebarBgBrush" Color="#B30A0F19" />
+    <SolidColorBrush x:Key="TitleBarBgBrush" Color="#660D1119" />
     <SolidColorBrush x:Key="StatusBarBgBrush" Color="#D9080C14" />
 
-    <!-- Borders -->
+    <!-- Borders — top highlight for glass edge refraction -->
     <SolidColorBrush x:Key="GlassBorderBrush" Color="#14FFFFFF" />
     <SolidColorBrush x:Key="GlassBorderTopBrush" Color="#33FFFFFF" />
     <SolidColorBrush x:Key="GlassDividerBrush" Color="#1AFFFFFF" />
@@ -53,7 +53,7 @@
          ═══════════════════════════════════════════════════════════════ -->
 
     <!-- ───────────────────────────────────────────────────────────────
-         GlassButton
+         GlassButton — base glass button with top-edge reflection
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="GlassButton" TargetType="Button">
         <Setter Property="Background" Value="#1AFFFFFF" />
@@ -80,16 +80,49 @@
                                               Color="Transparent" ShadowDepth="0"
                                               BlurRadius="0" Opacity="0" />
                         </Border.Effect>
-                        <ContentPresenter x:Name="contentPresenter"
-                                          HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"
-                                          RecognizesAccessKey="True" />
+                        <Grid>
+                            <!-- Top-edge reflection -->
+                            <Border VerticalAlignment="Top" Height="1"
+                                    Background="#18FFFFFF" CornerRadius="10,10,0,0"
+                                    Margin="1,1,1,0"/>
+                            <ContentPresenter x:Name="contentPresenter"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True" />
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="border" Property="Background" Value="#26FFFFFF" />
                             <Setter TargetName="border" Property="BorderBrush" Value="#33FFFFFF" />
                             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="shadow"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0.3" Duration="0:0:0.2" />
+                                        <DoubleAnimation Storyboard.TargetName="shadow"
+                                                         Storyboard.TargetProperty="BlurRadius"
+                                                         To="12" Duration="0:0:0.2" />
+                                        <ColorAnimation Storyboard.TargetName="shadow"
+                                                        Storyboard.TargetProperty="Color"
+                                                        To="#FFFFFF" Duration="0:0:0.2" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="shadow"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="0:0:0.25" />
+                                        <DoubleAnimation Storyboard.TargetName="shadow"
+                                                         Storyboard.TargetProperty="BlurRadius"
+                                                         To="0" Duration="0:0:0.25" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="border" Property="Background" Value="#33FFFFFF" />
@@ -105,7 +138,7 @@
     </Style>
 
     <!-- ───────────────────────────────────────────────────────────────
-         AccentButton (primary action: connect, start, load model)
+         AccentButton — primary action with glow + sweep animation
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="AccentButton" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource AccentBrush}" />
@@ -130,20 +163,24 @@
                                               Color="#FAE20A" ShadowDepth="0"
                                               BlurRadius="0" Opacity="0" />
                         </Border.Effect>
-                        <Border x:Name="innerGlow"
-                                Background="Transparent"
-                                CornerRadius="10"
-                                BorderThickness="0">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#FFFFFF" ShadowDepth="0"
-                                                  BlurRadius="0" Opacity="0"
-                                                  Direction="270" />
-                            </Border.Effect>
+                        <Grid>
+                            <!-- Top reflection -->
+                            <Border VerticalAlignment="Top" Height="1"
+                                    Background="#80FFFFFF" CornerRadius="10,10,0,0"
+                                    Margin="1,1,1,0"/>
+                            <!-- Sweep overlay (animated via code) -->
+                            <Border x:Name="sweepOverlay"
+                                    Background="Transparent" CornerRadius="10"
+                                    ClipToBounds="True">
+                                <Border.RenderTransform>
+                                    <SkewTransform AngleX="-20"/>
+                                </Border.RenderTransform>
+                            </Border>
                             <ContentPresenter x:Name="contentPresenter"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center"
                                               RecognizesAccessKey="True" />
-                        </Border>
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -153,10 +190,10 @@
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetName="glow"
                                                          Storyboard.TargetProperty="Opacity"
-                                                         To="0.4" Duration="0:0:0.2" />
+                                                         To="0.5" Duration="0:0:0.2" />
                                         <DoubleAnimation Storyboard.TargetName="glow"
                                                          Storyboard.TargetProperty="BlurRadius"
-                                                         To="20" Duration="0:0:0.2" />
+                                                         To="24" Duration="0:0:0.2" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -165,10 +202,10 @@
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetName="glow"
                                                          Storyboard.TargetProperty="Opacity"
-                                                         To="0" Duration="0:0:0.2" />
+                                                         To="0" Duration="0:0:0.25" />
                                         <DoubleAnimation Storyboard.TargetName="glow"
                                                          Storyboard.TargetProperty="BlurRadius"
-                                                         To="0" Duration="0:0:0.2" />
+                                                         To="0" Duration="0:0:0.25" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
@@ -186,7 +223,7 @@
     </Style>
 
     <!-- ───────────────────────────────────────────────────────────────
-         DangerButton (red action: disconnect, stop)
+         DangerButton — red action: disconnect, stop
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="DangerButton" TargetType="Button">
         <Setter Property="Background" Value="#1AEF4444" />
@@ -208,10 +245,15 @@
                             CornerRadius="10"
                             Padding="{TemplateBinding Padding}"
                             SnapsToDevicePixels="True">
-                        <ContentPresenter x:Name="contentPresenter"
-                                          HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"
-                                          RecognizesAccessKey="True" />
+                        <Grid>
+                            <Border VerticalAlignment="Top" Height="1"
+                                    Background="#18FFFFFF" CornerRadius="10,10,0,0"
+                                    Margin="1,1,1,0"/>
+                            <ContentPresenter x:Name="contentPresenter"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True" />
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -232,7 +274,7 @@
     </Style>
 
     <!-- ───────────────────────────────────────────────────────────────
-         GlassPanel (Border) — used by content panels
+         GlassPanel — card container with top-edge highlight + corner accent
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="GlassPanel" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource GlassBgBrush}" />
@@ -243,9 +285,29 @@
         <Setter Property="Effect">
             <Setter.Value>
                 <DropShadowEffect Color="#000000"
-                                  ShadowDepth="4"
-                                  BlurRadius="24"
-                                  Opacity="0.4"
+                                  ShadowDepth="6"
+                                  BlurRadius="32"
+                                  Opacity="0.5"
+                                  Direction="270" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ───────────────────────────────────────────────────────────────
+         GlassCard — panel wrapper with top-edge reflection + corner line
+         ─────────────────────────────────────────────────────────────── -->
+    <Style x:Key="GlassCard" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource GlassBgBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource GlassBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Padding" Value="20" />
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect Color="#000000"
+                                  ShadowDepth="6"
+                                  BlurRadius="28"
+                                  Opacity="0.45"
                                   Direction="270" />
             </Setter.Value>
         </Setter>
@@ -262,7 +324,7 @@
         <Setter Property="BorderBrush" Value="{StaticResource GlassBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="14,10" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="13" />
         <Setter Property="FontFamily" Value="Segoe UI" />
         <Setter Property="Template">
             <Setter.Value>
@@ -274,6 +336,10 @@
                             CornerRadius="{StaticResource CornerMd}"
                             SnapsToDevicePixels="True">
                         <Grid>
+                            <!-- Top-edge reflection -->
+                            <Border VerticalAlignment="Top" Height="1"
+                                    Background="#0DFFFFFF" CornerRadius="12,12,0,0"
+                                    Margin="1,1,1,0"/>
                             <ScrollViewer x:Name="PART_ContentHost"
                                           Focusable="False"
                                           HorizontalScrollBarVisibility="Hidden"
@@ -340,7 +406,7 @@
         <Setter Property="BorderBrush" Value="{StaticResource GlassBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="14,10" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="13" />
         <Setter Property="FontFamily" Value="Segoe UI" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="Template">
@@ -368,6 +434,10 @@
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="32" />
                                             </Grid.ColumnDefinitions>
+                                            <!-- Top reflection -->
+                                            <Border VerticalAlignment="Top" Height="1"
+                                                    Background="#0DFFFFFF" CornerRadius="12,12,0,0"
+                                                    Margin="1,1,1,0"/>
                                             <Border Grid.Column="1"
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center">
@@ -411,9 +481,9 @@
                                     MaxHeight="{TemplateBinding MaxDropDownHeight}">
                                 <Border.Effect>
                                     <DropShadowEffect Color="#000000"
-                                                      ShadowDepth="4"
-                                                      BlurRadius="20"
-                                                      Opacity="0.5"
+                                                      ShadowDepth="6"
+                                                      BlurRadius="24"
+                                                      Opacity="0.6"
                                                       Direction="270" />
                                 </Border.Effect>
                                 <ScrollViewer x:Name="dropDownScrollViewer"
@@ -431,12 +501,12 @@
         </Setter>
     </Style>
 
-    <!-- ComboBoxItem style for consistency -->
+    <!-- ComboBoxItem style -->
     <Style x:Key="GlassComboBoxItem" TargetType="ComboBoxItem">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
         <Setter Property="Padding" Value="12,8" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="13" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBoxItem">
@@ -467,7 +537,7 @@
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="GlassCheckBox" TargetType="CheckBox">
         <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="13" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
@@ -553,7 +623,176 @@
     </Style>
 
     <!-- ───────────────────────────────────────────────────────────────
-         SidebarIcon (ToggleButton)
+         SidebarNavRadio — glass nav items with pill indicator
+         ─────────────────────────────────────────────────────────────── -->
+    <Style x:Key="SidebarNavRadio" TargetType="RadioButton">
+        <Setter Property="Width" Value="52" />
+        <Setter Property="Height" Value="44" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="GroupName" Value="Nav" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="14"
+                            SnapsToDevicePixels="True">
+                        <Border.Effect>
+                            <DropShadowEffect x:Name="glow"
+                                              Color="Transparent" ShadowDepth="0"
+                                              BlurRadius="0" Opacity="0" />
+                        </Border.Effect>
+                        <Grid>
+                            <!-- Left pill indicator -->
+                            <Border x:Name="pill" Width="3" Height="0" CornerRadius="2"
+                                    HorizontalAlignment="Left" Margin="3,0,0,0"
+                                    Background="{StaticResource AccentBrush}"/>
+                            <ContentPresenter x:Name="contentPresenter"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#12FFFFFF" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#18FFFFFF" />
+                            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#1AFAE20A" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#33FAE20A" />
+                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                            <Setter TargetName="pill" Property="Height" Value="20" />
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="glow"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0.4" Duration="0:0:0.2" />
+                                        <DoubleAnimation Storyboard.TargetName="glow"
+                                                         Storyboard.TargetProperty="BlurRadius"
+                                                         To="14" Duration="0:0:0.2" />
+                                        <ColorAnimation Storyboard.TargetName="glow"
+                                                        Storyboard.TargetProperty="Color"
+                                                        To="#FAE20A" Duration="0:0:0.2" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="glow"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="0:0:0.25" />
+                                        <DoubleAnimation Storyboard.TargetName="glow"
+                                                         Storyboard.TargetProperty="BlurRadius"
+                                                         To="0" Duration="0:0:0.25" />
+                                        <ColorAnimation Storyboard.TargetName="glow"
+                                                        Storyboard.TargetProperty="Color"
+                                                        To="Transparent" Duration="0:0:0.25" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.35" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ───────────────────────────────────────────────────────────────
+         SidebarIconButton — settings at bottom
+         ─────────────────────────────────────────────────────────────── -->
+    <Style x:Key="SidebarIconButton" TargetType="Button">
+        <Setter Property="Width" Value="38" />
+        <Setter Property="Height" Value="38" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="10"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#14FFFFFF" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#18FFFFFF" />
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#22FFFFFF" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ───────────────────────────────────────────────────────────────
+         TitleBarButton — window controls
+         ─────────────────────────────────────────────────────────────── -->
+    <Style x:Key="TitleBarButton" TargetType="Button">
+        <Setter Property="Width" Value="46" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="6"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#18FFFFFF" />
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#22FFFFFF" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TitleBarCloseButton" TargetType="Button" BasedOn="{StaticResource TitleBarButton}">
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#EF4444" />
+                <Setter Property="Foreground" Value="#FFFFFF" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ───────────────────────────────────────────────────────────────
+         SidebarIcon (ToggleButton) — legacy, kept for compatibility
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="SidebarIcon" TargetType="ToggleButton">
         <Setter Property="Width" Value="52" />
@@ -634,7 +873,7 @@
     </Style>
 
     <!-- ───────────────────────────────────────────────────────────────
-         NavButton (Sidebar navigation)
+         NavButton — legacy, kept for compatibility
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="NavButton" TargetType="Button">
         <Setter Property="Background" Value="Transparent" />
@@ -706,190 +945,6 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-    </Style>
-
-    <!-- ───────────────────────────────────────────────────────────────
-         GlassCard (Content panel wrapper)
-         ─────────────────────────────────────────────────────────────── -->
-    <Style x:Key="GlassCard" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource GlassBgBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource GlassBorderBrush}" />
-        <Setter Property="BorderThickness" Value="1,1.5,1,1" />
-        <Setter Property="CornerRadius" Value="16" />
-        <Setter Property="Padding" Value="20" />
-        <Setter Property="Effect">
-            <Setter.Value>
-                <DropShadowEffect Color="#000000" ShadowDepth="4" BlurRadius="24" Opacity="0.4" Direction="270" />
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <!-- ───────────────────────────────────────────────────────────────
-         SidebarNavRadio (Navigation RadioButton)
-         ─────────────────────────────────────────────────────────────── -->
-    <Style x:Key="SidebarNavRadio" TargetType="RadioButton">
-        <Setter Property="Width" Value="56" />
-        <Setter Property="Height" Value="44" />
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
-        <Setter Property="BorderBrush" Value="Transparent" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="GroupName" Value="Nav" />
-        <Setter Property="SnapsToDevicePixels" Value="True" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="border"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="14"
-                            SnapsToDevicePixels="True">
-                        <Border.Effect>
-                            <DropShadowEffect x:Name="glow"
-                                              Color="Transparent" ShadowDepth="0"
-                                              BlurRadius="0" Opacity="0" />
-                        </Border.Effect>
-                        <Grid>
-                            <Border x:Name="pill" Width="3" Height="0" CornerRadius="2"
-                                    HorizontalAlignment="Left" Margin="2,0,0,0"
-                                    Background="{StaticResource AccentBrush}"/>
-                            <ContentPresenter x:Name="contentPresenter"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" />
-                        </Grid>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#12FFFFFF" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#18FFFFFF" />
-                            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
-                        </Trigger>
-                        <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#1AFAE20A" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#33FAE20A" />
-                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
-                            <Setter TargetName="pill" Property="Height" Value="20" />
-                            <Trigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="glow"
-                                                         Storyboard.TargetProperty="Opacity"
-                                                         To="0.4" Duration="0:0:0.2" />
-                                        <DoubleAnimation Storyboard.TargetName="glow"
-                                                         Storyboard.TargetProperty="BlurRadius"
-                                                         To="12" Duration="0:0:0.2" />
-                                        <ColorAnimation Storyboard.TargetName="glow"
-                                                        Storyboard.TargetProperty="Color"
-                                                        To="#FAE20A" Duration="0:0:0.2" />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.EnterActions>
-                            <Trigger.ExitActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="glow"
-                                                         Storyboard.TargetProperty="Opacity"
-                                                         To="0" Duration="0:0:0.25" />
-                                        <DoubleAnimation Storyboard.TargetName="glow"
-                                                         Storyboard.TargetProperty="BlurRadius"
-                                                         To="0" Duration="0:0:0.25" />
-                                        <ColorAnimation Storyboard.TargetName="glow"
-                                                        Storyboard.TargetProperty="Color"
-                                                        To="Transparent" Duration="0:0:0.25" />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.ExitActions>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Opacity" Value="0.35" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <!-- ───────────────────────────────────────────────────────────────
-         SidebarIconButton (Bottom settings)
-         ─────────────────────────────────────────────────────────────── -->
-    <Style x:Key="SidebarIconButton" TargetType="Button">
-        <Setter Property="Width" Value="38" />
-        <Setter Property="Height" Value="38" />
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
-        <Setter Property="BorderBrush" Value="Transparent" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="border"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="10"
-                            SnapsToDevicePixels="True">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#14FFFFFF" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#18FFFFFF" />
-                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#22FFFFFF" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <!-- ───────────────────────────────────────────────────────────────
-         TitleBarButton
-         ─────────────────────────────────────────────────────────────── -->
-    <Style x:Key="TitleBarButton" TargetType="Button">
-        <Setter Property="Width" Value="46" />
-        <Setter Property="Height" Value="28" />
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
-        <Setter Property="FontSize" Value="10" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="border"
-                            Background="{TemplateBinding Background}"
-                            CornerRadius="6"
-                            SnapsToDevicePixels="True">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#18FFFFFF" />
-                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#22FFFFFF" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <Style x:Key="TitleBarCloseButton" TargetType="Button" BasedOn="{StaticResource TitleBarButton}">
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#EF4444" />
-                <Setter Property="Foreground" Value="#FFFFFF" />
-            </Trigger>
-        </Style.Triggers>
     </Style>
 
 </ResourceDictionary>

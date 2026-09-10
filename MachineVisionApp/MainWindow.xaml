@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:MachineVisionApp"
         xmlns:views="clr-namespace:MachineVisionApp.Views"
         Title="MachineVisionApp" WindowState="Maximized"
-        Background="#0B0E14" WindowStyle="None" AllowsTransparency="False"
+        Background="#07090E" WindowStyle="None" AllowsTransparency="False"
         ResizeMode="CanResizeWithGrip">
 
     <WindowChrome.WindowChrome>
@@ -14,23 +14,23 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="88"/>
+            <ColumnDefinition Width="84"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ===== Sidebar ===== -->
+        <!-- ===== Sidebar — glass panel with backdrop ===== -->
         <Border Grid.Column="0" BorderThickness="0,0,1,0"
                 BorderBrush="{StaticResource GlassBorderBrush}">
             <Border.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#D9080C14" Offset="0"/>
-                    <GradientStop Color="#CC0D1119" Offset="0.5"/>
-                    <GradientStop Color="#D9080C14" Offset="1"/>
+                    <GradientStop Color="#CC0A0F19" Offset="0"/>
+                    <GradientStop Color="#B30D1119" Offset="0.5"/>
+                    <GradientStop Color="#CC0A0F19" Offset="1"/>
                 </LinearGradientBrush>
             </Border.Background>
             <DockPanel>
-                <!-- Logo -->
-                <Border DockPanel.Dock="Top" Height="80" Margin="0,12,0,8"
+                <!-- Logo — glass icon badge -->
+                <Border DockPanel.Dock="Top" Height="80" Margin="0,14,0,4"
                         MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                     <Grid>
                         <Grid.Background>
@@ -40,7 +40,7 @@
                             </LinearGradientBrush>
                         </Grid.Background>
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <Border Width="36" Height="36" CornerRadius="10"
+                            <Border Width="38" Height="38" CornerRadius="11"
                                     HorizontalAlignment="Center" Margin="0,0,0,6"
                                     Background="#1AFAE20A" BorderBrush="#33FAE20A"
                                     BorderThickness="1.5">
@@ -55,8 +55,8 @@
                     </Grid>
                 </Border>
 
-                <!-- Separator -->
-                <Border DockPanel.Dock="Top" Height="1" Margin="16,0,16,8"
+                <!-- Divider -->
+                <Border DockPanel.Dock="Top" Height="1" Margin="16,0,16,10"
                         Background="{StaticResource GlassDividerBrush}"/>
 
                 <!-- Nav Icons -->
@@ -87,12 +87,12 @@
                                  Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,4"/>
                 </StackPanel>
 
-                <!-- Spacer -->
-                <Border DockPanel.Dock="Top" Height="1" Margin="16,0,16,0"
+                <!-- Divider -->
+                <Border DockPanel.Dock="Top" Height="1" Margin="16,6,16,0"
                         Background="{StaticResource GlassDividerBrush}"/>
 
                 <!-- Settings at bottom -->
-                <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,16"
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,14"
                             HorizontalAlignment="Center">
                     <Button x:Name="SettingsButton" Content="&#xE713;" FontFamily="Segoe MDL2 Assets"
                             FontSize="16" Style="{StaticResource SidebarIconButton}"
@@ -113,9 +113,9 @@
             <Grid Grid.Row="0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Grid.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                        <GradientStop Color="#B00D1119" Offset="0"/>
+                        <GradientStop Color="#A00D1119" Offset="0"/>
                         <GradientStop Color="#800D1119" Offset="0.5"/>
-                        <GradientStop Color="#B00D1119" Offset="1"/>
+                        <GradientStop Color="#A00D1119" Offset="1"/>
                     </LinearGradientBrush>
                 </Grid.Background>
                 <Grid.ColumnDefinitions>
@@ -125,7 +125,7 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
                     <Ellipse x:Name="ConnectionIndicator" Width="7" Height="7" Fill="#484F58" Margin="0,0,8,0"/>
                     <TextBlock x:Name="StatusText" Text="Disconnected" Foreground="{StaticResource TextMutedBrush}"
-                               FontSize="12" VerticalAlignment="Center" FontWeight="Regular"/>
+                               FontSize="12" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Content="&#xE949;" FontFamily="Segoe MDL2 Assets" FontSize="10"
@@ -140,11 +140,10 @@
             <!-- Content Panels -->
             <Grid Grid.Row="1" Margin="6">
                 <Grid.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#050A12" Offset="0"/>
-                        <GradientStop Color="#0B0E14" Offset="0.5"/>
-                        <GradientStop Color="#050A12" Offset="1"/>
-                    </LinearGradientBrush>
+                    <RadialGradientBrush RadiusX="0.8" RadiusY="0.8">
+                        <GradientStop Color="#1A1A2E" Offset="0"/>
+                        <GradientStop Color="#07090E" Offset="1"/>
+                    </RadialGradientBrush>
                 </Grid.Background>
                 <views:CameraPanel x:Name="CameraPanelCtrl" Visibility="Visible"/>
                 <views:ProcessingPanel x:Name="ProcessingPanelCtrl" Visibility="Collapsed"/>
@@ -154,9 +153,9 @@
                 <views:LogPanel x:Name="LogPanelCtrl" Visibility="Collapsed"/>
             </Grid>
 
-            <!-- Status Bar -->
+            <!-- Status Bar — glass panel -->
             <Border Grid.Row="2" BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="0,1,0,0"
-                    Padding="16,6,16,6" CornerRadius="0,0,8,8">
+                    Padding="16,7,16,7" CornerRadius="0,0,8,8">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                         <GradientStop Color="#D9080C14" Offset="0"/>
