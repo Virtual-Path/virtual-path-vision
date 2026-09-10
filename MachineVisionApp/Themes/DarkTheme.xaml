@@ -384,7 +384,11 @@
                                 BorderThickness="1.5"
                                 Margin="0,0,10,0"
                                 VerticalAlignment="Center"
-                                SnapsToDevicePixels="True">
+                                SnapsToDevicePixels="True"
+                                RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1" />
+                            </Border.RenderTransform>
                             <Grid>
                                 <Path x:Name="checkMark"
                                       Data="M4,11 L8,15 L18,5"
