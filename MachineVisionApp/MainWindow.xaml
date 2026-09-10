@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:MachineVisionApp"
         xmlns:views="clr-namespace:MachineVisionApp.Views"
         Title="MachineVisionApp" WindowState="Maximized"
-        Background="#0A0F19" WindowStyle="None" AllowsTransparency="False"
+        Background="#0B0E14" WindowStyle="None" AllowsTransparency="False"
         ResizeMode="CanResizeWithGrip">
 
     <WindowChrome.WindowChrome>
@@ -18,65 +18,53 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ===== Sidebar Navigation ===== -->
-        <Border Grid.Column="0" Background="#C0101624" BorderBrush="#14FFFFFF" BorderThickness="0,0,1,0">
+        <!-- ===== Sidebar ===== -->
+        <Border Grid.Column="0" Background="{StaticResource SidebarBgBrush}"
+                BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="0,0,1,0">
             <DockPanel>
                 <!-- Logo -->
                 <Border DockPanel.Dock="Top" Height="70" Margin="0,16,0,30">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="MV" FontSize="22" FontWeight="Black" Foreground="#FAE20A"
+                        <TextBlock Text="MV" FontSize="22" FontWeight="Black" Foreground="{StaticResource AccentBrush}"
                                    HorizontalAlignment="Center"/>
-                        <TextBlock Text="V I S I O N" FontSize="8" Foreground="#7A8B9E"
+                        <TextBlock Text="V I S I O N" FontSize="8" Foreground="{StaticResource TextMutedBrush}"
                                    HorizontalAlignment="Center" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Nav Icons -->
-                <StackPanel DockPanel.Dock="Top" Margin="0,0,0,0">
+                <StackPanel DockPanel.Dock="Top">
                     <RadioButton x:Name="NavVision" Content="&#xE8B4;" FontFamily="Segoe MDL2 Assets"
                                  FontSize="20" IsChecked="True" GroupName="Nav"
                                  Click="NavButton_Click" Tag="Vision"
-                                 Width="52" Height="52" Margin="0,0,0,8"
-                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                 Cursor="Hand"/>
+                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,8"/>
                     <RadioButton x:Name="NavProcessing" Content="&#xE74F;" FontFamily="Segoe MDL2 Assets"
                                  FontSize="20" GroupName="Nav"
                                  Click="NavButton_Click" Tag="Processing"
-                                 Width="52" Height="52" Margin="0,0,0,8"
-                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                 Cursor="Hand"/>
+                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,8"/>
                     <RadioButton x:Name="NavAI" Content="&#xE99A;" FontFamily="Segoe MDL2 Assets"
                                  FontSize="20" GroupName="Nav"
                                  Click="NavButton_Click" Tag="AI"
-                                 Width="52" Height="52" Margin="0,0,0,8"
-                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                 Cursor="Hand"/>
+                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,8"/>
                     <RadioButton x:Name="NavCloud" Content="&#xE753;" FontFamily="Segoe MDL2 Assets"
                                  FontSize="20" GroupName="Nav"
                                  Click="NavButton_Click" Tag="Cloud"
-                                 Width="52" Height="52" Margin="0,0,0,8"
-                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                 Cursor="Hand"/>
+                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,8"/>
                     <RadioButton x:Name="NavIndustrial" Content="&#xE774;" FontFamily="Segoe MDL2 Assets"
                                  FontSize="20" GroupName="Nav"
                                  Click="NavButton_Click" Tag="Industrial"
-                                 Width="52" Height="52" Margin="0,0,0,8"
-                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                 Cursor="Hand"/>
+                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,8"/>
                     <RadioButton x:Name="NavLog" Content="&#xE7BA;" FontFamily="Segoe MDL2 Assets"
                                  FontSize="20" GroupName="Nav"
                                  Click="NavButton_Click" Tag="Log"
-                                 Width="52" Height="52" Margin="0,0,0,8"
-                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                 Cursor="Hand"/>
+                                 Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,8"/>
                 </StackPanel>
 
                 <!-- Bottom icons -->
                 <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,20"
                             HorizontalAlignment="Center">
                     <Button x:Name="SettingsButton" Content="&#xE713;" FontFamily="Segoe MDL2 Assets"
-                            FontSize="18" Width="40" Height="40" Background="Transparent"
-                            Foreground="#7A8B9E" BorderThickness="0" Cursor="Hand"/>
+                            FontSize="18" Style="{StaticResource SidebarIconButton}"/>
                 </StackPanel>
             </DockPanel>
         </Border>
@@ -90,27 +78,27 @@
             </Grid.RowDefinitions>
 
             <!-- Title Bar -->
-            <Grid Grid.Row="0" Background="#80101624">
+            <Grid Grid.Row="0" Background="{StaticResource TitleBarBgBrush}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
                     <Ellipse x:Name="ConnectionIndicator" Width="8" Height="8" Fill="#484F58" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="StatusText" Text="Disconnected" Foreground="#7A8B9E" FontSize="12" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="StatusText" Text="Disconnected" Foreground="{StaticResource TextMutedBrush}" FontSize="12" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="&#xE949;" FontFamily="Segoe MDL2 Assets" FontSize="10" Width="46" Height="32"
-                            Background="Transparent" Foreground="#7A8B9E" BorderThickness="0" Click="MinimizeButton_Click" Cursor="Hand"/>
-                    <Button x:Name="MaximizeBtn" Content="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="10" Width="46" Height="32"
-                            Background="Transparent" Foreground="#7A8B9E" BorderThickness="0" Click="MaximizeButton_Click" Cursor="Hand"/>
-                    <Button Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10" Width="46" Height="32"
-                            Background="Transparent" Foreground="#7A8B9E" BorderThickness="0" Click="CloseButton_Click" Cursor="Hand"/>
+                    <Button Content="&#xE949;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                            Style="{StaticResource TitleBarButton}" Click="MinimizeButton_Click"/>
+                    <Button x:Name="MaximizeBtn" Content="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                            Style="{StaticResource TitleBarButton}" Click="MaximizeButton_Click"/>
+                    <Button Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                            Style="{StaticResource TitleBarCloseButton}" Click="CloseButton_Click"/>
                 </StackPanel>
             </Grid>
 
-            <!-- Content Panels (switched by sidebar) -->
-            <Grid Grid.Row="1" Margin="0">
+            <!-- Content Panels -->
+            <Grid Grid.Row="1" Margin="8">
                 <views:CameraPanel x:Name="CameraPanelCtrl" Visibility="Visible"/>
                 <views:ProcessingPanel x:Name="ProcessingPanelCtrl" Visibility="Collapsed"/>
                 <views:AIPanel x:Name="AIPanelCtrl" Visibility="Collapsed"/>
@@ -120,8 +108,9 @@
             </Grid>
 
             <!-- Status Bar -->
-            <Border Grid.Row="2" Background="#80101624" BorderBrush="#14FFFFFF" BorderThickness="0,1,0,0"
-                    Padding="20,8">
+            <Border Grid.Row="2" Background="{StaticResource StatusBarBgBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="0,1,0,0"
+                    Padding="20,8" CornerRadius="0,0,8,8">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -134,14 +123,14 @@
 
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
                         <Ellipse x:Name="StatusIndicator" Width="6" Height="6" Fill="#484F58" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock x:Name="StatusTextFooter" Text="Ready" Foreground="#7A8B9E" FontSize="11" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="StatusTextFooter" Text="Ready" Foreground="{StaticResource TextMutedBrush}" FontSize="11" VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <TextBlock Grid.Column="1" x:Name="FpsTextBlock" Text="0 FPS" Foreground="#D1D9E6" FontSize="11"
+                    <TextBlock Grid.Column="1" x:Name="FpsTextBlock" Text="0 FPS" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"
                                VerticalAlignment="Center" Margin="20,0,0,0" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="2" x:Name="ProcessTimeTextBlock" Text="0 ms" Foreground="#7A8B9E" FontSize="11"
+                    <TextBlock Grid.Column="2" x:Name="ProcessTimeTextBlock" Text="0 ms" Foreground="{StaticResource TextMutedBrush}" FontSize="11"
                                VerticalAlignment="Center" Margin="12,0,0,0"/>
-                    <TextBlock Grid.Column="3" x:Name="CameraDataTextBlock" Text="" Foreground="#7A8B9E" FontSize="11"
+                    <TextBlock Grid.Column="3" x:Name="CameraDataTextBlock" Text="" Foreground="{StaticResource TextMutedBrush}" FontSize="11"
                                VerticalAlignment="Center" Margin="12,0,0,0"/>
 
                     <TextBlock Grid.Column="5" Text="OpenCV 5 + AWS" Foreground="#484F58" FontSize="10"
@@ -152,11 +141,11 @@
 
         <!-- Error Banner -->
         <Border x:Name="ErrorBorder" Grid.Column="1" Grid.Row="1" VerticalAlignment="Top"
-                Background="#40F85149" BorderBrush="#F85149" BorderThickness="0,0,0,2"
-                Padding="16,8" Visibility="Collapsed" Panel.ZIndex="100">
+                Background="#40EF4444" BorderBrush="{StaticResource DangerBrush}" BorderThickness="0,0,0,2"
+                Padding="16,8" Visibility="Collapsed" Panel.ZIndex="100" CornerRadius="0,0,8,8">
             <StackPanel Orientation="Horizontal">
-                <TextBlock x:Name="ErrorMessageTextBlock" Text="" Foreground="#F85149" FontSize="12" VerticalAlignment="Center"/>
-                <Button Content="X" Margin="12,0,0,0" Background="Transparent" Foreground="#F85149"
+                <TextBlock x:Name="ErrorMessageTextBlock" Text="" Foreground="{StaticResource DangerBrush}" FontSize="12" VerticalAlignment="Center"/>
+                <Button Content="X" Margin="12,0,0,0" Background="Transparent" Foreground="{StaticResource DangerBrush}"
                         BorderThickness="0" Cursor="Hand" FontSize="12" FontWeight="Bold"
                         Click="HideErrorButton_Click"/>
             </StackPanel>
