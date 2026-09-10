@@ -215,6 +215,30 @@ namespace MachineVisionApp
             HideError();
         }
 
+        /// <summary>拖拽移动窗口</summary>
+        private void TitleBar_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                WindowState = WindowState == WindowState.Maximized
+                    ? WindowState.Normal
+                    : WindowState.Maximized;
+            }
+            else
+            {
+                DragMove();
+            }
+        }
+
+        /// <summary>切换中英文</summary>
+        private void LangSwitchButton_Click(object sender, RoutedEventArgs e)
+        {
+            string current = System.Globalization.CultureInfo.CurrentUICulture.Name;
+            string next = current.StartsWith("zh") ? "en-US" : "zh-CN";
+            TranslationService.Instance.ChangeLanguage(next);
+            LangSwitchButton.Content = next.StartsWith("zh") ? "EN" : "中";
+        }
+
         // ==================== 语言切换 ====================
 
         /// <summary>

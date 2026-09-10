@@ -56,12 +56,12 @@
          GlassButton
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="GlassButton" TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource GlassBgBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="Background" Value="#1AFFFFFF" />
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
         <Setter Property="BorderBrush" Value="{StaticResource GlassBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Padding" Value="20,10" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="18,9" />
+        <Setter Property="FontSize" Value="13" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -72,20 +72,73 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="{StaticResource CornerMd}"
+                            CornerRadius="10"
                             Padding="{TemplateBinding Padding}"
                             SnapsToDevicePixels="True">
                         <Border.Effect>
                             <DropShadowEffect x:Name="shadow"
-                                              Color="Transparent"
-                                              ShadowDepth="0"
-                                              BlurRadius="0"
-                                              Opacity="0" />
+                                              Color="Transparent" ShadowDepth="0"
+                                              BlurRadius="0" Opacity="0" />
                         </Border.Effect>
-                        <Border x:Name="innerBorder"
+                        <ContentPresenter x:Name="contentPresenter"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          RecognizesAccessKey="True" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#26FFFFFF" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#33FFFFFF" />
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#33FFFFFF" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#44FFFFFF" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ───────────────────────────────────────────────────────────────
+         AccentButton (primary action: connect, start, load model)
+         ─────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AccentButton" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TextDarkBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="20,10" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="0"
+                            CornerRadius="10"
+                            Padding="{TemplateBinding Padding}"
+                            SnapsToDevicePixels="True">
+                        <Border.Effect>
+                            <DropShadowEffect x:Name="glow"
+                                              Color="#FAE20A" ShadowDepth="0"
+                                              BlurRadius="0" Opacity="0" />
+                        </Border.Effect>
+                        <Border x:Name="innerGlow"
                                 Background="Transparent"
-                                CornerRadius="{StaticResource CornerMd}"
-                                Padding="0">
+                                CornerRadius="10"
+                                BorderThickness="0">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#FFFFFF" ShadowDepth="0"
+                                                  BlurRadius="0" Opacity="0"
+                                                  Direction="270" />
+                            </Border.Effect>
                             <ContentPresenter x:Name="contentPresenter"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center"
@@ -94,42 +147,80 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#B3101624" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#29FFFFFF" />
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource AccentHoverBrush}" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="shadow"
+                                        <DoubleAnimation Storyboard.TargetName="glow"
                                                          Storyboard.TargetProperty="Opacity"
-                                                         To="0.6" Duration="0:0:0.2" />
-                                        <DoubleAnimation Storyboard.TargetName="shadow"
+                                                         To="0.4" Duration="0:0:0.2" />
+                                        <DoubleAnimation Storyboard.TargetName="glow"
                                                          Storyboard.TargetProperty="BlurRadius"
                                                          To="20" Duration="0:0:0.2" />
-                                        <ColorAnimation Storyboard.TargetName="shadow"
-                                                        Storyboard.TargetProperty="Color"
-                                                        To="#FAE20A" Duration="0:0:0.2" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
                             <Trigger.ExitActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="shadow"
+                                        <DoubleAnimation Storyboard.TargetName="glow"
                                                          Storyboard.TargetProperty="Opacity"
-                                                         To="0" Duration="0:0:0.25" />
-                                        <DoubleAnimation Storyboard.TargetName="shadow"
+                                                         To="0" Duration="0:0:0.2" />
+                                        <DoubleAnimation Storyboard.TargetName="glow"
                                                          Storyboard.TargetProperty="BlurRadius"
-                                                         To="0" Duration="0:0:0.25" />
-                                        <ColorAnimation Storyboard.TargetName="shadow"
-                                                        Storyboard.TargetProperty="Color"
-                                                        To="Transparent" Duration="0:0:0.25" />
+                                                         To="0" Duration="0:0:0.2" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#CC101624" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#33FFFFFF" />
+                            <Setter TargetName="border" Property="Background" Value="#E6D41A00" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ───────────────────────────────────────────────────────────────
+         DangerButton (red action: disconnect, stop)
+         ─────────────────────────────────────────────────────────────── -->
+    <Style x:Key="DangerButton" TargetType="Button">
+        <Setter Property="Background" Value="#1AEF4444" />
+        <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+        <Setter Property="BorderBrush" Value="#33EF4444" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="18,9" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="10"
+                            Padding="{TemplateBinding Padding}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter x:Name="contentPresenter"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          RecognizesAccessKey="True" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#33EF4444" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#66EF4444" />
+                            <Setter Property="Foreground" Value="#FFEF4444" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#44EF4444" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.4" />

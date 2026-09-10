@@ -23,7 +23,8 @@
                 BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="0,0,1,0">
             <DockPanel>
                 <!-- Logo -->
-                <Border DockPanel.Dock="Top" Height="70" Margin="0,16,0,30">
+                <Border DockPanel.Dock="Top" Height="70" Margin="0,16,0,20"
+                        MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="MV" FontSize="22" FontWeight="Black" Foreground="{StaticResource AccentBrush}"
                                    HorizontalAlignment="Center"/>
@@ -60,9 +61,12 @@
                                  Style="{StaticResource SidebarNavRadio}" Margin="0,0,0,8"/>
                 </StackPanel>
 
-                <!-- Bottom icons -->
+                <!-- Language Switch + Settings -->
                 <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,20"
                             HorizontalAlignment="Center">
+                    <Button x:Name="LangSwitchButton" Content="EN" FontSize="11" FontWeight="Bold"
+                            Style="{StaticResource SidebarIconButton}" Click="LangSwitchButton_Click"
+                            ToolTip="Switch Language" Margin="0,0,0,8"/>
                     <Button x:Name="SettingsButton" Content="&#xE713;" FontFamily="Segoe MDL2 Assets"
                             FontSize="18" Style="{StaticResource SidebarIconButton}"/>
                 </StackPanel>
@@ -77,8 +81,9 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Title Bar -->
-            <Grid Grid.Row="0" Background="{StaticResource TitleBarBgBrush}">
+            <!-- Title Bar (draggable) -->
+            <Grid Grid.Row="0" Background="{StaticResource TitleBarBgBrush}"
+                  MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>

@@ -84,7 +84,7 @@
                     <!-- Upload Button -->
                     <Button x:Name="CloudUploadScreenshotButton"
                             Content="Upload Screenshot"
-                            Style="{StaticResource GlassButton}"
+                            Style="{StaticResource AccentButton}"
                             Padding="14,8"
                             FontSize="13"
                             IsEnabled="False"
@@ -330,7 +330,7 @@
 
                     <Button x:Name="CloudInitButton"
                             Content="Initialize All"
-                            Style="{StaticResource GlassButton}"
+                            Style="{StaticResource AccentButton}"
                             Padding="24,12"
                             FontSize="15"
                             FontWeight="Bold"

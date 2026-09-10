@@ -61,7 +61,7 @@
                             <Button x:Name="LoadYoloModelButton"
                                     Grid.Column="0"
                                     Content="Load Model"
-                                    Style="{StaticResource GlassButton}"
+                                    Style="{StaticResource AccentButton}"
                                     Padding="14,8"
                                     FontSize="13"
                                     Margin="0,0,12,0"

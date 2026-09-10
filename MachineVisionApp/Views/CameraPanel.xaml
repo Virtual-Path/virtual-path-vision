@@ -120,22 +120,23 @@
                     <!-- Button Row -->
                     <Grid>
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
                         <Button x:Name="ConnectButton"
                                 Grid.Column="0"
                                 Content="Connect"
-                                Style="{StaticResource GlassButton}"
+                                Style="{StaticResource AccentButton}"
                                 Click="ConnectButton_Click"
                                 Margin="0,0,8,0" />
 
                         <Button x:Name="DisconnectButton"
                                 Grid.Column="1"
                                 Content="Disconnect"
-                                Style="{StaticResource GlassButton}"
+                                Style="{StaticResource DangerButton}"
                                 IsEnabled="False"
                                 Click="DisconnectButton_Click"
                                 Margin="0,0,8,0" />
@@ -150,31 +151,32 @@
 
                 <!-- Thin divider -->
                 <Border Height="1"
-                        Background="{StaticResource GlassBorderBrush}"
+                        Background="{StaticResource GlassDividerBrush}"
                         Margin="0,2" />
 
                 <!-- ═══ Camera Quick Controls ═══ -->
-                <StackPanel >
+                <StackPanel>
 
                     <Grid>
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
                         <Button x:Name="StartCameraButton"
                                 Grid.Column="0"
                                 Content="Start Camera"
-                                Style="{StaticResource GlassButton}"
+                                Style="{StaticResource AccentButton}"
                                 Click="StartCameraButton_Click"
                                 Margin="0,0,8,0" />
 
                         <Button x:Name="StopCameraButton"
                                 Grid.Column="1"
                                 Content="Stop Camera"
-                                Style="{StaticResource GlassButton}"
+                                Style="{StaticResource DangerButton}"
                                 IsEnabled="False"
                                 Click="StopCameraButton_Click"
                                 Margin="0,0,8,0" />
