@@ -199,20 +199,20 @@
 
         <!-- Error Banner — toast style, top of content area with margin -->
         <Border x:Name="ErrorBorder" Grid.Column="1" Grid.Row="1" VerticalAlignment="Top" Margin="12,12,12,0"
-                Background="#E0EF4444" BorderBrush="{StaticResource DangerBrush}" BorderThickness="0,0,0,2"
+                Background="#E010141C" BorderBrush="{StaticResource DangerBrush}" BorderThickness="1,1,1,3"
                 Padding="16,10" Visibility="Collapsed" Panel.ZIndex="100" CornerRadius="8"
                 RenderTransformOrigin="0.5,0">
             <Border.RenderTransform>
                 <TranslateTransform x:Name="ErrorTranslateY" Y="-40"/>
             </Border.RenderTransform>
             <Border.Effect>
-                <DropShadowEffect Color="#000000" ShadowDepth="4" BlurRadius="16" Opacity="0.3" Direction="270"/>
+                <DropShadowEffect Color="#000000" ShadowDepth="4" BlurRadius="16" Opacity="0.4" Direction="270"/>
             </Border.Effect>
             <StackPanel Orientation="Horizontal">
                 <TextBlock x:Name="ErrorMessageTextBlock" Text="" Foreground="{StaticResource DangerBrush}"
                            FontSize="12" VerticalAlignment="Center" FontWeight="Medium"/>
                 <Button Content="X" Margin="12,0,0,0" Background="Transparent"
-                        Foreground="{StaticResource DangerBrush}"
+                        Foreground="{StaticResource TextMutedBrush}"
                         BorderThickness="0" Cursor="Hand" FontSize="12" FontWeight="Bold"
                         Click="HideErrorButton_Click"/>
             </StackPanel>
