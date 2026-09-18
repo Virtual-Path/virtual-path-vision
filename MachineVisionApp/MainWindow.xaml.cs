@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using MachineVisionApp.AI;
 using MachineVisionApp.Cloud;
 using MachineVisionApp.Industrial;
@@ -1550,20 +1552,43 @@ namespace MachineVisionApp
             });
         }
 
+        private readonly DispatcherTimer _errorAutoCloseTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+
         // ==================== 错误提示 ====================
 
-        /// <summary>显示错误信息</summary>
+        /// <summary>显示错误信息（带滑入动画 + 5秒自动关闭）</summary>
         private void ShowError(string message)
         {
             ErrorBorder.Visibility = Visibility.Visible;
             ErrorMessageTextBlock.Text = message;
+
+            // 滑入动画
+            var slideIn = new DoubleAnimation(-40, 0, TimeSpan.FromMilliseconds(250))
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+            ErrorTranslateY.BeginAnimation(TranslateTransform.YProperty, slideIn);
+
+            // 重置自动关闭计时器
+            _errorAutoCloseTimer.Stop();
+            _errorAutoCloseTimer.Start();
         }
 
-        /// <summary>隐藏错误信息</summary>
+        /// <summary>隐藏错误信息（带滑出动画）</summary>
         private void HideError()
         {
-            ErrorBorder.Visibility = Visibility.Collapsed;
-            ErrorMessageTextBlock.Text = "";
+            _errorAutoCloseTimer.Stop();
+
+            var slideOut = new DoubleAnimation(0, -40, TimeSpan.FromMilliseconds(200))
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+            };
+            slideOut.Completed += (_, _) =>
+            {
+                ErrorBorder.Visibility = Visibility.Collapsed;
+                ErrorMessageTextBlock.Text = "";
+            };
+            ErrorTranslateY.BeginAnimation(TranslateTransform.YProperty, slideOut);
         }
 
         // ==================== 数字孪生 ====================
