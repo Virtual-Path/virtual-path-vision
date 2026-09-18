@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -365,6 +366,7 @@ namespace MachineVisionApp
         /// </summary>
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            RestoreWindowState();
             RefreshLocalizedControls();
 
             // 日志面板
@@ -397,6 +399,8 @@ namespace MachineVisionApp
         /// </summary>
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
+            SaveWindowState();
+
             _recordingComponent.Dispose();
             _videoCaptureComponent.Dispose();
             _templateMatchComponent.Clear();
@@ -1553,6 +1557,54 @@ namespace MachineVisionApp
         }
 
         private readonly DispatcherTimer _errorAutoCloseTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+
+        // ==================== 窗口状态持久化 ====================
+
+        private static readonly string WindowSettingsPath = Path.Combine(
+            AppContext.BaseDirectory, "window_settings.json");
+
+        private void SaveWindowState()
+        {
+            try
+            {
+                var state = new
+                {
+                    WindowLeft = Left,
+                    WindowTop = Top,
+                    WindowWidth = Width,
+                    WindowHeight = Height,
+                    IsMaximized = WindowState == WindowState.Maximized
+                };
+                File.WriteAllText(WindowSettingsPath, JsonSerializer.Serialize(state));
+            }
+            catch { }
+        }
+
+        private void RestoreWindowState()
+        {
+            try
+            {
+                if (!File.Exists(WindowSettingsPath)) return;
+                string json = File.ReadAllText(WindowSettingsPath);
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("WindowLeft", out var left) &&
+                    root.TryGetProperty("WindowTop", out var top) &&
+                    root.TryGetProperty("WindowWidth", out var w) &&
+                    root.TryGetProperty("WindowHeight", out var h))
+                {
+                    Left = left.GetDouble();
+                    Top = top.GetDouble();
+                    Width = w.GetDouble();
+                    Height = h.GetDouble();
+                }
+
+                if (root.TryGetProperty("IsMaximized", out var maximized) && maximized.GetBoolean())
+                    WindowState = WindowState.Maximized;
+            }
+            catch { }
+        }
 
         // ==================== 错误提示 ====================
 

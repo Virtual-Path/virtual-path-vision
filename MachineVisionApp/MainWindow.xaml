@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:MachineVisionApp"
         xmlns:views="clr-namespace:MachineVisionApp.Views"
-        Title="MachineVisionApp" WindowState="Maximized"
-        Background="#07090E" WindowStyle="None" AllowsTransparency="False"
-        ResizeMode="CanResizeWithGrip">
+        Title="MachineVisionApp" WindowState="Normal" WindowStyle="None" AllowsTransparency="False"
+        Width="1400" Height="850" MinWidth="900" MinHeight="600"
+        Background="#07090E" ResizeMode="CanResizeWithGrip">
 
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="0" GlassFrameThickness="0" ResizeBorderThickness="8"
