@@ -124,6 +124,26 @@ public partial class IndustrialPanel : UserControl
         SectionOPCUATitle.Text = t.SectionOPCUA;
         SectionBarcodeTitle.Text = t.SectionBarcodeScanner;
         SectionReportTitle.Text = t.SectionWorkReport;
+
+        // 字段标签
+        ModbusIpLabel.Text = t.FieldIPAddress;
+        ModbusPortLabel.Text = t.FieldPort;
+        ModbusUnitLabel.Text = t.FieldUnitID;
+        ModbusAddrLabel.Text = t.FieldRegisterAddress;
+        ModbusValueLabel.Text = t.Value;
+        OpcUaEndpointLabel.Text = t.EndpointUrl;
+        OpcUaNodeLabel.Text = t.FieldNodeID;
+        OpcUaValueLabel.Text = t.Value;
+        ScanSourceLabel.Text = t.FieldScanSource;
+        SerialConfigLabel.Text = t.SerialConfig;
+        SerialPortLabel.Text = t.FieldPort;
+        BaudRateLabel.Text = t.FieldBaudRate;
+        TcpConfigLabel.Text = t.TCPConfig;
+        TcpPortLabel.Text = t.FieldPort;
+        WorkOrderLabel.Text = t.FieldWorkOrder;
+        PlcRegisterLabel.Text = t.FieldPLCRegister;
+        TodayCountLabel.Text = t.FieldTodayCount;
+        LastBarcodeLabel.Text = t.FieldLastBarcode;
     }
 
     public void SetModbusState(bool connected, string statusText)

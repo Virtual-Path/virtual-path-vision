@@ -19,12 +19,12 @@
             <Color x:Key="ColorPrimaryDim">#58A6FF20</Color>
             <Color x:Key="ColorSuccess">#3FB950</Color>
             <Color x:Key="ColorSuccessDim">#3FB95020</Color>
-            <Color x:Key="ColorDanger">#F85149</Color>
-            <Color x:Key="ColorDangerDim">#F8514920</Color>
+            <Color x:Key="ColorDanger">#EF4444</Color>
+            <Color x:Key="ColorDangerDim">#EF444420</Color>
             <Color x:Key="ColorWarning">#D29922</Color>
-            <Color x:Key="ColorTextPrimary">#E6EDF3</Color>
-            <Color x:Key="ColorTextSecondary">#8B949E</Color>
-            <Color x:Key="ColorTextMuted">#484F58</Color>
+            <Color x:Key="ColorTextPrimary">#FFFFFF</Color>
+            <Color x:Key="ColorTextSecondary">#D1D9E6</Color>
+            <Color x:Key="ColorTextMuted">#7A8B9E</Color>
             <Color x:Key="ColorInputBg">#0B0E14</Color>
 
             <SolidColorBrush x:Key="BgBrush" Color="{StaticResource ColorBg}"/>

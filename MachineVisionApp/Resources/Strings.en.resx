@@ -619,4 +619,64 @@
   <data name="ServicesNotInit" xml:space="preserve">
     <value>Services Not Initialized</value>
   </data>
+  <data name="BtnLoadModel" xml:space="preserve">
+    <value>Load Model</value>
+  </data>
+  <data name="StatusLoaded" xml:space="preserve">
+    <value>Loaded</value>
+  </data>
+  <data name="NoUploads" xml:space="preserve">
+    <value>No uploads yet</value>
+  </data>
+  <data name="Thresholds" xml:space="preserve">
+    <value>Thresholds</value>
+  </data>
+  <data name="Objects" xml:space="preserve">
+    <value>Objects</value>
+  </data>
+  <data name="EndpointUrl" xml:space="preserve">
+    <value>Endpoint URL</value>
+  </data>
+  <data name="StatDetections" xml:space="preserve">
+    <value>Detections: {0}</value>
+  </data>
+  <data name="StatTracks" xml:space="preserve">
+    <value>Tracks: {0}</value>
+  </data>
+  <data name="StatInterval" xml:space="preserve">
+    <value>Interval: {0}</value>
+  </data>
+  <data name="StatDefects" xml:space="preserve">
+    <value>Defects: {0}</value>
+  </data>
+  <data name="StatPass" xml:space="preserve">
+    <value>Pass: {0}%</value>
+  </data>
+  <data name="StatusReady" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="StatusLoadFailed" xml:space="preserve">
+    <value>Load Failed</value>
+  </data>
+  <data name="StatusInitFailed" xml:space="preserve">
+    <value>Init Failed</value>
+  </data>
+  <data name="PromptLoadModel" xml:space="preserve">
+    <value>Load a YOLO model first</value>
+  </data>
+  <data name="PromptRegion" xml:space="preserve">
+    <value>Enter an AWS Region</value>
+  </data>
+  <data name="PromptInitS3" xml:space="preserve">
+    <value>Initialize the S3 service first</value>
+  </data>
+  <data name="PromptNoScreenshot" xml:space="preserve">
+    <value>No screenshot to upload</value>
+  </data>
+  <data name="PromptInitIoT" xml:space="preserve">
+    <value>Initialize the IoT service first</value>
+  </data>
+  <data name="PromptInitLambda" xml:space="preserve">
+    <value>Initialize the Lambda client first</value>
+  </data>
 </root>

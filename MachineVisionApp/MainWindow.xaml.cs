@@ -82,6 +82,8 @@ namespace MachineVisionApp
         public MainWindow()
         {
             InitializeComponent();
+            InitErrorTimer();
+            StateChanged += (_, _) => UpdateMaximizeIcon();
 
             _faceDetectionComponent = new Components.FaceDetectionComponent(
                 System.IO.Path.Combine(AppContext.BaseDirectory, "face_detection_yunet_2023mar.onnx"));
@@ -206,6 +208,12 @@ namespace MachineVisionApp
                 : WindowState.Maximized;
         }
 
+        /// <summary>根据窗口状态切换最大化/还原图标</summary>
+        private void UpdateMaximizeIcon()
+        {
+            MaximizeBtn.Content = WindowState == WindowState.Maximized ? "" : "";
+        }
+
         /// <summary>关闭窗口</summary>
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
@@ -256,11 +264,22 @@ namespace MachineVisionApp
         public void RefreshAllTexts()
         {
             RefreshLocalizedControls();
+
+            // 标题栏/状态栏连接状态文本按当前语言重绘
+            string connText = TranslationService.Instance.GetConnectionStatusText(_lastConnState);
+            StatusText.Text = connText;
+            StatusTextFooter.Text = connText;
+
             CameraPanelCtrl.RefreshTexts();
             ProcessingPanelCtrl.RefreshTexts();
             AIPanelCtrl.RefreshTexts();
             CloudPanelCtrl.RefreshTexts();
             IndustrialPanelCtrl.RefreshTexts();
+            // 扫码开关按钮按实际运行状态重绘（RefreshTexts 默认置为“启动”）
+            IndustrialPanelCtrl.SerialToggleButtonEl.Content =
+                _serialDriver.IsRunning ? TranslationService.Instance.Stop : TranslationService.Instance.Start;
+            IndustrialPanelCtrl.TcpToggleButtonEl.Content =
+                _tcpDriver.IsRunning ? TranslationService.Instance.Stop : TranslationService.Instance.Start;
             LogPanelCtrl.RefreshTexts();
         }
 
@@ -367,7 +386,7 @@ namespace MachineVisionApp
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             RestoreWindowState();
-            RefreshLocalizedControls();
+            RefreshAllTexts(); // 语言切换 + 本地化控件全部刷新（启动时按已保存语言初始化）
 
             // 日志面板
             LogPanelCtrl.SetLogSource(AppLogger.Instance.Entries);
@@ -745,7 +764,7 @@ namespace MachineVisionApp
             }
             catch (Exception ex)
             {
-                AIPanelCtrl.SetModelStatus(false, "Load Failed");
+                AIPanelCtrl.SetModelStatus(false, TranslationService.Instance.StatusLoadFailed);
                 ShowError($"YOLO 模型加载失败: {ex.Message}");
                 AppLogger.Instance.Error($"YOLO 模型加载失败: {ex.Message}");
             }
@@ -758,7 +777,7 @@ namespace MachineVisionApp
 
             if (_aiEnabled && (_yoloComponent == null || !_yoloComponent.IsModelLoaded))
             {
-                ShowError("请先加载 YOLO 模型");
+                ShowError(TranslationService.Instance.PromptLoadModel);
                 AIPanelCtrl.AiEnableCheckBoxEl.IsChecked = false;
                 _aiEnabled = false;
                 return;
@@ -789,7 +808,7 @@ namespace MachineVisionApp
 
             if (string.IsNullOrEmpty(region))
             {
-                ShowError("请输入 AWS Region");
+                ShowError(TranslationService.Instance.PromptRegion);
                 return;
             }
 
@@ -803,7 +822,7 @@ namespace MachineVisionApp
                         Dispatcher.Invoke(() => AppLogger.Instance.Info($"S3 上传成功: {key}"));
                     _s3Service.OnUploadError += (key, ex) =>
                         Dispatcher.Invoke(() => AppLogger.Instance.Error($"S3 上传失败: {key} - {ex.Message}"));
-                    CloudPanelCtrl.SetS3Status(true, "Connected");
+                    CloudPanelCtrl.SetS3Status(true, TranslationService.Instance.StatusConnected);
                     AppLogger.Instance.Info($"S3 服务已初始化: {bucket} ({region})");
                 }
 
@@ -829,7 +848,7 @@ namespace MachineVisionApp
                         Dispatcher.Invoke(() => AppLogger.Instance.Info($"IoT 发布成功: {topic}"));
                     _iotService.OnPublishError += (topic, ex) =>
                         Dispatcher.Invoke(() => AppLogger.Instance.Error($"IoT 发布失败: {topic} - {ex.Message}"));
-                    CloudPanelCtrl.SetIoTStatus(true, "Connected");
+                    CloudPanelCtrl.SetIoTStatus(true, TranslationService.Instance.StatusConnected);
                     AppLogger.Instance.Info($"IoT 服务已初始化: {iotEndpoint}");
                 }
 
@@ -841,16 +860,16 @@ namespace MachineVisionApp
                         Dispatcher.Invoke(() => AppLogger.Instance.Info($"Lambda 调用成功: {fn}"));
                     _lambdaClient.OnInvocationError += (fn, ex) =>
                         Dispatcher.Invoke(() => AppLogger.Instance.Error($"Lambda 调用失败: {fn} - {ex.Message}"));
-                    CloudPanelCtrl.SetLambdaStatus(true, "Ready");
+                    CloudPanelCtrl.SetLambdaStatus(true, TranslationService.Instance.StatusReady);
                     AppLogger.Instance.Info($"Lambda 客户端已初始化: {lambdaFunc}");
                 }
 
-                CloudPanelCtrl.SetCloudOverallStatus("Connected");
+                CloudPanelCtrl.SetCloudOverallStatus(TranslationService.Instance.StatusConnected);
                 HideError();
             }
             catch (Exception ex)
             {
-                CloudPanelCtrl.SetCloudOverallStatus("Init Failed");
+                CloudPanelCtrl.SetCloudOverallStatus(TranslationService.Instance.StatusInitFailed);
                 ShowError($"Cloud 初始化失败: {ex.Message}");
                 AppLogger.Instance.Error($"Cloud 初始化失败: {ex.Message}");
             }
@@ -862,7 +881,7 @@ namespace MachineVisionApp
         {
             if (_s3Service == null)
             {
-                ShowError("请先初始化 S3 服务");
+                ShowError(TranslationService.Instance.PromptInitS3);
                 return;
             }
 
@@ -871,7 +890,7 @@ namespace MachineVisionApp
                 var source = CameraPanelCtrl.OriginalImageEl.Source as System.Windows.Media.Imaging.BitmapSource;
                 if (source == null)
                 {
-                    ShowError("没有可上传的截图");
+                    ShowError(TranslationService.Instance.PromptNoScreenshot);
                     return;
                 }
 
@@ -901,7 +920,7 @@ namespace MachineVisionApp
         {
             if (_iotService == null)
             {
-                ShowError("请先初始化 IoT 服务");
+                ShowError(TranslationService.Instance.PromptInitIoT);
                 return;
             }
 
@@ -923,7 +942,7 @@ namespace MachineVisionApp
         {
             if (_iotService == null)
             {
-                ShowError("请先初始化 IoT 服务");
+                ShowError(TranslationService.Instance.PromptInitIoT);
                 return;
             }
 
@@ -945,7 +964,7 @@ namespace MachineVisionApp
         {
             if (_lambdaClient == null)
             {
-                ShowError("请先初始化 Lambda 客户端");
+                ShowError(TranslationService.Instance.PromptInitLambda);
                 return;
             }
 
@@ -1236,6 +1255,7 @@ namespace MachineVisionApp
         {
             Dispatcher.Invoke(() =>
             {
+                _lastConnState = state;
                 string statusText = TranslationService.Instance.GetConnectionStatusText(state);
                 bool connected = state == Components.ConnectionState.Connected;
 
@@ -1557,6 +1577,19 @@ namespace MachineVisionApp
         }
 
         private readonly DispatcherTimer _errorAutoCloseTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+
+        /// <summary>最近一次连接状态（语言切换时用于重绘状态文本）</summary>
+        private Components.ConnectionState _lastConnState = Components.ConnectionState.Disconnected;
+
+        /// <summary>初始化错误提示计时器（5秒后自动关闭）</summary>
+        private void InitErrorTimer()
+        {
+            _errorAutoCloseTimer.Tick += (_, _) =>
+            {
+                _errorAutoCloseTimer.Stop();
+                HideError();
+            };
+        }
 
         // ==================== 窗口状态持久化 ====================
 

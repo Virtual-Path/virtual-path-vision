@@ -58,7 +58,8 @@
 
                     <!-- Bucket -->
                     <StackPanel Margin="0,0,0,12">
-                        <TextBlock Text="Bucket:"
+                        <TextBlock x:Name="BucketLabel"
+                                   Text="Bucket:"
                                    FontSize="13"
                                    Foreground="{StaticResource TextSecondaryBrush}"
                                    Margin="0,0,0,6" />
@@ -71,7 +72,8 @@
 
                     <!-- Region -->
                     <StackPanel Margin="0,0,0,14">
-                        <TextBlock Text="Region:"
+                        <TextBlock x:Name="RegionLabel"
+                                   Text="Region:"
                                    FontSize="13"
                                    Foreground="{StaticResource TextSecondaryBrush}"
                                    Margin="0,0,0,6" />
@@ -101,7 +103,8 @@
 
                     <!-- Recent Uploads -->
                     <StackPanel Margin="0,0,0,4">
-                        <TextBlock Text="Recent Uploads"
+                        <TextBlock x:Name="RecentUploadsLabel"
+                                   Text="Recent Uploads"
                                    FontSize="14"
                                    FontWeight="SemiBold"
                                    Foreground="{StaticResource TextSecondaryBrush}"
@@ -174,7 +177,8 @@
 
                     <!-- Endpoint -->
                     <StackPanel Margin="0,0,0,12">
-                        <TextBlock Text="Endpoint:"
+                        <TextBlock x:Name="EndpointLabel"
+                                   Text="Endpoint:"
                                    FontSize="13"
                                    Foreground="{StaticResource TextSecondaryBrush}"
                                    Margin="0,0,0,6" />
@@ -187,7 +191,8 @@
 
                     <!-- Topic Prefix -->
                     <StackPanel Margin="0,0,0,14">
-                        <TextBlock Text="Topic Prefix:"
+                        <TextBlock x:Name="TopicPrefixLabel"
+                                   Text="Topic Prefix:"
                                    FontSize="13"
                                    Foreground="{StaticResource TextSecondaryBrush}"
                                    Margin="0,0,0,6" />
@@ -273,7 +278,8 @@
 
                     <!-- Function -->
                     <StackPanel Margin="0,0,0,14">
-                        <TextBlock Text="Function:"
+                        <TextBlock x:Name="FunctionLabel"
+                                   Text="Function:"
                                    FontSize="13"
                                    Foreground="{StaticResource TextSecondaryBrush}"
                                    Margin="0,0,0,6" />
@@ -295,7 +301,8 @@
 
                     <!-- Last Result -->
                     <StackPanel>
-                        <TextBlock Text="Last Result:"
+                        <TextBlock x:Name="LastResultLabel"
+                                   Text="Last Result:"
                                    FontSize="14"
                                    FontWeight="SemiBold"
                                    Foreground="{StaticResource TextSecondaryBrush}"

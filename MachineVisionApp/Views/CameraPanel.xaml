@@ -93,7 +93,7 @@
                                     
                                     VerticalAlignment="Center">
 
-                            <TextBlock Text="IP:"
+                            <TextBlock x:Name="CameraIpLabel" Text="IP:"
                                        FontSize="13"
                                        Foreground="{StaticResource TextMutedBrush}"
                                        VerticalAlignment="Center"
@@ -236,7 +236,7 @@
                                            Foreground="{StaticResource TextMutedBrush}"
                                            HorizontalAlignment="Center"
                                            Opacity="0.4" />
-                                <TextBlock Text="No Signal"
+                                <TextBlock x:Name="NoSignalOriginalText" Text="No Signal"
                                            FontSize="14"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            HorizontalAlignment="Center"
@@ -268,7 +268,7 @@
                                            Foreground="{StaticResource TextMutedBrush}"
                                            HorizontalAlignment="Center"
                                            Opacity="0.4" />
-                                <TextBlock Text="No Signal"
+                                <TextBlock x:Name="NoSignalEdgeText" Text="No Signal"
                                            FontSize="14"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            HorizontalAlignment="Center"

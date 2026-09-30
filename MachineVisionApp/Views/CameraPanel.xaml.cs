@@ -57,6 +57,9 @@ public partial class CameraPanel : UserControl
         RecordButton.Content = t.StartRecording;
         SectionTitleText.Text = t.SectionCamera;
         SourceLabel.Text = t.FieldSource;
+        CameraIpLabel.Text = t.FieldIP;
+        NoSignalOriginalText.Text = t.StatusNoSignal;
+        NoSignalEdgeText.Text = t.StatusNoSignal;
     }
 
     public void SetConnected(bool connected, string statusText)

@@ -49,28 +49,62 @@ public partial class AIPanel : UserControl
         ConfThresholdTextBox.LostFocus += ConfThresholdTextBox_LostFocus;
     }
 
+    // ── 状态（语言切换时用于恢复） ────────────────────────────────────
+    private bool _modelLoaded;
+    private bool _breakdownEmpty = true;
+    private int _detections;
+    private int _tracks;
+    private int _interval = 1;
+    private int _twinDetections;
+    private int _twinDefects;
+    private double _twinPassRate = 100;
+
     // ── Public Helpers ───────────────────────────────────────────────
 
     public void RefreshTexts()
     {
         var t = TranslationService.Instance;
-        LoadYoloModelButton.Content = t.LoadImage;
-        AiEnableCheckBox.Content = "Enable";
+        LoadYoloModelButton.Content = t.BtnLoadModel;
+        AiEnableCheckBox.Content = t.BtnEnable;
 
         SectionAITitle.Text = t.SectionAIDetection;
         SectionDigitalTwinTitle.Text = t.SectionDigitalTwin;
         SectionActivePerceptionTitle.Text = t.SectionActivePerception;
         SectionBreakdownTitle.Text = t.SectionDetectionBreakdown;
         SectionTrackingTitle.Text = t.SectionTrackingTrail;
+
+        // 字段标签
+        ConfidenceLabel.Text = t.FieldConfidence;
+        FrameCountLabel.Text = t.FrameCount;
+        ActiveTracksLabel.Text = t.ActiveTracks;
+        LostTracksLabel.Text = t.LostTracks;
+        AdaptiveIntervalLabel.Text = t.AdaptiveInterval;
+        RoiRegionsLabel.Text = t.ROIRegions;
+        MaxTrailLabel.Text = t.FieldMaxTrailLength;
+        MatchThresholdLabel.Text = t.FieldMatchThreshold;
+
+        // 状态（保留当前是否已加载）
+        SetModelStatus(_modelLoaded, YoloModelPathText.Text);
+        if (!_modelLoaded)
+            YoloModelPathText.Text = t.StatusNoModelLoaded;
+        if (_breakdownEmpty)
+            DetectionBreakdownText.Text = t.StatusNoDetections;
+
+        // 动态统计文本按当前语言重绘
+        RenderDetectionStats();
+        RenderTwinStats();
     }
 
     public void SetModelStatus(bool loaded, string path)
     {
+        _modelLoaded = loaded;
         AiStatusDot.Fill = loaded
             ? (Brush)FindResource("SuccessBrush")
             : (Brush)FindResource("TextMutedBrush");
 
-        AiStatusText.Text = loaded ? "Loaded" : "Not Loaded";
+        AiStatusText.Text = loaded
+            ? TranslationService.Instance.StatusLoaded
+            : TranslationService.Instance.StatusNotLoaded;
         YoloModelPathText.Text = path;
         YoloModelPathText.Foreground = loaded
             ? (Brush)FindResource("TextSecondaryBrush")
@@ -79,16 +113,35 @@ public partial class AIPanel : UserControl
 
     public void UpdateDetectionStats(int detections, int tracks, int interval)
     {
-        AiDetectionsText.Text = $"Detections: {detections}";
-        AiTracksText.Text = $"Tracks: {tracks}";
-        AiSampleText.Text = $"Interval: {interval}";
+        _detections = detections;
+        _tracks = tracks;
+        _interval = interval;
+        RenderDetectionStats();
     }
 
     public void UpdateTwinStats(int detections, int defects, double passRate)
     {
-        TwinDetectionsText.Text = $"Detections: {detections}";
-        TwinDefectsText.Text = $"Defects: {defects}";
-        TwinPassRateText.Text = $"Pass: {passRate:F0}%";
+        _twinDetections = detections;
+        _twinDefects = defects;
+        _twinPassRate = passRate;
+        RenderTwinStats();
+    }
+
+    /// <summary>按当前语言渲染检测/孪生统计文本（更新与语言切换共用）</summary>
+    private void RenderDetectionStats()
+    {
+        var t = TranslationService.Instance;
+        AiDetectionsText.Text = string.Format(t.StatDetections, _detections);
+        AiTracksText.Text = string.Format(t.StatTracks, _tracks);
+        AiSampleText.Text = string.Format(t.StatInterval, _interval);
+    }
+
+    private void RenderTwinStats()
+    {
+        var t = TranslationService.Instance;
+        TwinDetectionsText.Text = string.Format(t.StatDetections, _twinDetections);
+        TwinDefectsText.Text = string.Format(t.StatDefects, _twinDefects);
+        TwinPassRateText.Text = string.Format(t.StatPass, _twinPassRate.ToString("F0"));
     }
 
     public void UpdatePerceptionStats(int frameCount, int activeTracks, int lostTracks, int interval, int roiCount)
@@ -104,11 +157,13 @@ public partial class AIPanel : UserControl
     {
         if (classCounts == null || classCounts.Count == 0)
         {
-            DetectionBreakdownText.Text = "No detections yet";
+            _breakdownEmpty = true;
+            DetectionBreakdownText.Text = TranslationService.Instance.StatusNoDetections;
             DetectionBreakdownText.Foreground = (Brush)FindResource("TextMutedBrush");
             return;
         }
 
+        _breakdownEmpty = false;
         DetectionBreakdownText.Foreground = (Brush)FindResource("TextSecondaryBrush");
 
         var lines = new List<string>();

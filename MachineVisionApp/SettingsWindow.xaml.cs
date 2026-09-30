@@ -13,6 +13,7 @@ namespace MachineVisionApp
         {
             _mainWindow = mainWindow;
             InitializeComponent();
+            ApplyTexts();
 
             string current = CultureInfo.CurrentUICulture.Name;
             for (int i = 0; i < LanguageComboBox.Items.Count; i++)
@@ -23,6 +24,15 @@ namespace MachineVisionApp
                     break;
                 }
             }
+        }
+
+        /// <summary>按当前语言刷新本窗口文本</summary>
+        private void ApplyTexts()
+        {
+            var t = TranslationService.Instance;
+            SettingsTitle.Text = t.Settings;
+            DisplayLanguageLabel.Text = t.DisplayLanguage;
+            SettingsCloseButton.Content = t.Close;
         }
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -44,6 +54,7 @@ namespace MachineVisionApp
             {
                 TranslationService.Instance.ChangeLanguage(culture);
                 _mainWindow.RefreshAllTexts();
+                ApplyTexts();
             }
         }
     }

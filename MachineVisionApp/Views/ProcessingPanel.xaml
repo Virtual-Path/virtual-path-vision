@@ -101,7 +101,7 @@
                         Visibility="Visible">
                     <StackPanel >
 
-                        <TextBlock Text="Thresholds"
+                        <TextBlock x:Name="ThresholdsLabel" Text="Thresholds"
                                    FontSize="15"
                                    FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimaryBrush}" />
@@ -189,7 +189,7 @@
                         Visibility="Collapsed">
                     <StackPanel >
 
-                        <TextBlock Text="Color Detection"
+                        <TextBlock x:Name="ColorDetectionLabel" Text="Color Detection"
                                    FontSize="15"
                                    FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimaryBrush}" />
@@ -337,7 +337,7 @@
 
                             <!-- Face Count -->
                             <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,8,0">
-                                <TextBlock Text="Faces"
+                                <TextBlock x:Name="FacesLabel" Text="Faces"
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}" />
                                 <Border Background="#0DFFFFFF"
@@ -356,7 +356,7 @@
 
                             <!-- Contour Count -->
                             <StackPanel Grid.Column="1" Grid.Row="0" Margin="8,0,0,0">
-                                <TextBlock Text="Objects"
+                                <TextBlock x:Name="ObjectsLabel" Text="Objects"
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}" />
                                 <Border Background="#0DFFFFFF"

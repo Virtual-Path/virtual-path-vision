@@ -58,6 +58,10 @@ public partial class ProcessingPanel : UserControl
         SectionProcessingTitle.Text = t.SectionImageProcessing;
         TemplateFeatureTitle.Text = t.SectionTemplateFeature;
         ResultTitle.Text = t.SectionResult;
+        ThresholdsLabel.Text = t.Thresholds;
+        ColorDetectionLabel.Text = t.ModeColorDetection;
+        FacesLabel.Text = t.Faces;
+        ObjectsLabel.Text = t.Objects;
     }
 
     public void SetResultTitle(string title)

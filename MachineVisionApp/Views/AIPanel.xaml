@@ -93,7 +93,8 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Column="0"
+                            <TextBlock x:Name="ConfidenceLabel"
+                                       Grid.Column="0"
                                        Text="Confidence:"
                                        FontSize="13"
                                        Foreground="{StaticResource TextSecondaryBrush}"
@@ -294,7 +295,8 @@
 
                             <!-- Frame Count -->
                             <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,8,8">
-                                <TextBlock Text="Frame Count:"
+                                <TextBlock x:Name="FrameCountLabel"
+                                           Text="Frame Count:"
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
@@ -314,7 +316,8 @@
 
                             <!-- Active Tracks -->
                             <StackPanel Grid.Column="1" Grid.Row="0" Margin="8,0,0,8">
-                                <TextBlock Text="Active Tracks:"
+                                <TextBlock x:Name="ActiveTracksLabel"
+                                           Text="Active Tracks:"
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
@@ -334,7 +337,8 @@
 
                             <!-- Lost Tracks -->
                             <StackPanel Grid.Column="0" Grid.Row="1" Margin="0,0,8,8">
-                                <TextBlock Text="Lost Tracks:"
+                                <TextBlock x:Name="LostTracksLabel"
+                                           Text="Lost Tracks:"
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
@@ -354,7 +358,8 @@
 
                             <!-- Adaptive Interval -->
                             <StackPanel Grid.Column="1" Grid.Row="1" Margin="8,0,0,8">
-                                <TextBlock Text="Adaptive Interval:"
+                                <TextBlock x:Name="AdaptiveIntervalLabel"
+                                           Text="Adaptive Interval:"
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
@@ -374,7 +379,8 @@
 
                             <!-- ROI Regions -->
                             <StackPanel Grid.Column="0" Grid.Row="2" Margin="0,0,8,0">
-                                <TextBlock Text="ROI Regions:"
+                                <TextBlock x:Name="RoiRegionsLabel"
+                                           Text="ROI Regions:"
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
@@ -436,7 +442,8 @@
                                 </Grid.ColumnDefinitions>
 
                                 <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                    <TextBlock Text="Max Trail Length:"
+                                    <TextBlock x:Name="MaxTrailLabel"
+                                               Text="Max Trail Length:"
                                                FontSize="12"
                                                Foreground="{StaticResource TextMutedBrush}"
                                                Margin="0,0,0,4" />
@@ -449,7 +456,8 @@
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                                    <TextBlock Text="Match Threshold:"
+                                    <TextBlock x:Name="MatchThresholdLabel"
+                                               Text="Match Threshold:"
                                                FontSize="12"
                                                Foreground="{StaticResource TextMutedBrush}"
                                                Margin="0,0,0,4" />

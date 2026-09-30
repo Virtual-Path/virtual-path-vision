@@ -68,7 +68,7 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="IP Address"
+                            <TextBlock x:Name="ModbusIpLabel" Text="IP Address"
                                        FontSize="12"
                                        Foreground="{StaticResource TextMutedBrush}"
                                        Margin="0,0,0,4" />
@@ -80,7 +80,7 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Port"
+                            <TextBlock x:Name="ModbusPortLabel" Text="Port"
                                        FontSize="12"
                                        Foreground="{StaticResource TextMutedBrush}"
                                        Margin="0,0,0,4" />
@@ -92,7 +92,7 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="4">
-                            <TextBlock Text="Unit ID"
+                            <TextBlock x:Name="ModbusUnitLabel" Text="Unit ID"
                                        FontSize="12"
                                        Foreground="{StaticResource TextMutedBrush}"
                                        Margin="0,0,0,4" />
@@ -142,7 +142,7 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Address"
+                            <TextBlock x:Name="ModbusAddrLabel" Text="Address"
                                        FontSize="12"
                                        Foreground="{StaticResource TextMutedBrush}"
                                        Margin="0,0,0,4" />
@@ -154,7 +154,7 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Value"
+                            <TextBlock x:Name="ModbusValueLabel" Text="Value"
                                        FontSize="12"
                                        Foreground="{StaticResource TextMutedBrush}"
                                        Margin="0,0,0,4" />
@@ -242,7 +242,7 @@
 
                     <!-- Endpoint -->
                     <StackPanel Margin="0,0,0,14">
-                        <TextBlock Text="Endpoint URL"
+                        <TextBlock x:Name="OpcUaEndpointLabel" Text="Endpoint URL"
                                    FontSize="12"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    Margin="0,0,0,4" />
@@ -284,7 +284,7 @@
 
                     <!-- Node -->
                     <StackPanel Margin="0,0,0,12">
-                        <TextBlock Text="Node ID"
+                        <TextBlock x:Name="OpcUaNodeLabel" Text="Node ID"
                                    FontSize="12"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    Margin="0,0,0,4" />
@@ -297,7 +297,7 @@
 
                     <!-- Value -->
                     <StackPanel Margin="0,0,0,14">
-                        <TextBlock Text="Value"
+                        <TextBlock x:Name="OpcUaValueLabel" Text="Value"
                                    FontSize="12"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    Margin="0,0,0,4" />
@@ -360,7 +360,7 @@
 
                     <!-- Source -->
                     <StackPanel Margin="0,0,0,14">
-                        <TextBlock Text="Scan Source"
+                        <TextBlock x:Name="ScanSourceLabel" Text="Scan Source"
                                    FontSize="12"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    Margin="0,0,0,4" />
@@ -387,7 +387,7 @@
                             BorderBrush="{StaticResource GlassBorderBrush}"
                             BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="Serial Configuration"
+                            <TextBlock x:Name="SerialConfigLabel" Text="Serial Configuration"
                                        FontSize="14"
                                        FontWeight="SemiBold"
                                        Foreground="{StaticResource TextSecondaryBrush}"
@@ -395,7 +395,7 @@
 
                             <!-- Port -->
                             <StackPanel Margin="0,0,0,10">
-                                <TextBlock Text="Port"
+                                <TextBlock x:Name="SerialPortLabel" Text="Port"
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
@@ -406,7 +406,7 @@
 
                             <!-- Baud Rate -->
                             <StackPanel Margin="0,0,0,10">
-                                <TextBlock Text="Baud Rate"
+                                <TextBlock x:Name="BaudRateLabel" Text="Baud Rate"
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
@@ -434,7 +434,7 @@
                             BorderBrush="{StaticResource GlassBorderBrush}"
                             BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="TCP Configuration"
+                            <TextBlock x:Name="TcpConfigLabel" Text="TCP Configuration"
                                        FontSize="14"
                                        FontWeight="SemiBold"
                                        Foreground="{StaticResource TextSecondaryBrush}"
@@ -442,7 +442,7 @@
 
                             <!-- Port -->
                             <StackPanel Margin="0,0,0,10">
-                                <TextBlock Text="Port"
+                                <TextBlock x:Name="TcpPortLabel" Text="Port"
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
@@ -483,7 +483,7 @@
 
                     <!-- Work Order -->
                     <StackPanel Margin="0,0,0,12">
-                        <TextBlock Text="Work Order"
+                        <TextBlock x:Name="WorkOrderLabel" Text="Work Order"
                                    FontSize="12"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    Margin="0,0,0,4" />
@@ -518,7 +518,7 @@
 
                     <!-- PLC Register -->
                     <StackPanel Margin="0,0,0,14">
-                        <TextBlock Text="PLC Register"
+                        <TextBlock x:Name="PlcRegisterLabel" Text="PLC Register"
                                    FontSize="12"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    Margin="0,0,0,4" />
@@ -543,7 +543,7 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Today Count"
+                            <TextBlock x:Name="TodayCountLabel" Text="Today Count"
                                        FontSize="12"
                                        Foreground="{StaticResource TextMutedBrush}"
                                        Margin="0,0,0,4" />
@@ -555,7 +555,7 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Last Barcode"
+                            <TextBlock x:Name="LastBarcodeLabel" Text="Last Barcode"
                                        FontSize="12"
                                        Foreground="{StaticResource TextMutedBrush}"
                                        Margin="0,0,0,4" />

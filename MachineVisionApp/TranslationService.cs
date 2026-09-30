@@ -190,6 +190,27 @@ namespace MachineVisionApp
         public string BtnExportCSV => GetString("BtnExportCSV");
         public string BtnClear => GetString("BtnClear");
         public string BtnUploadScreenshot => GetString("BtnUploadScreenshot");
+        public string BtnLoadModel => GetString("BtnLoadModel");
+        public string StatusLoaded => GetString("StatusLoaded");
+        public string NoUploads => GetString("NoUploads");
+        public string Thresholds => GetString("Thresholds");
+        public string Objects => GetString("Objects");
+        public string EndpointUrl => GetString("EndpointUrl");
+        public string StatDetections => GetString("StatDetections");
+        public string StatTracks => GetString("StatTracks");
+        public string StatInterval => GetString("StatInterval");
+        public string StatDefects => GetString("StatDefects");
+        public string StatPass => GetString("StatPass");
+        public string StatusConnected => GetString("StatusConnected");
+        public string StatusReady => GetString("StatusReady");
+        public string StatusLoadFailed => GetString("StatusLoadFailed");
+        public string StatusInitFailed => GetString("StatusInitFailed");
+        public string PromptLoadModel => GetString("PromptLoadModel");
+        public string PromptRegion => GetString("PromptRegion");
+        public string PromptInitS3 => GetString("PromptInitS3");
+        public string PromptNoScreenshot => GetString("PromptNoScreenshot");
+        public string PromptInitIoT => GetString("PromptInitIoT");
+        public string PromptInitLambda => GetString("PromptInitLambda");
 
         // ---- Other ----
         public string DisabledLabel => GetString("DisabledLabel");
@@ -207,6 +228,7 @@ namespace MachineVisionApp
         public string SettingsLabel => GetString("Settings");
         public string LanguageLabel => GetString("Language");
         public string DisplayLanguage => GetString("DisplayLanguage");
+        public string Settings => GetString("Settings");
         public string About => GetString("About");
 
         /// <summary>扫码源名称列表（供报工面板下拉框使用）</summary>

@@ -66,21 +66,49 @@ public partial class CloudPanel : UserControl
 
     // ── Public Methods ───────────────────────────────────────────────
 
+    // ── 状态（语言切换时用于恢复） ────────────────────────────────────
+    private bool _s3Connected;
+    private bool _iotConnected;
+    private bool _lambdaConnected;
+    private bool _uploadsEmpty = true;
+
     public void RefreshTexts()
     {
         var t = TranslationService.Instance;
-        CloudUploadScreenshotButton.Content = t.SaveScreenshot;
-        CloudAlertButton.Content = "Send Alert";
-        CloudPublishStatsButton.Content = "Publish Stats";
-        LambdaInvokeButton.Content = "Invoke";
-        CloudInitButton.Content = "Initialize All";
+
+        // 按钮
+        CloudUploadScreenshotButton.Content = t.BtnUploadScreenshot;
+        CloudAlertButton.Content = t.BtnSendAlert;
+        CloudPublishStatsButton.Content = t.BtnPublishStats;
+        LambdaInvokeButton.Content = t.BtnInvoke;
+        CloudInitButton.Content = t.BtnInitializeAll;
+
+        // 分节标题
         SectionS3Title.Text = t.SectionAWSS3;
         SectionIoTTitle.Text = t.SectionAWSIoT;
         SectionLambdaTitle.Text = t.SectionAWSLambda;
+
+        // 字段标签
+        BucketLabel.Text = t.FieldBucket;
+        RegionLabel.Text = t.FieldRegion;
+        RecentUploadsLabel.Text = t.RecentUploads;
+        EndpointLabel.Text = t.FieldEndpoint;
+        TopicPrefixLabel.Text = t.FieldTopicPrefix;
+        FunctionLabel.Text = t.FieldFunction;
+        LastResultLabel.Text = t.LastResult;
+
+        // 状态（未连接时用本地化占位文本）
+        if (!_s3Connected) S3StatusText.Text = t.StatusNotConfigured;
+        if (!_iotConnected) IoTStatusText.Text = t.StatusNotConfigured;
+        if (!_lambdaConnected) LambdaStatusText.Text = t.StatusNotConfigured;
+        bool anyConnected = _s3Connected || _iotConnected || _lambdaConnected;
+        if (!anyConnected) CloudOverallStatus.Text = t.StatusServicesNotInit;
+        if (_uploadsEmpty) S3UploadListText.Text = t.NoUploads;
     }
 
     public void SetS3Status(bool connected, string text)
     {
+        _s3Connected = connected;
         S3StatusDot.Fill = connected
             ? (Brush)FindResource("SuccessBrush")
             : (Brush)FindResource("TextMutedBrush");
@@ -91,6 +119,7 @@ public partial class CloudPanel : UserControl
 
     public void SetIoTStatus(bool connected, string text)
     {
+        _iotConnected = connected;
         IoTStatusDot.Fill = connected
             ? (Brush)FindResource("SuccessBrush")
             : (Brush)FindResource("TextMutedBrush");
@@ -102,6 +131,7 @@ public partial class CloudPanel : UserControl
 
     public void SetLambdaStatus(bool connected, string text)
     {
+        _lambdaConnected = connected;
         LambdaStatusDot.Fill = connected
             ? (Brush)FindResource("SuccessBrush")
             : (Brush)FindResource("TextMutedBrush");
@@ -126,6 +156,7 @@ public partial class CloudPanel : UserControl
 
     public void AddUploadRecord(string key)
     {
+        _uploadsEmpty = false;
         _uploadHistory.Insert(0, key);
         if (_uploadHistory.Count > 20)
             _uploadHistory.RemoveRange(20, _uploadHistory.Count - 20);
