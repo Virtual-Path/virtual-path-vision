@@ -23,9 +23,9 @@
                 BorderBrush="{StaticResource GlassBorderBrush}">
             <Border.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#CC0A0908" Offset="0"/>
-                    <GradientStop Color="#B30C0B0A" Offset="0.5"/>
-                    <GradientStop Color="#CC0A0908" Offset="1"/>
+                    <GradientStop Color="#CC1A1713" Offset="0"/>
+                    <GradientStop Color="#B3181511" Offset="0.5"/>
+                    <GradientStop Color="#CC1A1713" Offset="1"/>
                 </LinearGradientBrush>
             </Border.Background>
             <DockPanel>
@@ -42,7 +42,7 @@
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                             <Border Width="38" Height="38" CornerRadius="11"
                                     HorizontalAlignment="Center" Margin="0,0,0,6"
-                                    Background="#1A788F94" BorderBrush="#33788F94"
+                                    Background="#2A788F94" BorderBrush="#33788F94"
                                     BorderThickness="1.5">
                                 <TextBlock Text="MV" FontSize="13" FontWeight="Black"
                                            Foreground="{StaticResource AccentBrush}"
@@ -113,9 +113,9 @@
             <Grid Grid.Row="0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Grid.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                        <GradientStop Color="#A00C0B0A" Offset="0"/>
-                        <GradientStop Color="#800C0B0A" Offset="0.5"/>
-                        <GradientStop Color="#A00C0B0A" Offset="1"/>
+                        <GradientStop Color="#A0181511" Offset="0"/>
+                        <GradientStop Color="#80181511" Offset="0.5"/>
+                        <GradientStop Color="#A0181511" Offset="1"/>
                     </LinearGradientBrush>
                 </Grid.Background>
                 <Grid.ColumnDefinitions>
@@ -141,7 +141,7 @@
             <Grid Grid.Row="1" Margin="6">
                 <Grid.Background>
                     <RadialGradientBrush RadiusX="0.8" RadiusY="0.8">
-                        <GradientStop Color="#1A1612" Offset="0"/>
+                        <GradientStop Color="#2B241C" Offset="0"/>
                         <GradientStop Color="#040404" Offset="1"/>
                     </RadialGradientBrush>
                 </Grid.Background>
@@ -158,9 +158,9 @@
                     Padding="16,7,16,7" CornerRadius="0,0,8,8">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                        <GradientStop Color="#D9070605" Offset="0"/>
-                        <GradientStop Color="#E6090807" Offset="0.5"/>
-                        <GradientStop Color="#D9070605" Offset="1"/>
+                        <GradientStop Color="#D9171310" Offset="0"/>
+                        <GradientStop Color="#E61A1613" Offset="0.5"/>
+                        <GradientStop Color="#D9171310" Offset="1"/>
                     </LinearGradientBrush>
                 </Border.Background>
                 <Grid>
@@ -191,7 +191,7 @@
                                Foreground="{StaticResource TextMutedBrush}" FontSize="11"
                                VerticalAlignment="Center" Margin="10,0,0,0"/>
 
-                    <TextBlock Grid.Column="5" Text="OpenCV 5 + AWS" Foreground="#33C4B7A7"
+                    <TextBlock Grid.Column="5" Text="OpenCV 5 + AWS" Foreground="#4DC4B7A7"
                                FontSize="10" VerticalAlignment="Center" FontWeight="Light"/>
                 </Grid>
             </Border>
@@ -199,7 +199,7 @@
 
         <!-- Error Banner — toast style, top of content area with margin -->
         <Border x:Name="ErrorBorder" Grid.Column="1" Grid.Row="1" VerticalAlignment="Top" Margin="12,12,12,0"
-                Background="#E0131110" BorderBrush="{StaticResource DangerBrush}" BorderThickness="1,1,1,3"
+                Background="#E0241F1A" BorderBrush="{StaticResource DangerBrush}" BorderThickness="1,1,1,3"
                 Padding="16,10" Visibility="Collapsed" Panel.ZIndex="100" CornerRadius="8"
                 RenderTransformOrigin="0.5,0">
             <Border.RenderTransform>

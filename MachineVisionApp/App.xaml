@@ -9,10 +9,10 @@
             </ResourceDictionary.MergedDictionaries>
             <!-- Colors -->
             <Color x:Key="ColorBg">#040404</Color>
-            <Color x:Key="ColorSurface">#0D0C0B</Color>
-            <Color x:Key="ColorCard">#14120F</Color>
-            <Color x:Key="ColorCardHover">#1D1A16</Color>
-            <Color x:Key="ColorBorder">#2F2B27</Color>
+            <Color x:Key="ColorSurface">#1A1713</Color>
+            <Color x:Key="ColorCard">#241E18</Color>
+            <Color x:Key="ColorCardHover">#2E271F</Color>
+            <Color x:Key="ColorBorder">#453E36</Color>
             <Color x:Key="ColorBorderLight">#5F554C</Color>
             <Color x:Key="ColorPrimary">#788F94</Color>
             <Color x:Key="ColorPrimaryHover">#8FA5AA</Color>
@@ -25,7 +25,7 @@
             <Color x:Key="ColorTextPrimary">#C4B7A7</Color>
             <Color x:Key="ColorTextSecondary">#9B9690</Color>
             <Color x:Key="ColorTextMuted">#7C7C85</Color>
-            <Color x:Key="ColorInputBg">#040404</Color>
+            <Color x:Key="ColorInputBg">#14110E</Color>
 
             <SolidColorBrush x:Key="BgBrush" Color="{StaticResource ColorBg}"/>
             <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource ColorSurface}"/>

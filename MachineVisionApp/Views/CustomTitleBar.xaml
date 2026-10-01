@@ -8,7 +8,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="48" d:DesignWidth="1100"
              Height="48">
-    <Grid Background="#0E0D0C" MouseLeftButtonDown="Grid_MouseLeftButtonDown">
+    <Grid Background="#1A1713" MouseLeftButtonDown="Grid_MouseLeftButtonDown">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
@@ -16,7 +16,7 @@
         </Grid.ColumnDefinitions>
 
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0" Grid.Column="0">
-            <Border Background="#1A1815" CornerRadius="6" Width="28" Height="28" Margin="0,0,10,0">
+            <Border Background="#2A241D" CornerRadius="6" Width="28" Height="28" Margin="0,0,10,0">
                 <TextBlock Text="MV" FontSize="12" FontWeight="Bold" Foreground="#788F94"
                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
