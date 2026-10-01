@@ -24,7 +24,8 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/01_ui.png" alt="Main UI" width="880"/>
+  <img src="docs/images/01_ui.png" alt="Dark theme" width="432"/>
+  <img src="docs/images/01_ui_light.png" alt="Light theme" width="432"/>
 </p>
 
 ---

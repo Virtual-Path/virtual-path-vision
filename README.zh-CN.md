@@ -24,7 +24,8 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/01_ui.png" alt="主界面" width="880"/>
+  <img src="docs/images/01_ui.png" alt="深色主题" width="432"/>
+  <img src="docs/images/01_ui_light.png" alt="浅色主题" width="432"/>
 </p>
 
 ---
