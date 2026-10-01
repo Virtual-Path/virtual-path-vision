@@ -100,6 +100,40 @@ public partial class IndustrialPanel : UserControl
         ClearReportButton.Click += (_, _) => ClearReportRequested?.Invoke(this, EventArgs.Empty);
 
         ScanSourceComboBox.SelectionChanged += ScanSourceComboBox_SelectionChanged;
+
+        SizeChanged += IndustrialPanel_SizeChanged;
+    }
+
+    /// <summary>自适应：窄窗口时 2×2 卡片改为单列堆叠。</summary>
+    private void IndustrialPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        bool narrow = e.NewSize.Width < 980;
+        if (narrow)
+        {
+            IndCol2.Width = new GridLength(0);
+            IndGutterCol.Width = new GridLength(0);
+            IndGutterRow3.Height = new GridLength(12);
+            IndRow4.Height = GridLength.Auto;
+            IndGutterRow5.Height = new GridLength(12);
+            IndRow6.Height = GridLength.Auto;
+
+            Grid.SetColumn(OpcCard, 0); Grid.SetRow(OpcCard, 2);
+            Grid.SetColumn(BarcodeCard, 0); Grid.SetRow(BarcodeCard, 4);
+            Grid.SetColumn(ReportCard, 0); Grid.SetRow(ReportCard, 6);
+        }
+        else
+        {
+            IndCol2.Width = new GridLength(1, GridUnitType.Star);
+            IndGutterCol.Width = new GridLength(12);
+            IndGutterRow3.Height = new GridLength(0);
+            IndRow4.Height = new GridLength(0);
+            IndGutterRow5.Height = new GridLength(0);
+            IndRow6.Height = new GridLength(0);
+
+            Grid.SetColumn(OpcCard, 2); Grid.SetRow(OpcCard, 0);
+            Grid.SetColumn(BarcodeCard, 0); Grid.SetRow(BarcodeCard, 2);
+            Grid.SetColumn(ReportCard, 2); Grid.SetRow(ReportCard, 2);
+        }
     }
 
     // ── Public Methods ───────────────────────────────────────────────

@@ -1,21 +1,25 @@
 ﻿<UserControl x:Class="MachineVisionApp.Views.AIPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="{DynamicResource BgDarkBrush}">
+             Background="Transparent">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Disabled">
-        <Grid Margin="0">
+        <Grid Margin="0" x:Name="RootGrid">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="AiColLeft" Width="*" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="AiColRight" Width="*" />
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
             <!-- ═══════════════════════════════════════════════════════════
                  LEFT COLUMN — YOLO Detection + Controls
                  ═══════════════════════════════════════════════════════════ -->
-            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+            <StackPanel x:Name="LeftColumn" Grid.Column="0" Grid.Row="0" Margin="0,0,12,0">
 
                 <!-- ── AI Detection Header ── -->
                 <Border Style="{StaticResource GlassPanel}" Padding="20" Margin="0,0,0,16">
@@ -69,7 +73,7 @@
                                     VerticalAlignment="Center" />
 
                             <Border Grid.Column="1"
-                                    Background="#14FFFFFF"
+                                    Background="{DynamicResource InsetBrush}"
                                     CornerRadius="{StaticResource CornerMd}"
                                     Padding="14,8"
                                     BorderBrush="{DynamicResource GlassBorderBrush}"
@@ -127,7 +131,7 @@
                             </Grid.ColumnDefinitions>
 
                             <Border Grid.Column="0"
-                                    Background="#14FFFFFF"
+                                    Background="{DynamicResource InsetBrush}"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
                                     BorderBrush="{DynamicResource GlassBorderBrush}"
@@ -140,7 +144,7 @@
                             </Border>
 
                             <Border Grid.Column="1"
-                                    Background="#14FFFFFF"
+                                    Background="{DynamicResource InsetBrush}"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
                                     BorderBrush="{DynamicResource GlassBorderBrush}"
@@ -153,7 +157,7 @@
                             </Border>
 
                             <Border Grid.Column="2"
-                                    Background="#14FFFFFF"
+                                    Background="{DynamicResource InsetBrush}"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
                                     BorderBrush="{DynamicResource GlassBorderBrush}"
@@ -194,7 +198,7 @@
                                        VerticalAlignment="Center" />
                         </Grid>
 
-                        <Border Background="#14FFFFFF"
+                        <Border Background="{DynamicResource InsetBrush}"
                                 CornerRadius="{StaticResource CornerMd}"
                                 Padding="2"
                                 BorderBrush="{DynamicResource GlassBorderBrush}"
@@ -215,7 +219,7 @@
                             </Grid.ColumnDefinitions>
 
                             <Border Grid.Column="0"
-                                    Background="#14FFFFFF"
+                                    Background="{DynamicResource InsetBrush}"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
                                     BorderBrush="{DynamicResource GlassBorderBrush}"
@@ -228,7 +232,7 @@
                             </Border>
 
                             <Border Grid.Column="1"
-                                    Background="#14FFFFFF"
+                                    Background="{DynamicResource InsetBrush}"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
                                     BorderBrush="{DynamicResource GlassBorderBrush}"
@@ -241,7 +245,7 @@
                             </Border>
 
                             <Border Grid.Column="2"
-                                    Background="#14FFFFFF"
+                                    Background="{DynamicResource InsetBrush}"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
                                     BorderBrush="{DynamicResource GlassBorderBrush}"
@@ -258,17 +262,10 @@
 
             </StackPanel>
 
-            <!-- Thin vertical divider -->
-            <Border Grid.Column="1"
-                    Width="1"
-                    Background="{DynamicResource GlassBorderBrush}"
-                    Margin="0,12"
-                    VerticalAlignment="Stretch" />
-
             <!-- ═══════════════════════════════════════════════════════════
                  RIGHT COLUMN — Active Perception Details
                  ═══════════════════════════════════════════════════════════ -->
-            <StackPanel Grid.Column="2" Margin="12,0,0,0">
+            <StackPanel x:Name="RightColumn" Grid.Column="2" Grid.Row="0" Margin="12,0,0,0">
 
                 <!-- ── Active Perception Header ── -->
                 <Border Style="{StaticResource GlassPanel}" Padding="20">
@@ -300,7 +297,7 @@
                                            FontSize="12"
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#14FFFFFF"
+                                <Border Background="{DynamicResource InsetBrush}"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
                                         BorderBrush="{DynamicResource GlassBorderBrush}"
@@ -321,7 +318,7 @@
                                            FontSize="12"
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#14FFFFFF"
+                                <Border Background="{DynamicResource InsetBrush}"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
                                         BorderBrush="{DynamicResource GlassBorderBrush}"
@@ -342,7 +339,7 @@
                                            FontSize="12"
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#14FFFFFF"
+                                <Border Background="{DynamicResource InsetBrush}"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
                                         BorderBrush="{DynamicResource GlassBorderBrush}"
@@ -363,7 +360,7 @@
                                            FontSize="12"
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#14FFFFFF"
+                                <Border Background="{DynamicResource InsetBrush}"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
                                         BorderBrush="{DynamicResource GlassBorderBrush}"
@@ -384,7 +381,7 @@
                                            FontSize="12"
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#14FFFFFF"
+                                <Border Background="{DynamicResource InsetBrush}"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
                                         BorderBrush="{DynamicResource GlassBorderBrush}"
@@ -409,7 +406,7 @@
                                        Margin="0,0,0,8" />
 
                             <Border x:Name="DetectionBreakdownPanel"
-                                    Background="#14FFFFFF"
+                                    Background="{DynamicResource InsetBrush}"
                                     CornerRadius="{StaticResource CornerMd}"
                                     Padding="14"
                                     BorderBrush="{DynamicResource GlassBorderBrush}"

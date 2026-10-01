@@ -47,6 +47,34 @@ public partial class AIPanel : UserControl
         AiEnableCheckBox.Checked += AiEnableCheckBox_Changed;
         AiEnableCheckBox.Unchecked += AiEnableCheckBox_Changed;
         ConfThresholdTextBox.LostFocus += ConfThresholdTextBox_LostFocus;
+
+        SizeChanged += AIPanel_SizeChanged;
+    }
+
+    /// <summary>自适应：窄窗口时左右两列改为上下堆叠。</summary>
+    private void AIPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        bool narrow = e.NewSize.Width < 900;
+        if (narrow)
+        {
+            AiColRight.Width = new GridLength(0);
+            Grid.SetColumn(LeftColumn, 0);
+            Grid.SetRow(LeftColumn, 0);
+            LeftColumn.Margin = new Thickness(0, 0, 0, 14);
+            Grid.SetColumn(RightColumn, 0);
+            Grid.SetRow(RightColumn, 1);
+            RightColumn.Margin = new Thickness(0);
+        }
+        else
+        {
+            AiColRight.Width = new GridLength(1, GridUnitType.Star);
+            Grid.SetColumn(LeftColumn, 0);
+            Grid.SetRow(LeftColumn, 0);
+            LeftColumn.Margin = new Thickness(0, 0, 12, 0);
+            Grid.SetColumn(RightColumn, 2);
+            Grid.SetRow(RightColumn, 0);
+            RightColumn.Margin = new Thickness(12, 0, 0, 0);
+        }
     }
 
     // ── 状态（语言切换时用于恢复） ────────────────────────────────────

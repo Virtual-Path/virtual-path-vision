@@ -8,20 +8,18 @@
         <converters:LogLevelToColorConverter x:Key="LogLevelToColorConverter" />
     </UserControl.Resources>
 
-    <Border Style="{StaticResource GlassPanel}"
+    <Border Style="{StaticResource GlassCard}"
             Margin="0"
-            Padding="24">
+            Padding="20">
 
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="8" />
+                <RowDefinition Height="14" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- ═══════════════════════════════════════════════════════
-                 HEADER ROW
-                 ═══════════════════════════════════════════════════════ -->
+            <!-- ═══ Header ═══ -->
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -31,9 +29,9 @@
                 <TextBlock x:Name="SectionLogTitle"
                            Grid.Column="0"
                            Text="Application Log"
-                           FontSize="18"
+                           FontSize="20"
                            FontWeight="Bold"
-                           Foreground="{StaticResource TextPrimaryBrush}"
+                           Foreground="{DynamicResource TextPrimaryBrush}"
                            VerticalAlignment="Center" />
 
                 <Button x:Name="ClearLogButton"
@@ -45,18 +43,10 @@
                         Click="ClearLogButton_Click" />
             </Grid>
 
-            <!-- Thin divider -->
-            <Border Grid.Row="1"
-                    Height="1"
-                    Background="{StaticResource GlassBorderBrush}"
-                    Margin="0,2" />
-
-            <!-- ═══════════════════════════════════════════════════════
-                 LOG LISTBOX
-                 ═══════════════════════════════════════════════════════ -->
+            <!-- ═══ Log List ═══ -->
             <Border Grid.Row="2"
-                    Background="#06000000"
-                    BorderBrush="{StaticResource GlassBorderBrush}"
+                    Background="{DynamicResource InsetBrush}"
+                    BorderBrush="{DynamicResource GlassBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="{StaticResource CornerMd}"
                     ClipToBounds="True">
@@ -64,18 +54,18 @@
                 <ListBox x:Name="LogListBox"
                          Background="Transparent"
                          BorderThickness="0"
-                         Foreground="{StaticResource TextSecondaryBrush}"
+                         Foreground="{DynamicResource TextSecondaryBrush}"
                          FontFamily="Consolas"
                          FontSize="12"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         Padding="4"
+                         Padding="6"
                          SelectionChanged="LogListBox_SelectionChanged">
 
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                            <Setter Property="Padding" Value="12,8" />
+                            <Setter Property="Padding" Value="12,7" />
                             <Setter Property="BorderThickness" Value="0" />
                             <Setter Property="Background" Value="Transparent" />
                             <Setter Property="Template">
@@ -84,16 +74,17 @@
                                         <Border x:Name="border"
                                                 Background="{TemplateBinding Background}"
                                                 BorderThickness="0"
+                                                CornerRadius="6"
                                                 Padding="{TemplateBinding Padding}"
                                                 SnapsToDevicePixels="True">
                                             <ContentPresenter />
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="#0AFFFFFF" />
+                                                <Setter TargetName="border" Property="Background" Value="#0F0A84FF" />
                                             </Trigger>
                                             <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="#140A84FF" />
+                                                <Setter TargetName="border" Property="Background" Value="#200A84FF" />
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -118,7 +109,7 @@
                                            Text="{Binding Time, StringFormat='{}{0:HH:mm:ss.fff}'}"
                                            FontFamily="Consolas"
                                            FontSize="12"
-                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            VerticalAlignment="Center" />
 
                                 <!-- Level Badge -->
@@ -138,7 +129,7 @@
                                 <!-- Message -->
                                 <TextBlock Grid.Column="4"
                                            Text="{Binding Message}"
-                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
                                            FontFamily="Consolas"
                                            FontSize="12"
                                            VerticalAlignment="Center"

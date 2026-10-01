@@ -62,6 +62,40 @@ public partial class CloudPanel : UserControl
         CloudAlertButton.Click += CloudAlertButton_Click;
         CloudPublishStatsButton.Click += CloudPublishStatsButton_Click;
         LambdaInvokeButton.Click += LambdaInvokeButton_Click;
+
+        SizeChanged += CloudPanel_SizeChanged;
+    }
+
+    /// <summary>自适应：窄窗口时三列改为纵向堆叠。</summary>
+    private void CloudPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        bool narrow = e.NewSize.Width < 1080;
+        if (narrow)
+        {
+            CloudCol2.Width = new GridLength(0);
+            CloudCol4.Width = new GridLength(0);
+            Grid.SetColumn(S3Card, 0); Grid.SetRow(S3Card, 0);
+            S3Card.Margin = new Thickness(0, 0, 0, 12);
+            Grid.SetColumn(IoTCard, 0); Grid.SetRow(IoTCard, 1);
+            IoTCard.Margin = new Thickness(0, 0, 0, 12);
+            Grid.SetColumn(LambdaCard, 0); Grid.SetRow(LambdaCard, 2);
+            LambdaCard.Margin = new Thickness(0, 0, 0, 12);
+            Grid.SetColumn(InitCard, 0); Grid.SetColumnSpan(InitCard, 1); Grid.SetRow(InitCard, 3);
+            InitCard.Margin = new Thickness(0);
+        }
+        else
+        {
+            CloudCol2.Width = new GridLength(1, GridUnitType.Star);
+            CloudCol4.Width = new GridLength(1, GridUnitType.Star);
+            Grid.SetColumn(S3Card, 0); Grid.SetRow(S3Card, 0);
+            S3Card.Margin = new Thickness(0, 0, 12, 0);
+            Grid.SetColumn(IoTCard, 2); Grid.SetRow(IoTCard, 0);
+            IoTCard.Margin = new Thickness(12, 0, 12, 0);
+            Grid.SetColumn(LambdaCard, 4); Grid.SetRow(LambdaCard, 0);
+            LambdaCard.Margin = new Thickness(12, 0, 0, 0);
+            Grid.SetColumn(InitCard, 0); Grid.SetColumnSpan(InitCard, 5); Grid.SetRow(InitCard, 1);
+            InitCard.Margin = new Thickness(0, 12, 0, 0);
+        }
     }
 
     // ── Public Methods ───────────────────────────────────────────────
