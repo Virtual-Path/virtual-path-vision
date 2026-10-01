@@ -361,3 +361,13 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# ─── Project-specific ───────────────────────────────────────────────
+# Application runtime settings (language / theme / window state)
+user_settings.json
+
+# JetBrains Rider
+.idea/
+
+# Visual Studio Code
+.vscode/

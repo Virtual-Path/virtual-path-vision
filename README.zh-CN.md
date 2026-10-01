@@ -8,17 +8,19 @@
   <img src="https://img.shields.io/github/v/release/xianshi3/machine-vision-app?style=flat-square&label=release" alt="release"/>
   <img src="https://img.shields.io/github/stars/xianshi3/machine-vision-app?style=flat-square" alt="stars"/>
   <img src="https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=.net" alt=".NET 8"/>
-  <img src="https://img.shields.io/badge/WPF-Dark%20UI-58A6FF?style=flat-square" alt="WPF"/>
-  <img src="https://img.shields.io/badge/OpenCV-4.11-5C3EE8?style=flat-square&logo=opencv" alt="OpenCV 4.11"/>
+  <img src="https://img.shields.io/badge/WPF-Light%20%2F%20Dark%20UI-58A6FF?style=flat-square" alt="WPF"/>
+  <img src="https://img.shields.io/badge/OpenCV-5-5C3EE8?style=flat-square&logo=opencv" alt="OpenCV 5"/>
+  <img src="https://img.shields.io/badge/AWS-S3%20%C2%B7%20IoT%20%C2%B7%20Lambda-FF9900?style=flat-square&logo=amazonaws" alt="AWS"/>
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=flat-square" alt="Windows"/>
   <img src="https://img.shields.io/badge/lang-EN%20%2F%20中文-3FB950?style=flat-square" alt="i18n"/>
+  <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License"/>
 </p>
 
 <p align="center">
   一款现代机器视觉桌面应用，支持本地/网络摄像头的实时视频处理、
   图像识别、条码扫描与测量。
   <br/>
-  基于 <strong>WPF</strong> · <strong>OpenCvSharp</strong> · <strong>ZXing.Net</strong> · <strong>.NET 8</strong> 构建
+  基于 <strong>WPF</strong> · <strong>OpenCvSharp5 (OpenCV 5)</strong> · <strong>AWS SDK</strong> · <strong>.NET 8</strong> 构建
 </p>
 
 <p align="center">
@@ -42,7 +44,11 @@
 - **截图** – 将当前帧保存为 PNG 图片
 - **网络摄像头** – 通过 IP Webcam 类应用连接手机摄像头
 - **双语支持** – 内置中文与英文，运行时一键切换
-- **现代深色界面** – GitHub 深色主题、卡片布局、状态栏、可折叠日志面板、可调整窗口
+- **明暗双主题** – Apple 风格卡片界面，运行时切换主题（含"跟随系统"）与可折叠侧边栏
+- **AI 主动感知** – YOLO 目标检测、卡尔曼多目标跟踪与数字孪生叠加
+- **AWS 云服务** – S3 截图上传、IoT Core 遥测、Lambda 调用
+- **工业互联** – Modbus TCP、OPC UA、串口 / TCP 条码枪与报工导出
+- **自适应布局** – 窄窗口自动堆叠；2K/4K 屏清晰（PerMonitorV2 DPI）
 - **图片分析** – 加载静态图片并应用完整处理流水线
 - **实时统计** – FPS、处理耗时、人脸/轮廓计数
 
@@ -111,30 +117,35 @@
 
 ```
 MachineVisionApp/
-├── App.xaml / App.xaml.cs          # 应用入口与默认语言（en-US）
-├── MainWindow.xaml / .cs           # 主界面与事件编排
-├── TranslationService.cs           # i18n 单例服务（INotifyPropertyChanged）
-├── AppLogger.cs                    # 日志服务（单例）
+├── App.xaml / App.xaml.cs           # 应用入口、DI 容器、主题初始化
+├── MainWindow.xaml / .cs            # 主界面、导航与事件编排
+├── SettingsWindow.xaml / .cs        # 设置窗口（语言 + 主题）
+├── ThemeService.cs                  # 明/暗/跟随系统 主题切换
+├── TranslationService.cs            # i18n 单例服务（INotifyPropertyChanged）
+├── AppLogger.cs                     # 日志服务（单例）
+├── app.manifest                     # PerMonitorV2 DPI 感知
 ├── Resources/
-│   ├── Strings.resx                # 中文资源（回退语言）
-│   └── Strings.en.resx             # 英文资源
-├── Components/
-│   ├── VideoCaptureComponent.cs    # 视频采集（本地 + 网络）
-│   ├── ImageDisplayComponent.cs    # WPF 图像显示与帧更新
-│   ├── ImageProcessingComponent.cs # 5 种经典模式（Canny/Sobel/Laplacian/二值化/轮廓）
-│   ├── FaceDetectionComponent.cs   # Haar 级联人脸检测
-│   ├── BarcodeDetectionComponent.cs # QR/条码解码（ZXing.Net）
-│   ├── ColorDetectionComponent.cs  # HSV 颜色检测 + 点击取色
-│   ├── TemplateMatchComponent.cs   # 模板匹配（含分数）
-│   ├── ShapeDetectionComponent.cs  # 几何形状分类 + 统计
-│   ├── FeatureMatchComponent.cs    # ORB 特征点匹配 + RANSAC
-│   ├── EnhancementComponent.cs     # CLAHE + 锐化增强
-│   ├── RecordingComponent.cs       # AVI 视频录制
-│   └── ThresholdParameterComponent # Canny 阈值参数逻辑
-├── Views/
-│   ├── CustomTitleBar.xaml / .cs   # 自定义标题栏 + 语言切换
-├── TestImages/                     # 测试图片（场景、模板、人脸照片）
-├── docs/images/                    # README 使用的截图
+│   ├── Strings.resx                 # 中文资源（回退语言）
+│   └── Strings.en.resx              # 英文资源
+├── Themes/
+│   ├── LightTheme.xaml              # Apple 风格浅色配色 + 控件样式
+│   └── DarkTheme.xaml               # Apple 风格深色配色 + 控件样式
+├── Views/                           # 每页一个 UserControl
+│   ├── CameraPanel.xaml / .cs       # 首页：采集、预览、截图/录像
+│   ├── ProcessingPanel.xaml / .cs   # 11 种处理模式 + 阈值
+│   ├── AIPanel.xaml / .cs           # YOLO 检测、跟踪、数字孪生
+│   ├── CloudPanel.xaml / .cs        # AWS S3 / IoT Core / Lambda
+│   ├── IndustrialPanel.xaml / .cs   # Modbus / OPC UA / 条码枪 / 报工
+│   ├── LogPanel.xaml / .cs          # 应用日志
+│   └── CustomTitleBar.xaml / .cs    # 旧版自定义标题栏
+├── AI/                              # 主动感知、卡尔曼跟踪、数字孪生
+├── Cloud/                           # S3Service、IoTService、LambdaClient
+├── Industrial/                      # Modbus、OPC UA、串口/TCP 条码枪、DI 工厂
+├── Components/                      # 采集 + 10 个图像处理组件
+├── Converters/                      # 值转换器（日志级别 → 颜色 等）
+├── TestImages/                      # 测试图片（场景、模板、人脸照片）
+├── docs/images/                     # README 使用的截图
+├── face_detection_yunet_2023mar.onnx
 └── haarcascade_frontalface_default.xml
 ```
 
@@ -172,10 +183,13 @@ MachineVisionApp/
 - .NET 8 SDK（仅编译需要；下方发布包已自包含运行时）
 - Windows 10/11（WPF）
 - NuGet 包（自动还原）：
-  - `OpenCvSharp4` – OpenCV 绑定
-  - `OpenCvSharp4.runtime.win` – OpenCV 原生库
-  - `OpenCvSharp4.WpfExtensions` – `BitmapSource` 转换
+  - `OpenCvSharp5` – OpenCV 5 绑定
+  - `OpenCvSharp5.runtime.win` – OpenCV 原生库
+  - `OpenCvSharp5.WpfExtensions` – `BitmapSource` 转换
   - `ZXing.Net` – 二维码/条码解码
+  - `AWSSDK.S3` / `AWSSDK.Lambda` / `AWSSDK.SimpleNotificationService` – AWS 集成
+  - `NModbus` / `OPCFoundation.NetStandard.Opc.Ua.*` – 工业协议
+  - `Microsoft.Data.Sqlite` – 本地报工数据存储
 
 ---
 
@@ -224,7 +238,8 @@ dotnet run --project MachineVisionApp/MachineVisionApp.csproj
 | 技术            | 说明                           |
 |-----------------|--------------------------------|
 | `WPF`           | Windows 桌面 UI 框架           |
-| `OpenCvSharp`   | OpenCV 4.x 的 .NET 封装        |
+| `OpenCvSharp5`  | OpenCV 5 的 .NET 封装          |
+| `AWS SDK v4`    | S3 / IoT / Lambda 集成         |
 | `ZXing.Net`     | 二维码与条码解码               |
 | `C#`            | 主要编程语言                   |
 | `XAML`          | 界面设计与布局                 |
@@ -232,6 +247,14 @@ dotnet run --project MachineVisionApp/MachineVisionApp.csproj
 
 ---
 
+## 贡献
+
+欢迎参与贡献！请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 与[行为准则](CODE_OF_CONDUCT.md)。
+安全问题请按 [SECURITY.md](SECURITY.md) 私密上报。
+
+---
+
 ## 许可证
 
-本项目仅用于学习与演示。
+基于 [GNU 通用公共许可证 v3.0](LICENSE) 发布。
+© 2026 xianshi3 及贡献者。

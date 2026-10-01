@@ -8,18 +8,19 @@
   <img src="https://img.shields.io/github/v/release/xianshi3/machine-vision-app?style=flat-square&label=release" alt="release"/>
   <img src="https://img.shields.io/github/stars/xianshi3/machine-vision-app?style=flat-square" alt="stars"/>
   <img src="https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=.net" alt=".NET 8"/>
-  <img src="https://img.shields.io/badge/WPF-Dark%20UI-58A6FF?style=flat-square" alt="WPF"/>
-  <img src="https://img.shields.io/badge/OpenCV-4.11-5C3EE8?style=flat-square&logo=opencv" alt="OpenCV 4.11"/>
+  <img src="https://img.shields.io/badge/WPF-Light%20%2F%20Dark%20UI-58A6FF?style=flat-square" alt="WPF"/>
+  <img src="https://img.shields.io/badge/OpenCV-5-5C3EE8?style=flat-square&logo=opencv" alt="OpenCV 5"/>
+  <img src="https://img.shields.io/badge/AWS-S3%20%C2%B7%20IoT%20%C2%B7%20Lambda-FF9900?style=flat-square&logo=amazonaws" alt="AWS"/>
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=flat-square" alt="Windows"/>
   <img src="https://img.shields.io/badge/lang-EN%20%2F%20中文-3FB950?style=flat-square" alt="i18n"/>
-  <img src="https://img.shields.io/badge/version-v2.3.0-blue?style=flat-square" alt="v2.3.0"/>
+  <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License"/>
 </p>
 
 <p align="center">
   A modern machine vision desktop application for real-time video processing,
   image recognition, barcode scanning and measurement over local or network cameras.
   <br/>
-  Built with <strong>WPF</strong> · <strong>OpenCvSharp</strong> · <strong>ZXing.Net</strong> · <strong>.NET 8</strong>
+  Built with <strong>WPF</strong> · <strong>OpenCvSharp5 (OpenCV 5)</strong> · <strong>AWS SDK</strong> · <strong>.NET 8</strong>
 </p>
 
 <p align="center">
@@ -43,7 +44,11 @@
 - **Screenshot** – Save the current frame as a PNG image
 - **Network Camera** – Connect to phone cameras via IP Webcam apps
 - **i18n Support** – Built-in English and Chinese, switchable at runtime
-- **Modern Dark UI** – GitHub-dark theme, card layout, status bar, collapsible log panel, resizable window
+- **Light / Dark Themes** – Apple-style card UI with runtime theme switch (incl. *Follow system*) and a collapsible sidebar
+- **AI Active Perception** – YOLO object detection, Kalman multi-object tracking and a digital-twin overlay
+- **AWS Cloud** – S3 screenshot upload, IoT Core telemetry and Lambda invocation
+- **Industrial Connectivity** – Modbus TCP, OPC UA, serial / TCP barcode scanners and work-report export
+- **Responsive Layout** – panels adapt and stack on narrow windows; crisp on 2K/4K displays (PerMonitorV2 DPI)
 - **Image Analysis** – Load static images and apply the full processing pipeline
 - **Real-time Stats** – FPS counter, processing time, face/contour counts
 
@@ -112,30 +117,35 @@ The app automatically constructs the MJPEG URL and starts streaming.
 
 ```
 MachineVisionApp/
-├── App.xaml / App.xaml.cs          # Application entry and default culture (en-US)
-├── MainWindow.xaml / .cs           # Main UI and event orchestration
-├── TranslationService.cs           # i18n singleton with INotifyPropertyChanged
-├── AppLogger.cs                    # Logging service (singleton)
+├── App.xaml / App.xaml.cs           # Application entry, DI container, theme init
+├── MainWindow.xaml / .cs            # Main UI, navigation and event orchestration
+├── SettingsWindow.xaml / .cs        # Settings dialog (language + theme)
+├── ThemeService.cs                  # Light / Dark / System theme switching
+├── TranslationService.cs            # i18n singleton with INotifyPropertyChanged
+├── AppLogger.cs                     # Logging service (singleton)
+├── app.manifest                     # PerMonitorV2 DPI awareness
 ├── Resources/
-│   ├── Strings.resx                # Chinese resource strings (fallback)
-│   └── Strings.en.resx             # English resource strings
-├── Components/
-│   ├── VideoCaptureComponent.cs    # Camera source (local + network)
-│   ├── ImageDisplayComponent.cs    # WPF Image display and frame update
-│   ├── ImageProcessingComponent.cs # 5 classic modes (Canny/Sobel/Laplacian/Binary/Contour)
-│   ├── FaceDetectionComponent.cs   # Haar cascade face detection
-│   ├── BarcodeDetectionComponent.cs # QR/barcode decoding (ZXing.Net)
-│   ├── ColorDetectionComponent.cs  # HSV color detection + click-to-pick sampling
-│   ├── TemplateMatchComponent.cs   # Template matching with score
-│   ├── ShapeDetectionComponent.cs  # Geometric shape classification + statistics
-│   ├── FeatureMatchComponent.cs    # ORB feature matching + RANSAC homography
-│   ├── EnhancementComponent.cs     # CLAHE + unsharp masking enhancement
-│   ├── RecordingComponent.cs       # AVI video recording via VideoWriter
-│   └── ThresholdParameterComponent # Canny threshold UI logic
-├── Views/
-│   ├── CustomTitleBar.xaml / .cs   # Custom window chrome + language switch
-├── TestImages/                     # Sample test images (scene, templates, face photo)
-├── docs/images/                    # Screenshots used by this README
+│   ├── Strings.resx                 # Chinese resource strings (fallback)
+│   └── Strings.en.resx              # English resource strings
+├── Themes/
+│   ├── LightTheme.xaml              # Apple-style light palette + control styles
+│   └── DarkTheme.xaml               # Apple-style dark palette + control styles
+├── Views/                           # One UserControl per page
+│   ├── CameraPanel.xaml / .cs       # Home: capture, preview, screenshot / record
+│   ├── ProcessingPanel.xaml / .cs   # 11 processing modes + thresholds
+│   ├── AIPanel.xaml / .cs           # YOLO detection, tracking, digital twin
+│   ├── CloudPanel.xaml / .cs        # AWS S3 / IoT Core / Lambda
+│   ├── IndustrialPanel.xaml / .cs   # Modbus / OPC UA / scanners / work report
+│   ├── LogPanel.xaml / .cs          # Application log
+│   └── CustomTitleBar.xaml / .cs    # Legacy custom chrome
+├── AI/                              # Active perception, Kalman tracking, digital twin
+├── Cloud/                           # S3Service, IoTService, LambdaClient
+├── Industrial/                      # Modbus, OPC UA, serial/TCP scanners, DI factory
+├── Components/                      # Capture + 10 image-processing components
+├── Converters/                      # Value converters (log level → colour, …)
+├── TestImages/                      # Sample test images (scene, templates, face photo)
+├── docs/images/                     # Screenshots used by this README
+├── face_detection_yunet_2023mar.onnx
 └── haarcascade_frontalface_default.xml
 ```
 
@@ -173,10 +183,13 @@ MachineVisionApp/
 - .NET 8 SDK (build only; the release package below is self-contained)
 - Windows 10/11 with WPF support
 - NuGet packages (restored automatically):
-  - `OpenCvSharp4` – OpenCV bindings
-  - `OpenCvSharp4.runtime.win` – Native OpenCV binaries
-  - `OpenCvSharp4.WpfExtensions` – `BitmapSource` conversion
+  - `OpenCvSharp5` – OpenCV 5 bindings
+  - `OpenCvSharp5.runtime.win` – Native OpenCV binaries
+  - `OpenCvSharp5.WpfExtensions` – `BitmapSource` conversion
   - `ZXing.Net` – QR code and barcode decoding
+  - `AWSSDK.S3` / `AWSSDK.Lambda` / `AWSSDK.SimpleNotificationService` – AWS integration
+  - `NModbus` / `OPCFoundation.NetStandard.Opc.Ua.*` – industrial protocols
+  - `Microsoft.Data.Sqlite` – local work-report storage
 
 ---
 
@@ -225,7 +238,8 @@ Open `TestImages/` from the Load Image dialog:
 | Technology      | Description                     |
 |-----------------|---------------------------------|
 | `WPF`           | UI framework for Windows apps   |
-| `OpenCvSharp`   | .NET wrapper for OpenCV 4.x     |
+| `OpenCvSharp5`  | .NET wrapper for OpenCV 5       |
+| `AWS SDK v4`    | S3 / IoT / Lambda integration   |
 | `ZXing.Net`     | QR code and barcode decoding    |
 | `C#`            | Primary programming language    |
 | `XAML`          | UI design and layout            |
@@ -233,6 +247,15 @@ Open `TestImages/` from the Load Image dialog:
 
 ---
 
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[Code of Conduct](CODE_OF_CONDUCT.md). Security issues should be reported per
+[SECURITY.md](SECURITY.md).
+
+---
+
 ## License
 
-This project is for learning and demonstration purposes.
+Released under the [GNU General Public License v3.0](LICENSE).
+© 2026 xianshi3 and contributors.
