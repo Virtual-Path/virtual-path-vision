@@ -5,7 +5,8 @@
         xmlns:views="clr-namespace:MachineVisionApp.Views"
         Title="MachineVisionApp" WindowState="Normal" WindowStyle="None" AllowsTransparency="False"
         Width="1400" Height="850" MinWidth="900" MinHeight="600"
-        Background="#040404" ResizeMode="CanResizeWithGrip">
+        Background="#040404" ResizeMode="CanResizeWithGrip"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType">
 
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="0" GlassFrameThickness="0" ResizeBorderThickness="8"
