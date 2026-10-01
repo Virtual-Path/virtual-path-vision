@@ -189,28 +189,25 @@ namespace MachineVisionApp
         }
 
         /// <summary>
-        /// 根据窗口宽度动态调整侧栏宽度：
-        /// - ≥1200：完整侧栏（240px，显示文字）
-        /// - ≥800：图标侧栏（84px，隐藏文字）
-        /// - <800：图标侧栏（84px，隐藏文字）
+        /// 根据窗口宽度动态调整侧栏：
+        /// - ≥1180：宽侧栏（200px，显示导航文字）
+        /// - <1180：窄侧栏（76px，仅图标）
         /// </summary>
         private void UpdateLayoutForWidth(double width)
         {
-            if (width >= 1200)
-            {
-                SidebarColumn.Width = new GridLength(240);
-                SidebarText.Visibility = Visibility.Visible;
-            }
-            else if (width >= 800)
-            {
-                SidebarColumn.Width = new GridLength(84);
-                SidebarText.Visibility = Visibility.Collapsed;
-            }
-            else
-            {
-                SidebarColumn.Width = new GridLength(84);
-                SidebarText.Visibility = Visibility.Collapsed;
-            }
+            bool wide = width >= 1180;
+
+            if (SidebarColumn != null)
+                SidebarColumn.Width = new GridLength(wide ? 200 : 76);
+
+            var vis = wide ? Visibility.Visible : Visibility.Collapsed;
+            if (SidebarText != null) SidebarText.Visibility = vis;
+            if (NavVisionLabel != null) NavVisionLabel.Visibility = vis;
+            if (NavProcessingLabel != null) NavProcessingLabel.Visibility = vis;
+            if (NavAILabel != null) NavAILabel.Visibility = vis;
+            if (NavCloudLabel != null) NavCloudLabel.Visibility = vis;
+            if (NavIndustrialLabel != null) NavIndustrialLabel.Visibility = vis;
+            if (NavLogLabel != null) NavLogLabel.Visibility = vis;
         }
 
         // ==================== 侧边栏导航 ====================
@@ -304,13 +301,24 @@ namespace MachineVisionApp
         {
             RefreshLocalizedControls();
 
+            // 侧边栏导航文字（宽侧栏时显示）
+            var t = TranslationService.Instance;
+            if (NavVisionLabel != null)
+            {
+                NavVisionLabel.Text = t.SectionCamera;
+                NavProcessingLabel.Text = t.SectionImageProcessing;
+                NavAILabel.Text = t.SectionAIDetection;
+                NavCloudLabel.Text = t.SectionAWSS3;
+                NavIndustrialLabel.Text = t.Industrial;
+                NavLogLabel.Text = t.Log;
+            }
+
             // 标题栏/状态栏连接状态文本按当前语言重绘
             string connText = TranslationService.Instance.GetConnectionStatusText(_lastConnState);
             StatusText.Text = connText;
             StatusTextFooter.Text = connText;
 
-            CameraPanelCtrl.RefreshTexts();
-            ProcessingPanelCtrl.RefreshTexts();
+            CameraPanelCtrl.RefreshTexts();            ProcessingPanelCtrl.RefreshTexts();
             AIPanelCtrl.RefreshTexts();
             CloudPanelCtrl.RefreshTexts();
             IndustrialPanelCtrl.RefreshTexts();
@@ -425,6 +433,7 @@ namespace MachineVisionApp
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             RestoreWindowState();
+            UpdateLayoutForWidth(ActualWidth); // 初始化侧栏布局（宽/窄）
             RefreshAllTexts(); // 语言切换 + 本地化控件全部刷新（启动时按已保存语言初始化）
 
             // 日志面板

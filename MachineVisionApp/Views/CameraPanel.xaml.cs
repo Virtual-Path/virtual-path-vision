@@ -76,6 +76,18 @@ public partial class CameraPanel : UserControl
     }
 
     // ── Event Handlers ───────────────────────────────────────────────
+    /// <summary>
+    /// 双视图开关：默认仅显示单屏，用户开启后才显示第二个预览面板。
+    /// </summary>
+    private void DualViewToggle_Click(object sender, RoutedEventArgs e)
+    {
+        bool enabled = DualViewToggle.IsChecked == true;
+        if (SecondViewBorder != null)
+            SecondViewBorder.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
+        if (SecondViewColumn != null)
+            SecondViewColumn.Width = enabled ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
+    }
+
     private void SourceTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (NetworkConfigPanel == null) return;

@@ -679,11 +679,53 @@
     </Style>
 
     <!-- ───────────────────────────────────────────────────────────────
+         GlassToggleButton — pill toggle (dual-view switch, etc.)
+         ─────────────────────────────────────────────────────────────── -->
+    <Style x:Key="GlassToggleButton" TargetType="ToggleButton">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="14,7" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="10"
+                            Padding="{TemplateBinding Padding}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{DynamicResource CardHoverBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{DynamicResource AccentBrush}" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource TextDarkBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ───────────────────────────────────────────────────────────────
          SidebarNavRadio — glass nav items with pill indicator
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="SidebarNavRadio" TargetType="RadioButton">
-        <Setter Property="Width" Value="52" />
-        <Setter Property="Height" Value="44" />
+        <Setter Property="Height" Value="42" />
+        <Setter Property="Margin" Value="10,2" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
         <Setter Property="BorderBrush" Value="Transparent" />
@@ -711,8 +753,9 @@
                                     HorizontalAlignment="Left" Margin="3,0,0,0"
                                     Background="{DynamicResource AccentBrush}"/>
                             <ContentPresenter x:Name="contentPresenter"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" />
+                                              HorizontalAlignment="Left"
+                                              VerticalAlignment="Center"
+                                              Margin="16,0,12,0" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
