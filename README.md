@@ -138,7 +138,6 @@ MachineVisionApp/
 │   ├── CloudPanel.xaml / .cs        # AWS S3 / IoT Core / Lambda
 │   ├── IndustrialPanel.xaml / .cs   # Modbus / OPC UA / scanners / work report
 │   ├── LogPanel.xaml / .cs          # Application log
-│   └── CustomTitleBar.xaml / .cs    # Legacy custom chrome
 ├── AI/                              # Active perception, Kalman tracking, digital twin
 ├── Cloud/                           # S3Service, IoTService, LambdaClient
 ├── Industrial/                      # Modbus, OPC UA, serial/TCP scanners, DI factory

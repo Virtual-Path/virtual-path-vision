@@ -138,7 +138,6 @@ MachineVisionApp/
 │   ├── CloudPanel.xaml / .cs        # AWS S3 / IoT Core / Lambda
 │   ├── IndustrialPanel.xaml / .cs   # Modbus / OPC UA / 条码枪 / 报工
 │   ├── LogPanel.xaml / .cs          # 应用日志
-│   └── CustomTitleBar.xaml / .cs    # 旧版自定义标题栏
 ├── AI/                              # 主动感知、卡尔曼跟踪、数字孪生
 ├── Cloud/                           # S3Service、IoTService、LambdaClient
 ├── Industrial/                      # Modbus、OPC UA、串口/TCP 条码枪、DI 工厂
