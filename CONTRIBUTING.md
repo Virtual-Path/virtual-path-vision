@@ -1,9 +1,9 @@
-# Contributing to Machine Vision App
+# Contributing to Virtual Path Vision
 
-Thanks for your interest in improving **Machine Vision App**! This document describes how to
+Thanks for your interest in improving **Virtual Path Vision**! This document describes how to
 report issues, propose features, and submit pull requests.
 
-> 感谢你参与 **Machine Vision App** 的开发！本文说明如何反馈问题、提出功能建议与提交代码。
+> 感谢你参与 **Virtual Path Vision** 的开发！本文说明如何反馈问题、提出功能建议与提交代码。
 
 ---
 
@@ -16,7 +16,7 @@ By participating you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ## Ways to Contribute
 
-- **Bug reports** – open an [issue](https://github.com/xianshi3/machine-vision-app/issues/new/choose)
+- **Bug reports** – open an [issue](https://github.com/xianshi3/virtual-path-vision/issues/new/choose)
   using the *Bug report* template.
 - **Feature requests** – open an issue using the *Feature request* template.
 - **Pull requests** – fix a bug, add a processing mode, improve docs or translations.
@@ -33,14 +33,14 @@ By participating you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.md)
 | IDE | Visual Studio 2022 / Rider / VS Code |
 
 ```bash
-git clone https://github.com/xianshi3/machine-vision-app.git
-cd machine-vision-app
+git clone https://github.com/xianshi3/virtual-path-vision.git
+cd virtual-path-vision
 dotnet restore
 dotnet build
-dotnet run --project MachineVisionApp/MachineVisionApp.csproj
+dotnet run --project VirtualPathVision/VirtualPathVision.csproj
 ```
 
-Or open `MachineVisionApp.sln` in Visual Studio 2022 and press **F5**.
+Or open `VirtualPathVision.sln` in Visual Studio 2022 and press **F5**.
 
 ---
 

@@ -1,0 +1,648 @@
+﻿<UserControl x:Class="VirtualPathVision.Views.IndustrialPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="IndCol0" Width="*" />
+                <ColumnDefinition x:Name="IndGutterCol" Width="12" />
+                <ColumnDefinition x:Name="IndCol2" Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="12" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition x:Name="IndGutterRow3" Height="0" />
+                <RowDefinition x:Name="IndRow4" Height="0" />
+                <RowDefinition x:Name="IndGutterRow5" Height="0" />
+                <RowDefinition x:Name="IndRow6" Height="0" />
+            </Grid.RowDefinitions>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 TOP-LEFT — Modbus TCP
+                 ═══════════════════════════════════════════════════════════ -->
+            <Border x:Name="ModbusCard" Grid.Column="0" Grid.Row="0"
+                    Style="{StaticResource GlassPanel}"
+                    Padding="20">
+                <StackPanel>
+
+                    <!-- Header -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Ellipse x:Name="ModbusStatusDot"
+                                 Grid.Column="0"
+                                 Width="10"
+                                 Height="10"
+                                 Fill="{DynamicResource TextMutedBrush}"
+                                 Margin="0,0,10,0"
+                                 VerticalAlignment="Center" />
+
+                        <TextBlock x:Name="SectionModbusTitle"
+                                   Grid.Column="1"
+                                   Text="Modbus TCP"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center" />
+
+                        <TextBlock x:Name="ModbusStatusText"
+                                   Grid.Column="2"
+                                   Text="Disconnected"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+
+                    <!-- Connection Row: IP / Port / UnitId -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock x:Name="ModbusIpLabel" Text="IP Address"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       Margin="0,0,0,4" />
+                            <TextBox x:Name="ModbusIpTextBox"
+                                     Text="127.0.0.1"
+                                     Style="{StaticResource GlassTextBox}"
+                                     FontSize="13"
+                                     VerticalContentAlignment="Center" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock x:Name="ModbusPortLabel" Text="Port"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       Margin="0,0,0,4" />
+                            <TextBox x:Name="ModbusPortTextBox"
+                                     Text="502"
+                                     Style="{StaticResource GlassTextBox}"
+                                     FontSize="13"
+                                     VerticalContentAlignment="Center" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4">
+                            <TextBlock x:Name="ModbusUnitLabel" Text="Unit ID"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       Margin="0,0,0,4" />
+                            <TextBox x:Name="ModbusUnitTextBox"
+                                     Text="1"
+                                     Style="{StaticResource GlassTextBox}"
+                                     FontSize="13"
+                                     VerticalContentAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Connect / Disconnect -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="ModbusConnectButton"
+                                Grid.Column="0"
+                                Content="Connect"
+                                Style="{StaticResource GlassButton}"
+                                Padding="14,8"
+                                FontSize="13" />
+
+                        <Button x:Name="ModbusDisconnectButton"
+                                Grid.Column="2"
+                                Content="Disconnect"
+                                Style="{StaticResource GlassButton}"
+                                Padding="14,8"
+                                FontSize="13"
+                                IsEnabled="False" />
+                    </Grid>
+
+                    <!-- Divider -->
+                    <Border Height="1"
+                            Background="{DynamicResource GlassBorderBrush}"
+                            Margin="0,0,0,14" />
+
+                    <!-- Address / Value -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="3*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock x:Name="ModbusAddrLabel" Text="Address"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       Margin="0,0,0,4" />
+                            <TextBox x:Name="ModbusAddrTextBox"
+                                     Text="0"
+                                     Style="{StaticResource GlassTextBox}"
+                                     FontSize="13"
+                                     VerticalContentAlignment="Center" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock x:Name="ModbusValueLabel" Text="Value"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       Margin="0,0,0,4" />
+                            <TextBox x:Name="ModbusValueTextBox"
+                                     Text="0"
+                                     Style="{StaticResource GlassTextBox}"
+                                     FontSize="13"
+                                     VerticalContentAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Read / Write -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="ModbusReadButton"
+                                Grid.Column="0"
+                                Content="Read"
+                                Style="{StaticResource GlassButton}"
+                                Padding="14,8"
+                                FontSize="13" />
+
+                        <Button x:Name="ModbusWriteButton"
+                                Grid.Column="2"
+                                Content="Write"
+                                Style="{StaticResource GlassButton}"
+                                Padding="14,8"
+                                FontSize="13" />
+                    </Grid>
+
+                    <!-- Result -->
+                    <TextBlock x:Name="ModbusResultText"
+                               Text=""
+                               FontSize="13"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               TextWrapping="Wrap"
+                               MaxHeight="60" />
+
+                </StackPanel>
+            </Border>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 TOP-RIGHT — OPC-UA
+                 ═══════════════════════════════════════════════════════════ -->
+            <Border x:Name="OpcCard" Grid.Column="2" Grid.Row="0"
+                    Style="{StaticResource GlassPanel}"
+                    Padding="20">
+                <StackPanel>
+
+                    <!-- Header -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Ellipse x:Name="OpcUaStatusDot"
+                                 Grid.Column="0"
+                                 Width="10"
+                                 Height="10"
+                                 Fill="{DynamicResource TextMutedBrush}"
+                                 Margin="0,0,10,0"
+                                 VerticalAlignment="Center" />
+
+                        <TextBlock x:Name="SectionOPCUATitle"
+                                   Grid.Column="1"
+                                   Text="OPC-UA"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center" />
+
+                        <TextBlock x:Name="OpcUaStatusText"
+                                   Grid.Column="2"
+                                   Text="Disconnected"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+
+                    <!-- Endpoint -->
+                    <StackPanel Margin="0,0,0,14">
+                        <TextBlock x:Name="OpcUaEndpointLabel" Text="Endpoint URL"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   Margin="0,0,0,4" />
+                        <TextBox x:Name="OpcUaEndpointTextBox"
+                                 Text="opc.tcp://127.0.0.1:4840"
+                                 Style="{StaticResource GlassTextBox}"
+                                 FontSize="13"
+                                 VerticalContentAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Connect / Disconnect -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="OpcUaConnectButton"
+                                Grid.Column="0"
+                                Content="Connect"
+                                Style="{StaticResource GlassButton}"
+                                Padding="14,8"
+                                FontSize="13" />
+
+                        <Button x:Name="OpcUaDisconnectButton"
+                                Grid.Column="2"
+                                Content="Disconnect"
+                                Style="{StaticResource GlassButton}"
+                                Padding="14,8"
+                                FontSize="13"
+                                IsEnabled="False" />
+                    </Grid>
+
+                    <!-- Divider -->
+                    <Border Height="1"
+                            Background="{DynamicResource GlassBorderBrush}"
+                            Margin="0,0,0,14" />
+
+                    <!-- Node -->
+                    <StackPanel Margin="0,0,0,12">
+                        <TextBlock x:Name="OpcUaNodeLabel" Text="Node ID"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   Margin="0,0,0,4" />
+                        <TextBox x:Name="OpcUaNodeTextBox"
+                                 Text=""
+                                 Style="{StaticResource GlassTextBox}"
+                                 FontSize="13"
+                                 VerticalContentAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Value -->
+                    <StackPanel Margin="0,0,0,14">
+                        <TextBlock x:Name="OpcUaValueLabel" Text="Value"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   Margin="0,0,0,4" />
+                        <TextBox x:Name="OpcUaValueTextBox"
+                                 Text=""
+                                 Style="{StaticResource GlassTextBox}"
+                                 FontSize="13"
+                                 VerticalContentAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Read / Write -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="OpcUaReadButton"
+                                Grid.Column="0"
+                                Content="Read"
+                                Style="{StaticResource GlassButton}"
+                                Padding="14,8"
+                                FontSize="13" />
+
+                        <Button x:Name="OpcUaWriteButton"
+                                Grid.Column="2"
+                                Content="Write"
+                                Style="{StaticResource GlassButton}"
+                                Padding="14,8"
+                                FontSize="13" />
+                    </Grid>
+
+                    <!-- Result -->
+                    <TextBlock x:Name="OpcUaResultText"
+                               Text=""
+                               FontSize="13"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               TextWrapping="Wrap"
+                               MaxHeight="60" />
+
+                </StackPanel>
+            </Border>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 BOTTOM-LEFT — Barcode Scanner
+                 ═══════════════════════════════════════════════════════════ -->
+            <Border x:Name="BarcodeCard" Grid.Column="0" Grid.Row="2"
+                    Style="{StaticResource GlassPanel}"
+                    Padding="20">
+                <StackPanel>
+
+                    <!-- Header -->
+                    <TextBlock x:Name="SectionBarcodeTitle"
+                               Text="Barcode Scanner"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               Margin="0,0,0,16" />
+
+                    <!-- Source -->
+                    <StackPanel Margin="0,0,0,14">
+                        <TextBlock x:Name="ScanSourceLabel" Text="Scan Source"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   Margin="0,0,0,4" />
+                        <ComboBox x:Name="ScanSourceComboBox"
+                                  Style="{StaticResource GlassComboBox}"
+                                  SelectedIndex="0"
+                                  FontSize="13">
+                            <ComboBoxItem Content="Disabled"
+                                          Style="{StaticResource GlassComboBoxItem}" />
+                            <ComboBoxItem Content="Serial Port"
+                                          Style="{StaticResource GlassComboBoxItem}" />
+                            <ComboBoxItem Content="TCP"
+                                          Style="{StaticResource GlassComboBoxItem}" />
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- Serial Port Config -->
+                    <Border x:Name="SerialScanPanel"
+                            Visibility="Collapsed"
+                            Background="{DynamicResource InsetBrush}"
+                            CornerRadius="{StaticResource CornerMd}"
+                            Padding="14"
+                            Margin="0,0,0,14"
+                            BorderBrush="{DynamicResource GlassBorderBrush}"
+                            BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock x:Name="SerialConfigLabel" Text="Serial Configuration"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Margin="0,0,0,10" />
+
+                            <!-- Port -->
+                            <StackPanel Margin="0,0,0,10">
+                                <TextBlock x:Name="SerialPortLabel" Text="Port"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Margin="0,0,0,4" />
+                                <ComboBox x:Name="SerialPortComboBox"
+                                          Style="{StaticResource GlassComboBox}"
+                                          FontSize="13" />
+                            </StackPanel>
+
+                            <!-- Baud Rate -->
+                            <StackPanel Margin="0,0,0,10">
+                                <TextBlock x:Name="BaudRateLabel" Text="Baud Rate"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Margin="0,0,0,4" />
+                                <ComboBox x:Name="SerialBaudComboBox"
+                                          Style="{StaticResource GlassComboBox}"
+                                          FontSize="13" />
+                            </StackPanel>
+
+                            <Button x:Name="SerialToggleButton"
+                                    Content="Start"
+                                    Style="{StaticResource GlassButton}"
+                                    Padding="14,8"
+                                    FontSize="13"
+                                    HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- TCP Config -->
+                    <Border x:Name="TcpScanPanel"
+                            Visibility="Collapsed"
+                            Background="{DynamicResource InsetBrush}"
+                            CornerRadius="{StaticResource CornerMd}"
+                            Padding="14"
+                            Margin="0,0,0,14"
+                            BorderBrush="{DynamicResource GlassBorderBrush}"
+                            BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock x:Name="TcpConfigLabel" Text="TCP Configuration"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Margin="0,0,0,10" />
+
+                            <!-- Port -->
+                            <StackPanel Margin="0,0,0,10">
+                                <TextBlock x:Name="TcpPortLabel" Text="Port"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Margin="0,0,0,4" />
+                                <TextBox x:Name="TcpScanPortTextBox"
+                                         Text="9001"
+                                         Style="{StaticResource GlassTextBox}"
+                                         FontSize="13"
+                                         VerticalContentAlignment="Center" />
+                            </StackPanel>
+
+                            <Button x:Name="TcpToggleButton"
+                                    Content="Start"
+                                    Style="{StaticResource GlassButton}"
+                                    Padding="14,8"
+                                    FontSize="13"
+                                    HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </Border>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 BOTTOM-RIGHT — Work Report
+                 ═══════════════════════════════════════════════════════════ -->
+            <Border x:Name="ReportCard" Grid.Column="2" Grid.Row="2"
+                    Style="{StaticResource GlassPanel}"
+                    Padding="20">
+                <StackPanel>
+
+                    <!-- Header -->
+                    <TextBlock x:Name="SectionReportTitle"
+                               Text="Work Report"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               Margin="0,0,0,16" />
+
+                    <!-- Work Order -->
+                    <StackPanel Margin="0,0,0,12">
+                        <TextBlock x:Name="WorkOrderLabel" Text="Work Order"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   Margin="0,0,0,4" />
+                        <TextBox x:Name="WorkOrderTextBox"
+                                 Text=""
+                                 Style="{StaticResource GlassTextBox}"
+                                 FontSize="13"
+                                 VerticalContentAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Camera Report + PLC Link -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <CheckBox x:Name="CameraReportCheckBox"
+                                  Grid.Column="0"
+                                  Content="Camera Report"
+                                  Style="{StaticResource GlassCheckBox}"
+                                  IsChecked="True"
+                                  VerticalAlignment="Center" />
+
+                        <CheckBox x:Name="ModbusLinkCheckBox"
+                                  Grid.Column="2"
+                                  Content="PLC Link"
+                                  Style="{StaticResource GlassCheckBox}"
+                                  VerticalAlignment="Center" />
+                    </Grid>
+
+                    <!-- PLC Register -->
+                    <StackPanel Margin="0,0,0,14">
+                        <TextBlock x:Name="PlcRegisterLabel" Text="PLC Register"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   Margin="0,0,0,4" />
+                        <TextBox x:Name="PlcRegisterTextBox"
+                                 Text="100"
+                                 Style="{StaticResource GlassTextBox}"
+                                 FontSize="13"
+                                 VerticalContentAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Divider -->
+                    <Border Height="1"
+                            Background="{DynamicResource GlassBorderBrush}"
+                            Margin="0,0,0,14" />
+
+                    <!-- Stats -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock x:Name="TodayCountLabel" Text="Today Count"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       Margin="0,0,0,4" />
+                            <TextBlock x:Name="TodayCountTextBlock"
+                                       Text="0"
+                                       FontSize="28"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource AccentBrush}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock x:Name="LastBarcodeLabel" Text="Last Barcode"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       Margin="0,0,0,4" />
+                            <TextBlock x:Name="LastBarcodeTextBlock"
+                                       Text="--"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       TextTrimming="CharacterEllipsis"
+                                       VerticalAlignment="Bottom"
+                                       Padding="0,0,0,2" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Report List -->
+                    <Border Background="{DynamicResource InsetBrush}"
+                            CornerRadius="{StaticResource CornerMd}"
+                            BorderBrush="{DynamicResource GlassBorderBrush}"
+                            BorderThickness="1"
+                            Padding="4"
+                            Margin="0,0,0,14"
+                            MaxHeight="160">
+                        <ListBox x:Name="ReportListBox"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Foreground="{DynamicResource TextSecondaryBrush}"
+                                 FontSize="13"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="10,6" />
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="border"
+                                                        Background="Transparent"
+                                                        CornerRadius="6"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter />
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="border" Property="Background" Value="#2AFFFFFF" />
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="border" Property="Background" Value="#330A84FF" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                    </Border>
+
+                    <!-- Export / Clear -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="ExportCsvButton"
+                                Grid.Column="0"
+                                Content="Export CSV"
+                                Style="{StaticResource GlassButton}"
+                                Padding="14,8"
+                                FontSize="13" />
+
+                        <Button x:Name="ClearReportButton"
+                                Grid.Column="2"
+                                Content="Clear"
+                                Style="{StaticResource GlassButton}"
+                                Padding="14,8"
+                                FontSize="13" />
+                    </Grid>
+
+                </StackPanel>
+            </Border>
+
+        </Grid>
+    </ScrollViewer>
+</UserControl>

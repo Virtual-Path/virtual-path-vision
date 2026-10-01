@@ -12,7 +12,7 @@
 **Please do not open a public issue for security problems.**
 
 Report suspected vulnerabilities privately via GitHub's
-[Security Advisories](https://github.com/xianshi3/machine-vision-app/security/advisories/new)
+[Security Advisories](https://github.com/xianshi3/virtual-path-vision/security/advisories/new)
 (*Security* → *Report a vulnerability*), or by contacting the maintainers directly.
 
 Please include:

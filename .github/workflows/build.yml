@@ -21,7 +21,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore
-        run: dotnet restore MachineVisionApp.sln
+        run: dotnet restore VirtualPathVision.sln
 
       - name: Build (Release)
-        run: dotnet build MachineVisionApp.sln -c Release --no-restore
+        run: dotnet build VirtualPathVision.sln -c Release --no-restore

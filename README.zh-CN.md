@@ -2,11 +2,11 @@
   <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a>
 </p>
 
-<h1 align="center">Machine Vision App</h1>
+<h1 align="center">Virtual Path Vision</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/xianshi3/machine-vision-app?style=flat-square&label=release" alt="release"/>
-  <img src="https://img.shields.io/github/stars/xianshi3/machine-vision-app?style=flat-square" alt="stars"/>
+  <img src="https://img.shields.io/github/v/release/xianshi3/virtual-path-vision?style=flat-square&label=release" alt="release"/>
+  <img src="https://img.shields.io/github/stars/xianshi3/virtual-path-vision?style=flat-square" alt="stars"/>
   <img src="https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=.net" alt=".NET 8"/>
   <img src="https://img.shields.io/badge/WPF-Light%20%2F%20Dark%20UI-58A6FF?style=flat-square" alt="WPF"/>
   <img src="https://img.shields.io/badge/OpenCV-5-5C3EE8?style=flat-square&logo=opencv" alt="OpenCV 5"/>
@@ -117,7 +117,7 @@
 ## 项目结构
 
 ```
-MachineVisionApp/
+VirtualPathVision/
 ├── App.xaml / App.xaml.cs           # 应用入口、DI 容器、主题初始化
 ├── MainWindow.xaml / .cs            # 主界面、导航与事件编排
 ├── SettingsWindow.xaml / .cs        # 设置窗口（语言 + 主题）
@@ -199,26 +199,26 @@ MachineVisionApp/
 
 从 [Releases](../../releases/latest) 下载最新的自包含包：
 
-1. 下载 `MachineVisionApp-win-x64-vX.Y.Z.zip`
+1. 下载 `VirtualPathVision-win-x64-vX.Y.Z.zip`
 2. 解压到任意目录
-3. 运行 `MachineVisionApp.exe`
+3. 运行 `VirtualPathVision.exe`
 
 ### 从源码构建
 
 ```bash
 # 克隆仓库
-git clone https://github.com/xianshi3/machine-vision-app.git
-cd machine-vision-app
+git clone https://github.com/xianshi3/virtual-path-vision.git
+cd virtual-path-vision
 
 # 还原并编译
 dotnet restore
 dotnet build -c Release
 
 # 运行
-dotnet run --project MachineVisionApp/MachineVisionApp.csproj
+dotnet run --project VirtualPathVision/VirtualPathVision.csproj
 ```
 
-或用 Visual Studio 2022 打开 `MachineVisionApp.sln`，按 **F5** 运行。
+或用 Visual Studio 2022 打开 `VirtualPathVision.sln`，按 **F5** 运行。
 
 ### 使用内置测试图片
 
@@ -226,7 +226,7 @@ dotnet run --project MachineVisionApp/MachineVisionApp.csproj
 
 | 图片 | 测试内容 |
 |------|----------|
-| `test_scene.png` | 全部处理模式——边缘、轮廓、形状、颜色、QR/条码（内容为 `https://github.com/xianshi3/machine-vision-app`） |
+| `test_scene.png` | 全部处理模式——边缘、轮廓、形状、颜色、QR/条码（内容为 `https://github.com/xianshi3/virtual-path-vision`） |
 | `template_green.png` | 模板匹配（绿色方块，匹配度 ≈ 1.0） |
 | `template_qr.png` | 特征点匹配（纹理丰富的 QR 裁剪图） |
 | `face_lena.jpg` | 人脸检测 |

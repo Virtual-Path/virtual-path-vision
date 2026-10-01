@@ -2,11 +2,11 @@
   <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a>
 </p>
 
-<h1 align="center">Machine Vision App</h1>
+<h1 align="center">Virtual Path Vision</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/xianshi3/machine-vision-app?style=flat-square&label=release" alt="release"/>
-  <img src="https://img.shields.io/github/stars/xianshi3/machine-vision-app?style=flat-square" alt="stars"/>
+  <img src="https://img.shields.io/github/v/release/xianshi3/virtual-path-vision?style=flat-square&label=release" alt="release"/>
+  <img src="https://img.shields.io/github/stars/xianshi3/virtual-path-vision?style=flat-square" alt="stars"/>
   <img src="https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=.net" alt=".NET 8"/>
   <img src="https://img.shields.io/badge/WPF-Light%20%2F%20Dark%20UI-58A6FF?style=flat-square" alt="WPF"/>
   <img src="https://img.shields.io/badge/OpenCV-5-5C3EE8?style=flat-square&logo=opencv" alt="OpenCV 5"/>
@@ -117,7 +117,7 @@ The app automatically constructs the MJPEG URL and starts streaming.
 ## Project Structure
 
 ```
-MachineVisionApp/
+VirtualPathVision/
 ├── App.xaml / App.xaml.cs           # Application entry, DI container, theme init
 ├── MainWindow.xaml / .cs            # Main UI, navigation and event orchestration
 ├── SettingsWindow.xaml / .cs        # Settings dialog (language + theme)
@@ -199,26 +199,26 @@ MachineVisionApp/
 
 Grab the latest self-contained package from [Releases](../../releases/latest):
 
-1. Download `MachineVisionApp-win-x64-vX.Y.Z.zip`
+1. Download `VirtualPathVision-win-x64-vX.Y.Z.zip`
 2. Extract it to any folder
-3. Run `MachineVisionApp.exe`
+3. Run `VirtualPathVision.exe`
 
 ### Build from source
 
 ```bash
 # Clone the repository
-git clone https://github.com/xianshi3/machine-vision-app.git
-cd machine-vision-app
+git clone https://github.com/xianshi3/virtual-path-vision.git
+cd virtual-path-vision
 
 # Restore and build
 dotnet restore
 dotnet build -c Release
 
 # Run
-dotnet run --project MachineVisionApp/MachineVisionApp.csproj
+dotnet run --project VirtualPathVision/VirtualPathVision.csproj
 ```
 
-Or open `MachineVisionApp.sln` in Visual Studio 2022 and press **F5**.
+Or open `VirtualPathVision.sln` in Visual Studio 2022 and press **F5**.
 
 ### Try the bundled test images
 
@@ -226,7 +226,7 @@ Open `TestImages/` from the Load Image dialog:
 
 | Image | What to test |
 |-------|--------------|
-| `test_scene.png` | All processing modes – edges, contours, shapes, colors, QR/barcode (`https://github.com/xianshi3/machine-vision-app`) |
+| `test_scene.png` | All processing modes – edges, contours, shapes, colors, QR/barcode (`https://github.com/xianshi3/virtual-path-vision`) |
 | `template_green.png` | Template Matching (green square, score ≈ 1.0) |
 | `template_qr.png` | Feature Matching (texture-rich QR crop) |
 | `face_lena.jpg` | Face Detection |
