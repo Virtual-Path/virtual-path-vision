@@ -172,6 +172,45 @@ namespace MachineVisionApp
 
             Loaded += MainWindow_Loaded;
             Closed += MainWindow_Closed;
+            SizeChanged += MainWindow_SizeChanged;
+        }
+
+        // ==================== 自适应布局 ====================
+
+        /// <summary>
+        /// 窗口大小变化时根据宽度调整侧栏布局。
+        /// </summary>
+        private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (e.WidthChanged)
+            {
+                UpdateLayoutForWidth(e.NewSize.Width);
+            }
+        }
+
+        /// <summary>
+        /// 根据窗口宽度动态调整侧栏宽度：
+        /// - ≥1200：完整侧栏（240px，显示文字）
+        /// - ≥800：图标侧栏（84px，隐藏文字）
+        /// - <800：图标侧栏（84px，隐藏文字）
+        /// </summary>
+        private void UpdateLayoutForWidth(double width)
+        {
+            if (width >= 1200)
+            {
+                SidebarColumn.Width = new GridLength(240);
+                SidebarText.Visibility = Visibility.Visible;
+            }
+            else if (width >= 800)
+            {
+                SidebarColumn.Width = new GridLength(84);
+                SidebarText.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                SidebarColumn.Width = new GridLength(84);
+                SidebarText.Visibility = Visibility.Collapsed;
+            }
         }
 
         // ==================== 侧边栏导航 ====================
@@ -574,7 +613,7 @@ namespace MachineVisionApp
                 if (started)
                 {
                     CameraPanelCtrl.RecordButtonEl.Content = TranslationService.Instance.StopRecording;
-                    CameraPanelCtrl.RecordButtonEl.Background = new SolidColorBrush(Color.FromRgb(0xC4, 0x67, 0x5C));
+                    CameraPanelCtrl.RecordButtonEl.Background = new SolidColorBrush(Color.FromRgb(0xFF, 0x45, 0x3A));
                     AppLogger.Instance.Info($"{TranslationService.Instance.RecordingStarted} {path}");
                 }
                 else
@@ -1262,11 +1301,11 @@ namespace MachineVisionApp
                 CameraPanelCtrl.SetConnected(connected, statusText);
 
                 ConnectionIndicator.Fill = connected
-                    ? new SolidColorBrush(Color.FromRgb(0x78, 0x8F, 0x94))
-                    : new SolidColorBrush(Color.FromRgb(0x5F, 0x55, 0x4C));
+                    ? new SolidColorBrush(Color.FromRgb(0x0A, 0x84, 0xFF))
+                    : new SolidColorBrush(Color.FromRgb(0x8E, 0x8E, 0x93));
                 StatusIndicator.Fill = connected
-                    ? new SolidColorBrush(Color.FromRgb(0x78, 0x8F, 0x94))
-                    : new SolidColorBrush(Color.FromRgb(0x5F, 0x55, 0x4C));
+                    ? new SolidColorBrush(Color.FromRgb(0x0A, 0x84, 0xFF))
+                    : new SolidColorBrush(Color.FromRgb(0x8E, 0x8E, 0x93));
                 StatusText.Text = statusText;
                 StatusTextFooter.Text = statusText;
 
@@ -1274,14 +1313,14 @@ namespace MachineVisionApp
                 {
                     CameraPanelCtrl.EmptyOverlayLeftEl.Visibility = Visibility.Collapsed;
                     CameraPanelCtrl.EmptyOverlayRightEl.Visibility = Visibility.Collapsed;
-                    StatusTextFooter.Foreground = new SolidColorBrush(Color.FromRgb(0x78, 0x8F, 0x94));
+                    StatusTextFooter.Foreground = new SolidColorBrush(Color.FromRgb(0x0A, 0x84, 0xFF));
                     AppLogger.Instance.Info("设备已连接");
                 }
                 else if (state == Components.ConnectionState.Disconnected)
                 {
                     CameraPanelCtrl.EmptyOverlayLeftEl.Visibility = Visibility.Visible;
                     CameraPanelCtrl.EmptyOverlayRightEl.Visibility = Visibility.Visible;
-                    StatusTextFooter.Foreground = new SolidColorBrush(Color.FromRgb(0x5F, 0x55, 0x4C));
+                    StatusTextFooter.Foreground = new SolidColorBrush(Color.FromRgb(0x8E, 0x8E, 0x93));
                 }
                 else if (state == Components.ConnectionState.Failed)
                 {

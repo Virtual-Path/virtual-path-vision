@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -28,6 +28,8 @@ namespace MachineVisionApp
                     break;
                 }
             }
+
+            LoadThemePreference();
         }
 
         /// <summary>按当前语言刷新本窗口文本</summary>
@@ -62,6 +64,40 @@ namespace MachineVisionApp
                 TranslationService.Instance.ChangeLanguage(culture);
                 _mainWindow.RefreshAllTexts();
                 ApplyTexts();
+            }
+        }
+
+        /// <summary>加载当前主题设置并选中对应 RadioButton</summary>
+        private void LoadThemePreference()
+        {
+            var currentTheme = ThemeService.Instance.CurrentTheme;
+            switch (currentTheme)
+            {
+                case AppTheme.Light:
+                    LightThemeRadio.IsChecked = true;
+                    break;
+                case AppTheme.Dark:
+                    DarkThemeRadio.IsChecked = true;
+                    break;
+                case AppTheme.System:
+                    SystemThemeRadio.IsChecked = true;
+                    break;
+            }
+        }
+
+        /// <summary>主题 RadioButton 选中事件，切换主题</summary>
+        private void ThemeRadio_Checked(object sender, RoutedEventArgs e)
+        {
+            if (sender is RadioButton radio && radio.IsChecked == true)
+            {
+                var theme = radio.Tag?.ToString() switch
+                {
+                    "Light" => AppTheme.Light,
+                    "Dark" => AppTheme.Dark,
+                    "System" => AppTheme.System,
+                    _ => AppTheme.Dark
+                };
+                ThemeService.Instance.SetTheme(theme);
             }
         }
     }

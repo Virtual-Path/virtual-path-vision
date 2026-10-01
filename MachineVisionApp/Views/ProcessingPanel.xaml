@@ -1,7 +1,7 @@
-<UserControl x:Class="MachineVisionApp.Views.ProcessingPanel"
+﻿<UserControl x:Class="MachineVisionApp.Views.ProcessingPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="{StaticResource BgDarkBrush}">
+             Background="{DynamicResource BgDarkBrush}">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Disabled">
@@ -25,20 +25,20 @@
                                    Text="Image Processing"
                                    FontSize="22"
                                    FontWeight="Bold"
-                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
                                    VerticalAlignment="Center" />
 
                         <Border Grid.Column="1"
-                                Background="#14C4B7A7"
+                                Background="#14FFFFFF"
                                 CornerRadius="{StaticResource CornerSm}"
                                 Padding="14,6"
-                                BorderBrush="{StaticResource GlassBorderBrush}"
+                                BorderBrush="{DynamicResource GlassBorderBrush}"
                                 BorderThickness="1">
                             <TextBlock x:Name="ModeLabelText"
                                        Text="Canny"
                                        FontSize="13"
                                        FontWeight="SemiBold"
-                                       Foreground="{StaticResource AccentBrush}" />
+                                       Foreground="{DynamicResource AccentBrush}" />
                         </Border>
                     </Grid>
 
@@ -51,7 +51,7 @@
                         <TextBlock Grid.Column="0"
                                    Text="Mode:"
                                    FontSize="14"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
                                    VerticalAlignment="Center" />
 
                         <ComboBox x:Name="ProcessingModeComboBox"
@@ -88,15 +88,15 @@
 
                 <!-- Thin divider -->
                 <Border Height="1"
-                        Background="{StaticResource GlassBorderBrush}"
+                        Background="{DynamicResource GlassBorderBrush}"
                         Margin="0,2" />
 
                 <!-- ═══ Threshold Panel ═══ -->
                 <Border x:Name="ThresholdPanel"
-                        Background="#14C4B7A7"
+                        Background="#14FFFFFF"
                         CornerRadius="{StaticResource CornerMd}"
                         Padding="18"
-                        BorderBrush="{StaticResource GlassBorderBrush}"
+                        BorderBrush="{DynamicResource GlassBorderBrush}"
                         BorderThickness="1"
                         Visibility="Visible">
                     <StackPanel >
@@ -104,7 +104,7 @@
                         <TextBlock x:Name="ThresholdsLabel" Text="Thresholds"
                                    FontSize="15"
                                    FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
 
                         <!-- Threshold 1 -->
                         <StackPanel >
@@ -117,7 +117,7 @@
                                 <TextBlock Grid.Column="0"
                                            Text="Threshold 1"
                                            FontSize="13"
-                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
                                            VerticalAlignment="Center" />
 
                                 <TextBox x:Name="Threshold1TextBox"
@@ -149,7 +149,7 @@
                                 <TextBlock Grid.Column="0"
                                            Text="Threshold 2"
                                            FontSize="13"
-                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
                                            VerticalAlignment="Center" />
 
                                 <TextBox x:Name="Threshold2TextBox"
@@ -181,10 +181,10 @@
 
                 <!-- ═══ Color Panel ═══ -->
                 <Border x:Name="ColorPanel"
-                        Background="#14C4B7A7"
+                        Background="#14FFFFFF"
                         CornerRadius="{StaticResource CornerMd}"
                         Padding="18"
-                        BorderBrush="{StaticResource GlassBorderBrush}"
+                        BorderBrush="{DynamicResource GlassBorderBrush}"
                         BorderThickness="1"
                         Visibility="Collapsed">
                     <StackPanel >
@@ -192,7 +192,7 @@
                         <TextBlock x:Name="ColorDetectionLabel" Text="Color Detection"
                                    FontSize="15"
                                    FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
 
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -203,7 +203,7 @@
                             <TextBlock Grid.Column="0"
                                        Text="Color:"
                                        FontSize="14"
-                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                        VerticalAlignment="Center" />
 
                             <ComboBox x:Name="ColorComboBox"
@@ -234,17 +234,17 @@
                         <TextBlock x:Name="PickColorHintText"
                                    Text="Click image to pick color"
                                    FontSize="13"
-                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Foreground="{DynamicResource TextMutedBrush}"
                                    Visibility="Collapsed" />
                     </StackPanel>
                 </Border>
 
                 <!-- ═══ Template Panel ═══ -->
                 <Border x:Name="TemplatePanel"
-                        Background="#14C4B7A7"
+                        Background="#14FFFFFF"
                         CornerRadius="{StaticResource CornerMd}"
                         Padding="18"
-                        BorderBrush="{StaticResource GlassBorderBrush}"
+                        BorderBrush="{DynamicResource GlassBorderBrush}"
                         BorderThickness="1"
                         Visibility="Collapsed">
                     <StackPanel >
@@ -253,7 +253,7 @@
                                    Text="Template / Feature"
                                    FontSize="15"
                                    FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
 
                         <Button x:Name="LoadTemplateButton"
                                 Content="Load Template"
@@ -270,7 +270,7 @@
                             <TextBlock Grid.Column="0"
                                        Text="Status:"
                                        FontSize="13"
-                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Foreground="{DynamicResource TextMutedBrush}"
                                        VerticalAlignment="Center"
                                        Margin="0,0,8,0" />
 
@@ -278,23 +278,23 @@
                                        Grid.Column="1"
                                        Text="No Template"
                                        FontSize="13"
-                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                        VerticalAlignment="Center" />
                         </Grid>
 
                         <TextBlock x:Name="FeatureMatchText"
                                    Text=""
                                    FontSize="13"
-                                   Foreground="{StaticResource AccentBrush}"
+                                   Foreground="{DynamicResource AccentBrush}"
                                    TextWrapping="Wrap" />
                     </StackPanel>
                 </Border>
 
                 <!-- ═══ Result Panel ═══ -->
-                <Border Background="#14C4B7A7"
+                <Border Background="#14FFFFFF"
                         CornerRadius="{StaticResource CornerMd}"
                         Padding="18"
-                        BorderBrush="{StaticResource GlassBorderBrush}"
+                        BorderBrush="{DynamicResource GlassBorderBrush}"
                         BorderThickness="1">
                     <StackPanel >
 
@@ -309,19 +309,19 @@
                                        Text="Result"
                                        FontSize="15"
                                        FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
 
                             <Border Grid.Column="1"
-                                    Background="#14C4B7A7"
+                                    Background="#14FFFFFF"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
-                                    BorderBrush="{StaticResource GlassBorderBrush}"
+                                    BorderBrush="{DynamicResource GlassBorderBrush}"
                                     BorderThickness="1">
                                 <TextBlock x:Name="ResultTitleText"
                                            Text="Result"
                                            FontSize="13"
                                            FontWeight="SemiBold"
-                                           Foreground="{StaticResource AccentBrush}" />
+                                           Foreground="{DynamicResource AccentBrush}" />
                             </Border>
                         </Grid>
 
@@ -339,17 +339,17 @@
                             <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,8,0">
                                 <TextBlock x:Name="FacesLabel" Text="Faces"
                                            FontSize="12"
-                                           Foreground="{StaticResource TextMutedBrush}" />
-                                <Border Background="#14C4B7A7"
+                                           Foreground="{DynamicResource TextMutedBrush}" />
+                                <Border Background="#14FFFFFF"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
-                                        BorderBrush="{StaticResource GlassBorderBrush}"
+                                        BorderBrush="{DynamicResource GlassBorderBrush}"
                                         BorderThickness="1">
                                     <TextBlock x:Name="FaceCountTextBlock"
                                                Text="0"
                                                FontSize="20"
                                                FontWeight="Bold"
-                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
                                                HorizontalAlignment="Center" />
                                 </Border>
                             </StackPanel>
@@ -358,17 +358,17 @@
                             <StackPanel Grid.Column="1" Grid.Row="0" Margin="8,0,0,0">
                                 <TextBlock x:Name="ObjectsLabel" Text="Objects"
                                            FontSize="12"
-                                           Foreground="{StaticResource TextMutedBrush}" />
-                                <Border Background="#14C4B7A7"
+                                           Foreground="{DynamicResource TextMutedBrush}" />
+                                <Border Background="#14FFFFFF"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
-                                        BorderBrush="{StaticResource GlassBorderBrush}"
+                                        BorderBrush="{DynamicResource GlassBorderBrush}"
                                         BorderThickness="1">
                                     <TextBlock x:Name="ContourCountTextBlock"
                                                Text="0"
                                                FontSize="20"
                                                FontWeight="Bold"
-                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
                                                HorizontalAlignment="Center" />
                                 </Border>
                             </StackPanel>
@@ -384,7 +384,7 @@
                             <TextBlock Grid.Column="0"
                                        Text="Threshold:"
                                        FontSize="13"
-                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Foreground="{DynamicResource TextMutedBrush}"
                                        VerticalAlignment="Center"
                                        Margin="0,0,8,0" />
 
@@ -393,20 +393,20 @@
                                        Text="100 ~ 200"
                                        FontSize="13"
                                        FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                        VerticalAlignment="Center" />
                         </Grid>
 
                         <!-- Mode Result -->
-                        <Border Background="#14C4B7A7"
+                        <Border Background="#14FFFFFF"
                                 CornerRadius="{StaticResource CornerSm}"
                                 Padding="14,10"
-                                BorderBrush="{StaticResource GlassBorderBrush}"
+                                BorderBrush="{DynamicResource GlassBorderBrush}"
                                 BorderThickness="1">
                             <TextBlock x:Name="ModeResultTextBlock"
                                        Text=""
                                        FontSize="13"
-                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                        TextWrapping="Wrap" />
                         </Border>
                     </StackPanel>

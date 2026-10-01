@@ -1,7 +1,7 @@
-<UserControl x:Class="MachineVisionApp.Views.AIPanel"
+﻿<UserControl x:Class="MachineVisionApp.Views.AIPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="{StaticResource BgDarkBrush}">
+             Background="{DynamicResource BgDarkBrush}">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Disabled">
@@ -32,7 +32,7 @@
                                      Grid.Column="0"
                                      Width="10"
                                      Height="10"
-                                     Fill="{StaticResource TextMutedBrush}"
+                                     Fill="{DynamicResource TextMutedBrush}"
                                      Margin="0,0,10,0"
                                      VerticalAlignment="Center" />
 
@@ -41,14 +41,14 @@
                                        Text="AI Detection (YOLO)"
                                        FontSize="18"
                                        FontWeight="Bold"
-                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                        VerticalAlignment="Center" />
 
                             <TextBlock x:Name="AiStatusText"
                                        Grid.Column="2"
                                        Text="Not Loaded"
                                        FontSize="13"
-                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Foreground="{DynamicResource TextMutedBrush}"
                                        VerticalAlignment="Center" />
                         </Grid>
 
@@ -69,16 +69,16 @@
                                     VerticalAlignment="Center" />
 
                             <Border Grid.Column="1"
-                                    Background="#14C4B7A7"
+                                    Background="#14FFFFFF"
                                     CornerRadius="{StaticResource CornerMd}"
                                     Padding="14,8"
-                                    BorderBrush="{StaticResource GlassBorderBrush}"
+                                    BorderBrush="{DynamicResource GlassBorderBrush}"
                                     BorderThickness="1"
                                     VerticalAlignment="Center">
                                 <TextBlock x:Name="YoloModelPathText"
                                            Text="No model loaded"
                                            FontSize="13"
-                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            TextTrimming="CharacterEllipsis"
                                            VerticalAlignment="Center" />
                             </Border>
@@ -97,7 +97,7 @@
                                        Grid.Column="0"
                                        Text="Confidence:"
                                        FontSize="13"
-                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                        VerticalAlignment="Center"
                                        Margin="0,0,10,0" />
 
@@ -127,41 +127,41 @@
                             </Grid.ColumnDefinitions>
 
                             <Border Grid.Column="0"
-                                    Background="#14C4B7A7"
+                                    Background="#14FFFFFF"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
-                                    BorderBrush="{StaticResource GlassBorderBrush}"
+                                    BorderBrush="{DynamicResource GlassBorderBrush}"
                                     BorderThickness="1"
                                     Margin="0,0,8,0">
                                 <TextBlock x:Name="AiDetectionsText"
                                            Text="Detections: 0"
                                            FontSize="12"
-                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
                             </Border>
 
                             <Border Grid.Column="1"
-                                    Background="#14C4B7A7"
+                                    Background="#14FFFFFF"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
-                                    BorderBrush="{StaticResource GlassBorderBrush}"
+                                    BorderBrush="{DynamicResource GlassBorderBrush}"
                                     BorderThickness="1"
                                     Margin="0,0,8,0">
                                 <TextBlock x:Name="AiTracksText"
                                            Text="Tracks: 0"
                                            FontSize="12"
-                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
                             </Border>
 
                             <Border Grid.Column="2"
-                                    Background="#14C4B7A7"
+                                    Background="#14FFFFFF"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
-                                    BorderBrush="{StaticResource GlassBorderBrush}"
+                                    BorderBrush="{DynamicResource GlassBorderBrush}"
                                     BorderThickness="1">
                                 <TextBlock x:Name="AiSampleText"
                                            Text="Interval: 1"
                                            FontSize="12"
-                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
                             </Border>
                         </Grid>
 
@@ -183,21 +183,21 @@
                                        Text="Digital Twin"
                                        FontSize="15"
                                        FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                        VerticalAlignment="Center" />
 
                             <TextBlock x:Name="TwinStatusText"
                                        Grid.Column="1"
                                        Text=""
                                        FontSize="13"
-                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Foreground="{DynamicResource TextMutedBrush}"
                                        VerticalAlignment="Center" />
                         </Grid>
 
-                        <Border Background="#14C4B7A7"
+                        <Border Background="#14FFFFFF"
                                 CornerRadius="{StaticResource CornerMd}"
                                 Padding="2"
-                                BorderBrush="{StaticResource GlassBorderBrush}"
+                                BorderBrush="{DynamicResource GlassBorderBrush}"
                                 BorderThickness="1"
                                 Height="200"
                                 Margin="0,0,0,12">
@@ -215,41 +215,41 @@
                             </Grid.ColumnDefinitions>
 
                             <Border Grid.Column="0"
-                                    Background="#14C4B7A7"
+                                    Background="#14FFFFFF"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
-                                    BorderBrush="{StaticResource GlassBorderBrush}"
+                                    BorderBrush="{DynamicResource GlassBorderBrush}"
                                     BorderThickness="1"
                                     Margin="0,0,8,0">
                                 <TextBlock x:Name="TwinDetectionsText"
                                            Text="Detections: 0"
                                            FontSize="12"
-                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
                             </Border>
 
                             <Border Grid.Column="1"
-                                    Background="#14C4B7A7"
+                                    Background="#14FFFFFF"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
-                                    BorderBrush="{StaticResource GlassBorderBrush}"
+                                    BorderBrush="{DynamicResource GlassBorderBrush}"
                                     BorderThickness="1"
                                     Margin="0,0,8,0">
                                 <TextBlock x:Name="TwinDefectsText"
                                            Text="Defects: 0"
                                            FontSize="12"
-                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
                             </Border>
 
                             <Border Grid.Column="2"
-                                    Background="#14C4B7A7"
+                                    Background="#14FFFFFF"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
-                                    BorderBrush="{StaticResource GlassBorderBrush}"
+                                    BorderBrush="{DynamicResource GlassBorderBrush}"
                                     BorderThickness="1">
                                 <TextBlock x:Name="TwinPassRateText"
                                            Text="Pass: 100%"
                                            FontSize="12"
-                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
                             </Border>
                         </Grid>
 
@@ -261,7 +261,7 @@
             <!-- Thin vertical divider -->
             <Border Grid.Column="1"
                     Width="1"
-                    Background="{StaticResource GlassBorderBrush}"
+                    Background="{DynamicResource GlassBorderBrush}"
                     Margin="0,12"
                     VerticalAlignment="Stretch" />
 
@@ -278,7 +278,7 @@
                                    Text="Active Perception"
                                    FontSize="18"
                                    FontWeight="Bold"
-                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
                                    Margin="0,0,0,16" />
 
                         <!-- Stats Grid -->
@@ -298,18 +298,18 @@
                                 <TextBlock x:Name="FrameCountLabel"
                                            Text="Frame Count:"
                                            FontSize="12"
-                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#14C4B7A7"
+                                <Border Background="#14FFFFFF"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
-                                        BorderBrush="{StaticResource GlassBorderBrush}"
+                                        BorderBrush="{DynamicResource GlassBorderBrush}"
                                         BorderThickness="1">
                                     <TextBlock x:Name="AiFrameCountText"
                                                Text="0"
                                                FontSize="16"
                                                FontWeight="Bold"
-                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
                                                HorizontalAlignment="Center" />
                                 </Border>
                             </StackPanel>
@@ -319,18 +319,18 @@
                                 <TextBlock x:Name="ActiveTracksLabel"
                                            Text="Active Tracks:"
                                            FontSize="12"
-                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#14C4B7A7"
+                                <Border Background="#14FFFFFF"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
-                                        BorderBrush="{StaticResource GlassBorderBrush}"
+                                        BorderBrush="{DynamicResource GlassBorderBrush}"
                                         BorderThickness="1">
                                     <TextBlock x:Name="AiActiveTracksText"
                                                Text="0"
                                                FontSize="16"
                                                FontWeight="Bold"
-                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
                                                HorizontalAlignment="Center" />
                                 </Border>
                             </StackPanel>
@@ -340,18 +340,18 @@
                                 <TextBlock x:Name="LostTracksLabel"
                                            Text="Lost Tracks:"
                                            FontSize="12"
-                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#14C4B7A7"
+                                <Border Background="#14FFFFFF"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
-                                        BorderBrush="{StaticResource GlassBorderBrush}"
+                                        BorderBrush="{DynamicResource GlassBorderBrush}"
                                         BorderThickness="1">
                                     <TextBlock x:Name="AiLostTracksText"
                                                Text="0"
                                                FontSize="16"
                                                FontWeight="Bold"
-                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
                                                HorizontalAlignment="Center" />
                                 </Border>
                             </StackPanel>
@@ -361,18 +361,18 @@
                                 <TextBlock x:Name="AdaptiveIntervalLabel"
                                            Text="Adaptive Interval:"
                                            FontSize="12"
-                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#14C4B7A7"
+                                <Border Background="#14FFFFFF"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
-                                        BorderBrush="{StaticResource GlassBorderBrush}"
+                                        BorderBrush="{DynamicResource GlassBorderBrush}"
                                         BorderThickness="1">
                                     <TextBlock x:Name="AiIntervalText"
                                                Text="1"
                                                FontSize="16"
                                                FontWeight="Bold"
-                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
                                                HorizontalAlignment="Center" />
                                 </Border>
                             </StackPanel>
@@ -382,18 +382,18 @@
                                 <TextBlock x:Name="RoiRegionsLabel"
                                            Text="ROI Regions:"
                                            FontSize="12"
-                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#14C4B7A7"
+                                <Border Background="#14FFFFFF"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
-                                        BorderBrush="{StaticResource GlassBorderBrush}"
+                                        BorderBrush="{DynamicResource GlassBorderBrush}"
                                         BorderThickness="1">
                                     <TextBlock x:Name="AiRoiCountText"
                                                Text="0"
                                                FontSize="16"
                                                FontWeight="Bold"
-                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
                                                HorizontalAlignment="Center" />
                                 </Border>
                             </StackPanel>
@@ -405,14 +405,14 @@
                                        Text="Detection Breakdown"
                                        FontSize="14"
                                        FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                        Margin="0,0,0,8" />
 
                             <Border x:Name="DetectionBreakdownPanel"
-                                    Background="#14C4B7A7"
+                                    Background="#14FFFFFF"
                                     CornerRadius="{StaticResource CornerMd}"
                                     Padding="14"
-                                    BorderBrush="{StaticResource GlassBorderBrush}"
+                                    BorderBrush="{DynamicResource GlassBorderBrush}"
                                     BorderThickness="1"
                                     MaxHeight="180">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto"
@@ -420,7 +420,7 @@
                                     <TextBlock x:Name="DetectionBreakdownText"
                                                Text="No detections yet"
                                                FontSize="13"
-                                               Foreground="{StaticResource TextMutedBrush}"
+                                               Foreground="{DynamicResource TextMutedBrush}"
                                                TextWrapping="Wrap" />
                                 </ScrollViewer>
                             </Border>
@@ -432,7 +432,7 @@
                                        Text="Tracking Trail"
                                        FontSize="14"
                                        FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                        Margin="0,0,0,10" />
 
                             <Grid>
@@ -445,7 +445,7 @@
                                     <TextBlock x:Name="MaxTrailLabel"
                                                Text="Max Trail Length:"
                                                FontSize="12"
-                                               Foreground="{StaticResource TextMutedBrush}"
+                                               Foreground="{DynamicResource TextMutedBrush}"
                                                Margin="0,0,0,4" />
                                     <TextBox x:Name="MaxTrailTextBox"
                                              Text="30"
@@ -459,7 +459,7 @@
                                     <TextBlock x:Name="MatchThresholdLabel"
                                                Text="Match Threshold:"
                                                FontSize="12"
-                                               Foreground="{StaticResource TextMutedBrush}"
+                                               Foreground="{DynamicResource TextMutedBrush}"
                                                Margin="0,0,0,4" />
                                     <TextBox x:Name="MatchThresholdTextBox"
                                              Text="80"

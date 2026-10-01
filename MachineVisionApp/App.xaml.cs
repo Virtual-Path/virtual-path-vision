@@ -72,6 +72,9 @@ namespace MachineVisionApp
 
             Services = services.BuildServiceProvider();
 
+            // 初始化主题服务
+            ThemeService.Instance.Initialize();
+
             base.OnStartup(e);
         }
 

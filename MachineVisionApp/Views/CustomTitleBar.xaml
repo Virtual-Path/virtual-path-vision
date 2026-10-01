@@ -8,7 +8,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="48" d:DesignWidth="1100"
              Height="48">
-    <Grid Background="#1A1713" MouseLeftButtonDown="Grid_MouseLeftButtonDown">
+    <Grid Background="#1C1C1E" MouseLeftButtonDown="Grid_MouseLeftButtonDown">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
@@ -16,12 +16,12 @@
         </Grid.ColumnDefinitions>
 
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0" Grid.Column="0">
-            <Border Background="#2A241D" CornerRadius="6" Width="28" Height="28" Margin="0,0,10,0">
-                <TextBlock Text="MV" FontSize="12" FontWeight="Bold" Foreground="#788F94"
+            <Border Background="#2C2C2E" CornerRadius="6" Width="28" Height="28" Margin="0,0,10,0">
+                <TextBlock Text="MV" FontSize="12" FontWeight="Bold" Foreground="#0A84FF"
                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
             <TextBlock Text="{Binding Source={x:Static local:TranslationService.Instance}, Path=MachineVision}"
-                       FontSize="15" FontWeight="SemiBold" Foreground="#C4B7A7" VerticalAlignment="Center"/>
+                       FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0" Grid.Column="2"
@@ -60,8 +60,8 @@
                     <Style TargetType="Button" BasedOn="{StaticResource TitleBarButtonStyle}">
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#C4675C"/>
-                                <Setter Property="Foreground" Value="#040404"/>
+                                <Setter Property="Background" Value="#FF453A"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>

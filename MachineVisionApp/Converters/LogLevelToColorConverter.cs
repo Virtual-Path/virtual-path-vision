@@ -14,11 +14,11 @@ public class LogLevelToColorConverter : IValueConverter
 
         (Color color, double opacity) = level switch
         {
-            "INFO"  => (Color.FromRgb(0x78, 0x8F, 0x94), 1.0),   // SuccessBrush green
-            "WARN"  => (Color.FromRgb(0xC9, 0xA4, 0x6A), 1.0),   // WarningBrush yellow
-            "ERROR" => (Color.FromRgb(0xC4, 0x67, 0x5C), 1.0),   // DangerBrush red
-            "DEBUG" => (Color.FromRgb(0x7C, 0x7C, 0x85), 1.0),   // TextMutedBrush gray
-            _       => (Color.FromRgb(0x7C, 0x7C, 0x85), 1.0),
+            "INFO"  => (Color.FromRgb(0x0A, 0x84, 0xFF), 1.0),   // Accent blue
+            "WARN"  => (Color.FromRgb(0xFF, 0x9F, 0x0A), 1.0),   // WarningBrush orange
+            "ERROR" => (Color.FromRgb(0xFF, 0x45, 0x3A), 1.0),   // DangerBrush red
+            "DEBUG" => (Color.FromRgb(0x8E, 0x8E, 0x93), 1.0),   // TextMutedBrush gray
+            _       => (Color.FromRgb(0x8E, 0x8E, 0x93), 1.0),
         };
 
         if (string.Equals(mode, "Background", StringComparison.OrdinalIgnoreCase))

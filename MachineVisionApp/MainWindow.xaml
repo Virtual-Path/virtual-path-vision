@@ -5,7 +5,7 @@
         xmlns:views="clr-namespace:MachineVisionApp.Views"
         Title="MachineVisionApp" WindowState="Normal" WindowStyle="None" AllowsTransparency="False"
         Width="1400" Height="850" MinWidth="900" MinHeight="600"
-        Background="#040404" ResizeMode="CanResizeWithGrip"
+        Background="{DynamicResource BgBrush}" ResizeMode="CanResizeWithGrip"
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType">
 
     <WindowChrome.WindowChrome>
@@ -15,20 +15,14 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="84"/>
+            <ColumnDefinition x:Name="SidebarColumn" Width="84"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
         <!-- ===== Sidebar — glass panel with backdrop ===== -->
         <Border Grid.Column="0" BorderThickness="0,0,1,0"
-                BorderBrush="{StaticResource GlassBorderBrush}">
-            <Border.Background>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#CC1A1713" Offset="0"/>
-                    <GradientStop Color="#B3181511" Offset="0.5"/>
-                    <GradientStop Color="#CC1A1713" Offset="1"/>
-                </LinearGradientBrush>
-            </Border.Background>
+                BorderBrush="{DynamicResource GlassBorderBrush}"
+                Background="{DynamicResource SidebarBgBrush}">
             <DockPanel>
                 <!-- Logo — glass icon badge -->
                 <Border DockPanel.Dock="Top" Height="80" Margin="0,14,0,4"
@@ -36,21 +30,21 @@
                     <Grid>
                         <Grid.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#00788F94" Offset="0"/>
-                                <GradientStop Color="#0D788F94" Offset="1"/>
+                                <GradientStop Color="#000A84FF" Offset="0"/>
+                                <GradientStop Color="#0D0A84FF" Offset="1"/>
                             </LinearGradientBrush>
                         </Grid.Background>
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                             <Border Width="38" Height="38" CornerRadius="11"
                                     HorizontalAlignment="Center" Margin="0,0,0,6"
-                                    Background="#2A788F94" BorderBrush="#33788F94"
+                                    Background="#260A84FF" BorderBrush="#400A84FF"
                                     BorderThickness="1.5">
                                 <TextBlock Text="MV" FontSize="13" FontWeight="Black"
-                                           Foreground="{StaticResource AccentBrush}"
+                                           Foreground="{DynamicResource AccentBrush}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
-                            <TextBlock Text="V I S I O N" FontSize="7" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextMutedBrush}"
+                            <TextBlock x:Name="SidebarText" Text="V I S I O N" FontSize="7" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextMutedBrush}"
                                        HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Grid>
@@ -58,7 +52,7 @@
 
                 <!-- Divider -->
                 <Border DockPanel.Dock="Top" Height="1" Margin="16,0,16,10"
-                        Background="{StaticResource GlassDividerBrush}"/>
+                        Background="{DynamicResource GlassDividerBrush}"/>
 
                 <!-- Nav Icons -->
                 <StackPanel DockPanel.Dock="Top">
@@ -90,7 +84,7 @@
 
                 <!-- Divider -->
                 <Border DockPanel.Dock="Top" Height="1" Margin="16,6,16,0"
-                        Background="{StaticResource GlassDividerBrush}"/>
+                        Background="{DynamicResource GlassDividerBrush}"/>
 
                 <!-- Settings at bottom -->
                 <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,14"
@@ -111,21 +105,15 @@
             </Grid.RowDefinitions>
 
             <!-- Title Bar (draggable) -->
-            <Grid Grid.Row="0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                <Grid.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                        <GradientStop Color="#A0181511" Offset="0"/>
-                        <GradientStop Color="#80181511" Offset="0.5"/>
-                        <GradientStop Color="#A0181511" Offset="1"/>
-                    </LinearGradientBrush>
-                </Grid.Background>
+            <Grid Grid.Row="0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
+                  Background="{DynamicResource TitleBarBgBrush}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                    <Ellipse x:Name="ConnectionIndicator" Width="7" Height="7" Fill="#5F554C" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="StatusText" Text="Disconnected" Foreground="{StaticResource TextMutedBrush}"
+                    <Ellipse x:Name="ConnectionIndicator" Width="7" Height="7" Fill="#8E8E93" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="StatusText" Text="Disconnected" Foreground="{DynamicResource TextMutedBrush}"
                                FontSize="12" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -139,13 +127,7 @@
             </Grid>
 
             <!-- Content Panels -->
-            <Grid Grid.Row="1" Margin="6">
-                <Grid.Background>
-                    <RadialGradientBrush RadiusX="0.8" RadiusY="0.8">
-                        <GradientStop Color="#2B241C" Offset="0"/>
-                        <GradientStop Color="#040404" Offset="1"/>
-                    </RadialGradientBrush>
-                </Grid.Background>
+            <Grid Grid.Row="1" Margin="6" Background="{DynamicResource BgBrush}">
                 <views:CameraPanel x:Name="CameraPanelCtrl" Visibility="Visible"/>
                 <views:ProcessingPanel x:Name="ProcessingPanelCtrl" Visibility="Collapsed"/>
                 <views:AIPanel x:Name="AIPanelCtrl" Visibility="Collapsed"/>
@@ -155,15 +137,8 @@
             </Grid>
 
             <!-- Status Bar — glass panel -->
-            <Border Grid.Row="2" BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="0,1,0,0"
-                    Padding="16,7,16,7" CornerRadius="0,0,8,8">
-                <Border.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                        <GradientStop Color="#D9171310" Offset="0"/>
-                        <GradientStop Color="#E61A1613" Offset="0.5"/>
-                        <GradientStop Color="#D9171310" Offset="1"/>
-                    </LinearGradientBrush>
-                </Border.Background>
+            <Border Grid.Row="2" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,1,0,0"
+                    Padding="16,7,16,7" CornerRadius="0,0,8,8" Background="{DynamicResource StatusBarBgBrush}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -175,24 +150,24 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
-                        <Ellipse x:Name="StatusIndicator" Width="5" Height="5" Fill="#5F554C"
+                        <Ellipse x:Name="StatusIndicator" Width="5" Height="5" Fill="#8E8E93"
                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <TextBlock x:Name="StatusTextFooter" Text="Ready"
-                                   Foreground="{StaticResource TextMutedBrush}" FontSize="11"
+                                   Foreground="{DynamicResource TextMutedBrush}" FontSize="11"
                                    VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <TextBlock Grid.Column="1" x:Name="FpsTextBlock" Text="0 FPS"
-                               Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"
                                VerticalAlignment="Center" Margin="16,0,0,0" FontWeight="SemiBold"/>
                     <TextBlock Grid.Column="2" x:Name="ProcessTimeTextBlock" Text="0 ms"
-                               Foreground="{StaticResource TextMutedBrush}" FontSize="11"
+                               Foreground="{DynamicResource TextMutedBrush}" FontSize="11"
                                VerticalAlignment="Center" Margin="10,0,0,0"/>
                     <TextBlock Grid.Column="3" x:Name="CameraDataTextBlock" Text=""
-                               Foreground="{StaticResource TextMutedBrush}" FontSize="11"
+                               Foreground="{DynamicResource TextMutedBrush}" FontSize="11"
                                VerticalAlignment="Center" Margin="10,0,0,0"/>
 
-                    <TextBlock Grid.Column="5" Text="OpenCV 5 + AWS" Foreground="#4DC4B7A7"
+                    <TextBlock Grid.Column="5" Text="OpenCV 5 + AWS" Foreground="#33FFFFFF"
                                FontSize="10" VerticalAlignment="Center" FontWeight="Light"/>
                 </Grid>
             </Border>
@@ -200,7 +175,7 @@
 
         <!-- Error Banner — toast style, top of content area with margin -->
         <Border x:Name="ErrorBorder" Grid.Column="1" Grid.Row="1" VerticalAlignment="Top" Margin="12,12,12,0"
-                Background="#E0241F1A" BorderBrush="{StaticResource DangerBrush}" BorderThickness="1,1,1,3"
+                Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1,1,1,3"
                 Padding="16,10" Visibility="Collapsed" Panel.ZIndex="100" CornerRadius="8"
                 RenderTransformOrigin="0.5,0">
             <Border.RenderTransform>
@@ -210,10 +185,10 @@
                 <DropShadowEffect Color="#000000" ShadowDepth="4" BlurRadius="16" Opacity="0.4" Direction="270"/>
             </Border.Effect>
             <StackPanel Orientation="Horizontal">
-                <TextBlock x:Name="ErrorMessageTextBlock" Text="" Foreground="{StaticResource DangerBrush}"
+                <TextBlock x:Name="ErrorMessageTextBlock" Text="" Foreground="{DynamicResource DangerBrush}"
                            FontSize="12" VerticalAlignment="Center" FontWeight="Medium"/>
                 <Button Content="X" Margin="12,0,0,0" Background="Transparent"
-                        Foreground="{StaticResource TextMutedBrush}"
+                        Foreground="{DynamicResource TextMutedBrush}"
                         BorderThickness="0" Cursor="Hand" FontSize="12" FontWeight="Bold"
                         Click="HideErrorButton_Click"/>
             </StackPanel>

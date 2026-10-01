@@ -38,8 +38,15 @@ namespace MachineVisionApp
         {
             try
             {
-                string json = $"{{\"Language\":\"{culture}\"}}";
-                File.WriteAllText(SettingsPath, json);
+                // 保留其他键（如 Theme），只更新 Language 字段
+                Newtonsoft.Json.Linq.JObject json;
+                if (File.Exists(SettingsPath))
+                    json = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(SettingsPath));
+                else
+                    json = new Newtonsoft.Json.Linq.JObject();
+
+                json["Language"] = culture;
+                File.WriteAllText(SettingsPath, json.ToString());
             }
             catch { }
         }
