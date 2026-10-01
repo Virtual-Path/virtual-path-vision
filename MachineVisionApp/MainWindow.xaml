@@ -23,7 +23,7 @@
         <Border Grid.Column="0" BorderThickness="0,0,1,0"
                 BorderBrush="{DynamicResource GlassBorderBrush}"
                 Background="{DynamicResource SidebarBgBrush}">
-            <DockPanel>
+            <DockPanel LastChildFill="False">
                 <!-- Logo -->
                 <Border DockPanel.Dock="Top" Height="72"
                         MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
@@ -44,7 +44,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Nav Icons -->
                 <StackPanel DockPanel.Dock="Top" Margin="0,6,0,0">
                     <RadioButton x:Name="NavVision" GroupName="Nav" IsChecked="True"
                                  Click="NavButton_Click" Tag="Vision"
@@ -108,12 +107,20 @@
                     </RadioButton>
                 </StackPanel>
 
-                <!-- Settings at bottom -->
-                <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,16"
+                <!-- Settings at bottom (bottom-most) -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,14"
                             HorizontalAlignment="Center">
                     <Button x:Name="SettingsButton" Content="&#xE713;" FontFamily="Segoe MDL2 Assets"
                             FontSize="16" Style="{StaticResource SidebarIconButton}"
                             Click="SettingsButton_Click" ToolTip="Settings / 设置"/>
+                </StackPanel>
+
+                <!-- Collapse / expand toggle (above settings) -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,2"
+                            HorizontalAlignment="Center">
+                    <Button x:Name="SidebarToggleButton" Content="&#xE76B;" FontFamily="Segoe MDL2 Assets"
+                            FontSize="14" Style="{StaticResource SidebarIconButton}"
+                            Click="SidebarToggleButton_Click" ToolTip="折叠 / 展开侧边栏"/>
                 </StackPanel>
             </DockPanel>
         </Border>

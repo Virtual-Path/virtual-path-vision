@@ -188,19 +188,24 @@ namespace MachineVisionApp
             }
         }
 
+        /// <summary>侧栏用户偏好：是否展开（持久化到 user_settings.json）</summary>
+        private bool _sidebarUserExpanded = true;
+
         /// <summary>
-        /// 根据窗口宽度动态调整侧栏：
-        /// - ≥1180：宽侧栏（200px，显示导航文字）
-        /// - <1180：窄侧栏（76px，仅图标）
+        /// 根据用户偏好与窗口宽度调整侧栏：
+        /// - 展开：200px（显示导航文字）
+        /// - 折叠：76px（仅图标）
+        /// 窗口过窄时强制折叠并隐藏折叠按钮。
         /// </summary>
         private void UpdateLayoutForWidth(double width)
         {
-            bool wide = width >= 1180;
+            bool narrowWindow = width < 1180;
+            bool expanded = _sidebarUserExpanded && !narrowWindow;
 
             if (SidebarColumn != null)
-                SidebarColumn.Width = new GridLength(wide ? 200 : 76);
+                SidebarColumn.Width = new GridLength(expanded ? 200 : 76);
 
-            var vis = wide ? Visibility.Visible : Visibility.Collapsed;
+            var vis = expanded ? Visibility.Visible : Visibility.Collapsed;
             if (SidebarText != null) SidebarText.Visibility = vis;
             if (NavVisionLabel != null) NavVisionLabel.Visibility = vis;
             if (NavProcessingLabel != null) NavProcessingLabel.Visibility = vis;
@@ -208,6 +213,56 @@ namespace MachineVisionApp
             if (NavCloudLabel != null) NavCloudLabel.Visibility = vis;
             if (NavIndustrialLabel != null) NavIndustrialLabel.Visibility = vis;
             if (NavLogLabel != null) NavLogLabel.Visibility = vis;
+
+            if (SidebarToggleButton != null)
+            {
+                SidebarToggleButton.Visibility = narrowWindow ? Visibility.Collapsed : Visibility.Visible;
+                // E76B = 左箭头（可折叠）；E76C = 右箭头（可展开）
+                SidebarToggleButton.Content = expanded ? "\uE76B" : "\uE76C";
+                SidebarToggleButton.ToolTip = expanded ? "折叠侧边栏" : "展开侧边栏";
+            }
+        }
+
+        /// <summary>折叠 / 展开侧边栏</summary>
+        private void SidebarToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            _sidebarUserExpanded = !_sidebarUserExpanded;
+            SaveSidebarExpanded(_sidebarUserExpanded);
+            UpdateLayoutForWidth(ActualWidth);
+        }
+
+        private static readonly string UserSettingsPath =
+            System.IO.Path.Combine(AppContext.BaseDirectory, "user_settings.json");
+
+        private static bool LoadSidebarExpanded()
+        {
+            try
+            {
+                if (System.IO.File.Exists(UserSettingsPath))
+                {
+                    var json = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(UserSettingsPath));
+                    if (json["SidebarExpanded"] != null)
+                        return json.Value<bool>("SidebarExpanded");
+                }
+            }
+            catch { }
+            return true;
+        }
+
+        private static void SaveSidebarExpanded(bool expanded)
+        {
+            try
+            {
+                Newtonsoft.Json.Linq.JObject json;
+                if (System.IO.File.Exists(UserSettingsPath))
+                    json = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(UserSettingsPath));
+                else
+                    json = new Newtonsoft.Json.Linq.JObject();
+
+                json["SidebarExpanded"] = expanded;
+                System.IO.File.WriteAllText(UserSettingsPath, json.ToString());
+            }
+            catch { }
         }
 
         // ==================== 侧边栏导航 ====================
@@ -433,7 +488,8 @@ namespace MachineVisionApp
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             RestoreWindowState();
-            UpdateLayoutForWidth(ActualWidth); // 初始化侧栏布局（宽/窄）
+            _sidebarUserExpanded = LoadSidebarExpanded();
+            UpdateLayoutForWidth(ActualWidth); // 初始化侧栏布局（展开/折叠）
             RefreshAllTexts(); // 语言切换 + 本地化控件全部刷新（启动时按已保存语言初始化）
 
             // 日志面板
