@@ -22,6 +22,10 @@ namespace VirtualPathVision
         /// </summary>
         protected override void OnStartup(StartupEventArgs e)
         {
+            // 全局异常兜底：弹出可读的错误对话框，避免静默崩溃
+            DispatcherUnhandledException += OnDispatcherUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException += OnDomainUnhandledException;
+
             // SQLitePCL provider initialization (必须在任何 SQLite 操作之前)
             // Microsoft.Data.Sqlite 8.0 使用 SQLitePCLRaw.bundle_e_sqlite3，显式注册 provider
             SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlite3());
@@ -88,6 +92,36 @@ namespace VirtualPathVision
             }
             catch { }
             base.OnExit(e);
+        }
+
+        /// <summary>UI 线程未处理异常：显示错误信息（便于排查），启动阶段失败则退出。</summary>
+        private void OnDispatcherUnhandledException(object sender,
+            System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+            ShowCrashDialog(e.Exception);
+            e.Handled = true;
+
+            // 主窗口尚未建立时（启动失败），退出而不是滞留空进程
+            if (MainWindow == null || !MainWindow.IsLoaded)
+                Shutdown(-1);
+        }
+
+        /// <summary>非 UI 线程未处理异常：显示错误信息。</summary>
+        private void OnDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            ShowCrashDialog(e.ExceptionObject as Exception);
+        }
+
+        private static void ShowCrashDialog(Exception? ex)
+        {
+            try
+            {
+                MessageBox.Show(
+                    ex?.ToString() ?? "Unknown error",
+                    "Virtual Path Vision — Unhandled error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch { }
         }
     }
 }

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.1] - 2026-10-01
+
+### Fixed
+- **Startup no longer crashes when the bundled face-detection model is missing.**
+  If `face_detection_yunet_2023mar.onnx` is absent or fails to load, the app now starts
+  normally with face detection disabled, instead of throwing during `MainWindow` construction.
+- Unhandled exceptions now show a readable error dialog instead of failing silently.
+
 ## [3.1.0] - 2026-10-01
 
 ### Added
@@ -44,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Real-time i18n (Chinese / English) and GitHub-dark UI.
 - Video recording, screenshots and network camera (IP Webcam) support.
 
-[Unreleased]: https://github.com/virtual-path/virtual-path-vision/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/virtual-path/virtual-path-vision/compare/v3.1.1...HEAD
+[3.1.1]: https://github.com/virtual-path/virtual-path-vision/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/virtual-path/virtual-path-vision/compare/v2.3.0...v3.1.0
 [2.3.0]: https://github.com/virtual-path/virtual-path-vision/releases/tag/v2.3.0

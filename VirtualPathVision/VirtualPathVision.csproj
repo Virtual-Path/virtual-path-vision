@@ -8,7 +8,7 @@
     <UseWPF>true</UseWPF>
     <Platforms>AnyCPU;x64</Platforms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>3.1.0</Version>
+    <Version>3.1.1</Version>
     <Product>Virtual Path Vision</Product>
     <Company>xianshi3 and contributors</Company>
     <Copyright>Copyright (C) 2026 xianshi3 and contributors</Copyright>

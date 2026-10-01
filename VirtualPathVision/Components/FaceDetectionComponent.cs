@@ -9,7 +9,13 @@ namespace VirtualPathVision.Components
     /// </summary>
     public class FaceDetectionComponent
     {
-        private readonly FaceDetectorYN _faceDetector;
+        private readonly FaceDetectorYN? _faceDetector;
+
+        /// <summary>模型是否成功加载（false 表示人脸检测不可用，但不应影响程序启动）。</summary>
+        public bool IsAvailable => _faceDetector != null;
+
+        /// <summary>模型加载失败时的原因（成功为 null）。</summary>
+        public string? LoadError { get; }
 
         // 检测参数
         private float _scoreThreshold = 0.6f;        // 置信度阈值，越低越灵敏
@@ -23,17 +29,34 @@ namespace VirtualPathVision.Components
 
         /// <summary>
         /// 初始化人脸检测组件，加载 YuNet DNN 模型。
+        /// 若模型缺失或加载失败，组件进入"不可用"状态而非抛出异常，
+        /// 以免因缺少模型文件导致整个应用无法启动。
         /// </summary>
         /// <param name="modelPath">YuNet ONNX 模型文件路径</param>
         public FaceDetectionComponent(string modelPath)
         {
-            _faceDetector = FaceDetectorYN.Create(
-                model: modelPath,
-                config: "",
-                inputSize: new Size(320, 320),
-                scoreThreshold: _scoreThreshold,
-                nmsThreshold: _nmsThreshold,
-                topK: _topK);
+            try
+            {
+                if (!System.IO.File.Exists(modelPath))
+                {
+                    LoadError = $"Face model not found: {modelPath}";
+                    _faceDetector = null;
+                    return;
+                }
+
+                _faceDetector = FaceDetectorYN.Create(
+                    model: modelPath,
+                    config: "",
+                    inputSize: new Size(320, 320),
+                    scoreThreshold: _scoreThreshold,
+                    nmsThreshold: _nmsThreshold,
+                    topK: _topK);
+            }
+            catch (Exception ex)
+            {
+                LoadError = ex.Message;
+                _faceDetector = null;
+            }
         }
 
         /// <summary>置信度阈值（默认 0.6），值越低检测越灵敏但误检可能增加</summary>
@@ -95,6 +118,10 @@ namespace VirtualPathVision.Components
         /// <returns>检测到的人脸数量</returns>
         public int DetectFaces(Mat frame)
         {
+            // 模型未加载成功时静默跳过，保证主流程可用
+            if (_faceDetector is null)
+                return 0;
+
             // 设置输入尺寸为当前帧尺寸，确保坐标映射正确
             _faceDetector.SetInputSize(frame.Size());
 
