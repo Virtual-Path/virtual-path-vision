@@ -9,10 +9,14 @@ namespace MachineVisionApp
     {
         private readonly MainWindow _mainWindow;
 
+        /// <summary>XAML 解析完成标志（解析期间 ComboBox 会提前触发 SelectionChanged）</summary>
+        private bool _initialized;
+
         public SettingsWindow(MainWindow mainWindow)
         {
             _mainWindow = mainWindow;
             InitializeComponent();
+            _initialized = true;
             ApplyTexts();
 
             string current = CultureInfo.CurrentUICulture.Name;
@@ -30,9 +34,9 @@ namespace MachineVisionApp
         private void ApplyTexts()
         {
             var t = TranslationService.Instance;
-            SettingsTitle.Text = t.Settings;
-            DisplayLanguageLabel.Text = t.DisplayLanguage;
-            SettingsCloseButton.Content = t.Close;
+            if (SettingsTitle != null) SettingsTitle.Text = t.Settings;
+            if (DisplayLanguageLabel != null) DisplayLanguageLabel.Text = t.DisplayLanguage;
+            if (SettingsCloseButton != null) SettingsCloseButton.Content = t.Close;
         }
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -50,6 +54,9 @@ namespace MachineVisionApp
 
         private void LanguageComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
+            // XAML 解析期间控件尚未全部连接，忽略提前触发的事件
+            if (!_initialized) return;
+
             if (LanguageComboBox.SelectedItem is ComboBoxItem item && item.Tag is string culture)
             {
                 TranslationService.Instance.ChangeLanguage(culture);
