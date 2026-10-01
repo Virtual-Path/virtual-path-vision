@@ -95,10 +95,6 @@
                                               BlurRadius="0" Opacity="0" />
                         </Border.Effect>
                         <Grid>
-                            <!-- Top-edge reflection -->
-                            <Border VerticalAlignment="Top" Height="1"
-                                    Background="#18FFFFFF" CornerRadius="10,10,0,0"
-                                    Margin="1,1,1,0"/>
                             <ContentPresenter x:Name="contentPresenter"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center"
@@ -178,10 +174,6 @@
                                               BlurRadius="0" Opacity="0" />
                         </Border.Effect>
                         <Grid>
-                            <!-- Top reflection -->
-                            <Border VerticalAlignment="Top" Height="1"
-                                    Background="#80FFFFFF" CornerRadius="10,10,0,0"
-                                    Margin="1,1,1,0"/>
                             <!-- Sweep overlay (animated via code) -->
                             <Border x:Name="sweepOverlay"
                                     Background="Transparent" CornerRadius="10"
@@ -260,9 +252,6 @@
                             Padding="{TemplateBinding Padding}"
                             SnapsToDevicePixels="True">
                         <Grid>
-                            <Border VerticalAlignment="Top" Height="1"
-                                    Background="#18FFFFFF" CornerRadius="10,10,0,0"
-                                    Margin="1,1,1,0"/>
                             <ContentPresenter x:Name="contentPresenter"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center"
@@ -350,10 +339,6 @@
                             CornerRadius="{StaticResource CornerMd}"
                             SnapsToDevicePixels="True">
                         <Grid>
-                            <!-- Top-edge reflection -->
-                            <Border VerticalAlignment="Top" Height="1"
-                                    Background="#14FFFFFF" CornerRadius="12,12,0,0"
-                                    Margin="1,1,1,0"/>
                             <ScrollViewer x:Name="PART_ContentHost"
                                           Focusable="False"
                                           HorizontalScrollBarVisibility="Hidden"
@@ -448,10 +433,6 @@
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="32" />
                                             </Grid.ColumnDefinitions>
-                                            <!-- Top reflection -->
-                                            <Border VerticalAlignment="Top" Height="1"
-                                                    Background="#14FFFFFF" CornerRadius="12,12,0,0"
-                                                    Margin="1,1,1,0"/>
                                             <Border Grid.Column="1"
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center">
