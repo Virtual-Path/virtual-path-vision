@@ -30,6 +30,31 @@ namespace MachineVisionApp
             }
 
             LoadThemePreference();
+            SetAboutInfo();
+        }
+
+        /// <summary>填充 About 信息（版本号取程序集版本，随 csproj 的 &lt;Version&gt; 变化）。</summary>
+        private void SetAboutInfo()
+        {
+            try
+            {
+                var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                if (v != null && AboutVersion != null)
+                    AboutVersion.Text = $"v{v.Major}.{v.Minor}.{v.Build}";
+            }
+            catch { }
+        }
+
+        /// <summary>点击 About 中的仓库链接时用系统浏览器打开。</summary>
+        private void AboutLink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(
+                    new System.Diagnostics.ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+            }
+            catch { }
+            e.Handled = true;
         }
 
         /// <summary>按当前语言刷新本窗口文本</summary>

@@ -8,6 +8,11 @@
     <UseWPF>true</UseWPF>
     <Platforms>AnyCPU;x64</Platforms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>3.1.0</Version>
+    <Product>Machine Vision App</Product>
+    <Company>xianshi3 and contributors</Company>
+    <Copyright>Copyright (C) 2026 xianshi3 and contributors</Copyright>
+    <Description>WPF machine vision desktop app - OpenCV 5, AWS Cloud and AI active perception.</Description>
   </PropertyGroup>
 
   <ItemGroup>

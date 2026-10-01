@@ -1,7 +1,7 @@
 ﻿<Window x:Class="MachineVisionApp.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Settings" Width="440" Height="560"
+        Title="Settings" Width="440" Height="640"
         Background="{DynamicResource BgBrush}" WindowStyle="None" AllowsTransparency="False"
         ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
 
@@ -68,16 +68,33 @@
                                  Checked="ThemeRadio_Checked" Tag="System"/>
                 </StackPanel>
 
-                <!-- Theme info -->
+                <!-- About -->
                 <Border Height="1" Background="{DynamicResource GlassDividerBrush}" Margin="0,20"/>
                 <TextBlock Text="About" FontSize="16" FontWeight="SemiBold"
                            Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,16,0,12"/>
-                <TextBlock Text="MachineVisionApp v3.1.0" FontSize="13"
-                           Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
-                <TextBlock Text="OpenCV 5 + AWS Cloud + AI Active Perception" FontSize="12"
-                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,6"/>
+
+                <TextBlock x:Name="AboutAppName" Text="Machine Vision App"
+                           FontSize="14" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                <TextBlock x:Name="AboutVersion" Text="v3.1.0" FontSize="12"
+                           Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,10"/>
+
+                <TextBlock Text="OpenCV 5 · AWS Cloud · AI Active Perception" FontSize="12"
+                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4" TextWrapping="Wrap"/>
+                <TextBlock Text="WPF · OpenCvSharp5 · .NET 8 · ZXing.Net · NModbus · OPC UA" FontSize="12"
+                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+
                 <TextBlock Text="OpenCV AI Competition 2026" FontSize="12"
-                           Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold"/>
+                           Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+                <TextBlock FontSize="12" Margin="0,0,0,6">
+                    <Hyperlink x:Name="AboutLink"
+                               NavigateUri="https://github.com/xianshi3/machine-vision-app"
+                               RequestNavigate="AboutLink_RequestNavigate">github.com/xianshi3/machine-vision-app</Hyperlink>
+                </TextBlock>
+
+                <TextBlock Text="GPL-3.0 · © 2026 xianshi3 and contributors" FontSize="11"
+                           Foreground="{DynamicResource TextMutedBrush}"/>
             </StackPanel>
         </Border>
 
