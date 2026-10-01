@@ -90,10 +90,10 @@
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="#0AFFFFFF" />
+                                                <Setter TargetName="border" Property="Background" Value="#0AC4B7A7" />
                                             </Trigger>
                                             <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="#14FAE20A" />
+                                                <Setter TargetName="border" Property="Background" Value="#14788F94" />
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>

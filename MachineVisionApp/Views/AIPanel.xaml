@@ -69,7 +69,7 @@
                                     VerticalAlignment="Center" />
 
                             <Border Grid.Column="1"
-                                    Background="#0DFFFFFF"
+                                    Background="#0DC4B7A7"
                                     CornerRadius="{StaticResource CornerMd}"
                                     Padding="14,8"
                                     BorderBrush="{StaticResource GlassBorderBrush}"
@@ -127,7 +127,7 @@
                             </Grid.ColumnDefinitions>
 
                             <Border Grid.Column="0"
-                                    Background="#0DFFFFFF"
+                                    Background="#0DC4B7A7"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
                                     BorderBrush="{StaticResource GlassBorderBrush}"
@@ -140,7 +140,7 @@
                             </Border>
 
                             <Border Grid.Column="1"
-                                    Background="#0DFFFFFF"
+                                    Background="#0DC4B7A7"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
                                     BorderBrush="{StaticResource GlassBorderBrush}"
@@ -153,7 +153,7 @@
                             </Border>
 
                             <Border Grid.Column="2"
-                                    Background="#0DFFFFFF"
+                                    Background="#0DC4B7A7"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
                                     BorderBrush="{StaticResource GlassBorderBrush}"
@@ -194,7 +194,7 @@
                                        VerticalAlignment="Center" />
                         </Grid>
 
-                        <Border Background="#0DFFFFFF"
+                        <Border Background="#0DC4B7A7"
                                 CornerRadius="{StaticResource CornerMd}"
                                 Padding="2"
                                 BorderBrush="{StaticResource GlassBorderBrush}"
@@ -215,7 +215,7 @@
                             </Grid.ColumnDefinitions>
 
                             <Border Grid.Column="0"
-                                    Background="#0DFFFFFF"
+                                    Background="#0DC4B7A7"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
                                     BorderBrush="{StaticResource GlassBorderBrush}"
@@ -228,7 +228,7 @@
                             </Border>
 
                             <Border Grid.Column="1"
-                                    Background="#0DFFFFFF"
+                                    Background="#0DC4B7A7"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
                                     BorderBrush="{StaticResource GlassBorderBrush}"
@@ -241,7 +241,7 @@
                             </Border>
 
                             <Border Grid.Column="2"
-                                    Background="#0DFFFFFF"
+                                    Background="#0DC4B7A7"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
                                     BorderBrush="{StaticResource GlassBorderBrush}"
@@ -300,7 +300,7 @@
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#0DFFFFFF"
+                                <Border Background="#0DC4B7A7"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
                                         BorderBrush="{StaticResource GlassBorderBrush}"
@@ -321,7 +321,7 @@
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#0DFFFFFF"
+                                <Border Background="#0DC4B7A7"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
                                         BorderBrush="{StaticResource GlassBorderBrush}"
@@ -342,7 +342,7 @@
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#0DFFFFFF"
+                                <Border Background="#0DC4B7A7"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
                                         BorderBrush="{StaticResource GlassBorderBrush}"
@@ -363,7 +363,7 @@
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#0DFFFFFF"
+                                <Border Background="#0DC4B7A7"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
                                         BorderBrush="{StaticResource GlassBorderBrush}"
@@ -384,7 +384,7 @@
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            Margin="0,0,0,4" />
-                                <Border Background="#0DFFFFFF"
+                                <Border Background="#0DC4B7A7"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
                                         BorderBrush="{StaticResource GlassBorderBrush}"
@@ -409,7 +409,7 @@
                                        Margin="0,0,0,8" />
 
                             <Border x:Name="DetectionBreakdownPanel"
-                                    Background="#0DFFFFFF"
+                                    Background="#0DC4B7A7"
                                     CornerRadius="{StaticResource CornerMd}"
                                     Padding="14"
                                     BorderBrush="{StaticResource GlassBorderBrush}"

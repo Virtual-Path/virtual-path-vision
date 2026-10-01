@@ -8,24 +8,24 @@
                 <ResourceDictionary Source="Themes/DarkTheme.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <!-- Colors -->
-            <Color x:Key="ColorBg">#0B0E14</Color>
-            <Color x:Key="ColorSurface">#131820</Color>
-            <Color x:Key="ColorCard">#1A212D</Color>
-            <Color x:Key="ColorCardHover">#232B3B</Color>
-            <Color x:Key="ColorBorder">#2D3648</Color>
-            <Color x:Key="ColorBorderLight">#3D4A60</Color>
-            <Color x:Key="ColorPrimary">#58A6FF</Color>
-            <Color x:Key="ColorPrimaryHover">#79C0FF</Color>
-            <Color x:Key="ColorPrimaryDim">#58A6FF20</Color>
-            <Color x:Key="ColorSuccess">#3FB950</Color>
-            <Color x:Key="ColorSuccessDim">#3FB95020</Color>
-            <Color x:Key="ColorDanger">#EF4444</Color>
-            <Color x:Key="ColorDangerDim">#EF444420</Color>
-            <Color x:Key="ColorWarning">#D29922</Color>
-            <Color x:Key="ColorTextPrimary">#FFFFFF</Color>
-            <Color x:Key="ColorTextSecondary">#D1D9E6</Color>
-            <Color x:Key="ColorTextMuted">#7A8B9E</Color>
-            <Color x:Key="ColorInputBg">#0B0E14</Color>
+            <Color x:Key="ColorBg">#040404</Color>
+            <Color x:Key="ColorSurface">#0D0C0B</Color>
+            <Color x:Key="ColorCard">#14120F</Color>
+            <Color x:Key="ColorCardHover">#1D1A16</Color>
+            <Color x:Key="ColorBorder">#2F2B27</Color>
+            <Color x:Key="ColorBorderLight">#5F554C</Color>
+            <Color x:Key="ColorPrimary">#788F94</Color>
+            <Color x:Key="ColorPrimaryHover">#8FA5AA</Color>
+            <Color x:Key="ColorPrimaryDim">#788F9420</Color>
+            <Color x:Key="ColorSuccess">#788F94</Color>
+            <Color x:Key="ColorSuccessDim">#788F9420</Color>
+            <Color x:Key="ColorDanger">#C4675C</Color>
+            <Color x:Key="ColorDangerDim">#C4675C20</Color>
+            <Color x:Key="ColorWarning">#C9A46A</Color>
+            <Color x:Key="ColorTextPrimary">#C4B7A7</Color>
+            <Color x:Key="ColorTextSecondary">#9B9690</Color>
+            <Color x:Key="ColorTextMuted">#7C7C85</Color>
+            <Color x:Key="ColorInputBg">#040404</Color>
 
             <SolidColorBrush x:Key="BgBrush" Color="{StaticResource ColorBg}"/>
             <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource ColorSurface}"/>
@@ -75,7 +75,7 @@
             <!-- Primary Button -->
             <Style x:Key="PrimaryButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
-                <Setter Property="Foreground" Value="#FFFFFF"/>
+                <Setter Property="Foreground" Value="#040404"/>
                 <Setter Property="FontSize" Value="13"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="BorderThickness" Value="0"/>
@@ -151,7 +151,7 @@
             <!-- Danger Button -->
             <Style x:Key="DangerButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="{StaticResource DangerBrush}"/>
-                <Setter Property="Foreground" Value="#FFFFFF"/>
+                <Setter Property="Foreground" Value="#040404"/>
                 <Setter Property="FontSize" Value="13"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="BorderThickness" Value="0"/>

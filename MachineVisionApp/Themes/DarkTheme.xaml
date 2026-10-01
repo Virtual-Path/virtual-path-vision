@@ -6,38 +6,38 @@
          ═══════════════════════════════════════════════════════════════ -->
 
     <!-- Accent -->
-    <SolidColorBrush x:Key="AccentBrush" Color="#FAE20A" />
-    <SolidColorBrush x:Key="AccentHoverBrush" Color="#FFF04A" />
-    <SolidColorBrush x:Key="AccentGlowBrush" Color="#59FAE20A" />
-    <SolidColorBrush x:Key="TextDarkBrush" Color="#10141C" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#788F94" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#8FA5AA" />
+    <SolidColorBrush x:Key="AccentGlowBrush" Color="#59788F94" />
+    <SolidColorBrush x:Key="TextDarkBrush" Color="#040404" />
 
     <!-- Glass surfaces — layered transparency -->
-    <SolidColorBrush x:Key="GlassBgBrush" Color="#73101624" />
-    <SolidColorBrush x:Key="SidebarBgBrush" Color="#B30A0F19" />
-    <SolidColorBrush x:Key="TitleBarBgBrush" Color="#660D1119" />
-    <SolidColorBrush x:Key="StatusBarBgBrush" Color="#D9080C14" />
+    <SolidColorBrush x:Key="GlassBgBrush" Color="#73131110" />
+    <SolidColorBrush x:Key="SidebarBgBrush" Color="#B30A0908" />
+    <SolidColorBrush x:Key="TitleBarBgBrush" Color="#660C0B0A" />
+    <SolidColorBrush x:Key="StatusBarBgBrush" Color="#D9070605" />
 
     <!-- Borders — top highlight for glass edge refraction -->
-    <SolidColorBrush x:Key="GlassBorderBrush" Color="#14FFFFFF" />
-    <SolidColorBrush x:Key="GlassBorderTopBrush" Color="#33FFFFFF" />
-    <SolidColorBrush x:Key="GlassDividerBrush" Color="#1AFFFFFF" />
+    <SolidColorBrush x:Key="GlassBorderBrush" Color="#14C4B7A7" />
+    <SolidColorBrush x:Key="GlassBorderTopBrush" Color="#33C4B7A7" />
+    <SolidColorBrush x:Key="GlassDividerBrush" Color="#1AC4B7A7" />
 
     <!-- Text -->
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#D1D9E6" />
-    <SolidColorBrush x:Key="TextMutedBrush" Color="#7A8B9E" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#C4B7A7" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#9B9690" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#7C7C85" />
 
     <!-- Backgrounds -->
-    <SolidColorBrush x:Key="BgDarkBrush" Color="#0B0E14" />
+    <SolidColorBrush x:Key="BgDarkBrush" Color="#040404" />
     <SolidColorBrush x:Key="ProgressBgBrush" Color="#66000000" />
 
     <!-- Status -->
-    <SolidColorBrush x:Key="SuccessBrush" Color="#3FB950" />
-    <SolidColorBrush x:Key="DangerBrush" Color="#EF4444" />
-    <SolidColorBrush x:Key="WarningBrush" Color="#D29922" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#788F94" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#C4675C" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#C9A46A" />
 
     <!-- Brand -->
-    <SolidColorBrush x:Key="PrimaryBrush" Color="#3B82F6" />
+    <SolidColorBrush x:Key="PrimaryBrush" Color="#788F94" />
 
     <!-- ═══════════════════════════════════════════════════════════════
          CORNER RADIUS
@@ -56,7 +56,7 @@
          GlassButton — base glass button with top-edge reflection
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="GlassButton" TargetType="Button">
-        <Setter Property="Background" Value="#1AFFFFFF" />
+        <Setter Property="Background" Value="#1AC4B7A7" />
         <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
         <Setter Property="BorderBrush" Value="{StaticResource GlassBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
@@ -83,7 +83,7 @@
                         <Grid>
                             <!-- Top-edge reflection -->
                             <Border VerticalAlignment="Top" Height="1"
-                                    Background="#18FFFFFF" CornerRadius="10,10,0,0"
+                                    Background="#18C4B7A7" CornerRadius="10,10,0,0"
                                     Margin="1,1,1,0"/>
                             <ContentPresenter x:Name="contentPresenter"
                                               HorizontalAlignment="Center"
@@ -93,8 +93,8 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#26FFFFFF" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#33FFFFFF" />
+                            <Setter TargetName="border" Property="Background" Value="#26C4B7A7" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#33C4B7A7" />
                             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
@@ -107,7 +107,7 @@
                                                          To="12" Duration="0:0:0.2" />
                                         <ColorAnimation Storyboard.TargetName="shadow"
                                                         Storyboard.TargetProperty="Color"
-                                                        To="#FFFFFF" Duration="0:0:0.2" />
+                                                        To="#C4B7A7" Duration="0:0:0.2" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -125,8 +125,8 @@
                             </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#33FFFFFF" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#44FFFFFF" />
+                            <Setter TargetName="border" Property="Background" Value="#33C4B7A7" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#44C4B7A7" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.4" />
@@ -160,13 +160,13 @@
                             SnapsToDevicePixels="True">
                         <Border.Effect>
                             <DropShadowEffect x:Name="glow"
-                                              Color="#FAE20A" ShadowDepth="0"
+                                              Color="#788F94" ShadowDepth="0"
                                               BlurRadius="0" Opacity="0" />
                         </Border.Effect>
                         <Grid>
                             <!-- Top reflection -->
                             <Border VerticalAlignment="Top" Height="1"
-                                    Background="#80FFFFFF" CornerRadius="10,10,0,0"
+                                    Background="#80C4B7A7" CornerRadius="10,10,0,0"
                                     Margin="1,1,1,0"/>
                             <!-- Sweep overlay (animated via code) -->
                             <Border x:Name="sweepOverlay"
@@ -211,7 +211,7 @@
                             </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#E6D41A00" />
+                            <Setter TargetName="border" Property="Background" Value="#E63C4749" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.4" />
@@ -226,9 +226,9 @@
          DangerButton — red action: disconnect, stop
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="DangerButton" TargetType="Button">
-        <Setter Property="Background" Value="#1AEF4444" />
+        <Setter Property="Background" Value="#1AC4675C" />
         <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
-        <Setter Property="BorderBrush" Value="#33EF4444" />
+        <Setter Property="BorderBrush" Value="#33C4675C" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="18,9" />
         <Setter Property="FontSize" Value="13" />
@@ -247,7 +247,7 @@
                             SnapsToDevicePixels="True">
                         <Grid>
                             <Border VerticalAlignment="Top" Height="1"
-                                    Background="#18FFFFFF" CornerRadius="10,10,0,0"
+                                    Background="#18C4B7A7" CornerRadius="10,10,0,0"
                                     Margin="1,1,1,0"/>
                             <ContentPresenter x:Name="contentPresenter"
                                               HorizontalAlignment="Center"
@@ -257,12 +257,12 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#33EF4444" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#66EF4444" />
-                            <Setter Property="Foreground" Value="#FFEF4444" />
+                            <Setter TargetName="border" Property="Background" Value="#33C4675C" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#66C4675C" />
+                            <Setter Property="Foreground" Value="#FFC4675C" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#44EF4444" />
+                            <Setter TargetName="border" Property="Background" Value="#44C4675C" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.4" />
@@ -320,7 +320,7 @@
         <Setter Property="Background" Value="#1A000000" />
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
         <Setter Property="CaretBrush" Value="{StaticResource AccentBrush}" />
-        <Setter Property="SelectionBrush" Value="#55FAE20A" />
+        <Setter Property="SelectionBrush" Value="#55788F94" />
         <Setter Property="BorderBrush" Value="{StaticResource GlassBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="14,10" />
@@ -338,7 +338,7 @@
                         <Grid>
                             <!-- Top-edge reflection -->
                             <Border VerticalAlignment="Top" Height="1"
-                                    Background="#0DFFFFFF" CornerRadius="12,12,0,0"
+                                    Background="#0DC4B7A7" CornerRadius="12,12,0,0"
                                     Margin="1,1,1,0"/>
                             <ScrollViewer x:Name="PART_ContentHost"
                                           Focusable="False"
@@ -360,13 +360,13 @@
                             <Setter TargetName="placeholder" Property="Visibility" Value="Visible" />
                         </Trigger>
                         <Trigger Property="IsFocused" Value="True">
-                            <Setter TargetName="border" Property="BorderBrush" Value="#33FAE20A" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#33788F94" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <ColorAnimation Storyboard.TargetName="border"
                                                         Storyboard.TargetProperty="BorderBrush.Color"
-                                                        To="#55FAE20A" Duration="0:0:0.2" />
+                                                        To="#55788F94" Duration="0:0:0.2" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -375,13 +375,13 @@
                                     <Storyboard>
                                         <ColorAnimation Storyboard.TargetName="border"
                                                         Storyboard.TargetProperty="BorderBrush.Color"
-                                                        To="#14FFFFFF" Duration="0:0:0.2" />
+                                                        To="#14C4B7A7" Duration="0:0:0.2" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="BorderBrush" Value="#22FFFFFF" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#22C4B7A7" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.4" />
@@ -436,7 +436,7 @@
                                             </Grid.ColumnDefinitions>
                                             <!-- Top reflection -->
                                             <Border VerticalAlignment="Top" Height="1"
-                                                    Background="#0DFFFFFF" CornerRadius="12,12,0,0"
+                                                    Background="#0DC4B7A7" CornerRadius="12,12,0,0"
                                                     Margin="1,1,1,0"/>
                                             <Border Grid.Column="1"
                                                     HorizontalAlignment="Center"
@@ -452,7 +452,7 @@
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="border" Property="BorderBrush" Value="#22FFFFFF" />
+                                            <Setter TargetName="border" Property="BorderBrush" Value="#22C4B7A7" />
                                             <Setter TargetName="arrow" Property="Stroke" Value="{StaticResource TextPrimaryBrush}" />
                                         </Trigger>
                                     </ControlTemplate.Triggers>
@@ -472,8 +472,8 @@
                                Focusable="False"
                                PopupAnimation="Slide">
                             <Border x:Name="dropDownBorder"
-                                    Background="#CC101624"
-                                    BorderBrush="#22FFFFFF"
+                                    Background="#CC131110"
+                                    BorderBrush="#22C4B7A7"
                                     BorderThickness="1"
                                     CornerRadius="{StaticResource CornerMd}"
                                     Margin="0,4,0,0"
@@ -519,11 +519,11 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#1AFAE20A" />
+                            <Setter TargetName="border" Property="Background" Value="#1A788F94" />
                             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#26FAE20A" />
+                            <Setter TargetName="border" Property="Background" Value="#26788F94" />
                             <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -580,10 +580,10 @@
                     </StackPanel>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="checkBorder" Property="Background" Value="#CCFAE20A" />
+                            <Setter TargetName="checkBorder" Property="Background" Value="#CC788F94" />
                             <Setter TargetName="checkBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                            <Setter TargetName="checkMark" Property="Stroke" Value="#0A0F19" />
-                            <Setter TargetName="checkMark" Property="Fill" Value="#0A0F19" />
+                            <Setter TargetName="checkMark" Property="Stroke" Value="#0A0908" />
+                            <Setter TargetName="checkMark" Property="Fill" Value="#0A0908" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
@@ -606,12 +606,12 @@
                         <Trigger Property="IsChecked" Value="{x:Null}">
                             <Setter TargetName="indeterminateMark" Property="Visibility" Value="Visible" />
                             <Setter TargetName="checkMark" Property="Visibility" Value="Collapsed" />
-                            <Setter TargetName="checkBorder" Property="Background" Value="#CC3B82F6" />
+                            <Setter TargetName="checkBorder" Property="Background" Value="#CC788F94" />
                             <Setter TargetName="checkBorder" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
-                            <Setter TargetName="indeterminateMark" Property="Background" Value="White" />
+                            <Setter TargetName="indeterminateMark" Property="Background" Value="#040404" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="checkBorder" Property="BorderBrush" Value="#33FFFFFF" />
+                            <Setter TargetName="checkBorder" Property="BorderBrush" Value="#33C4B7A7" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.4" />
@@ -661,13 +661,13 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#12FFFFFF" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#18FFFFFF" />
+                            <Setter TargetName="border" Property="Background" Value="#12C4B7A7" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#18C4B7A7" />
                             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#1AFAE20A" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#33FAE20A" />
+                            <Setter TargetName="border" Property="Background" Value="#1A788F94" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#33788F94" />
                             <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
                             <Setter TargetName="pill" Property="Height" Value="20" />
                             <Trigger.EnterActions>
@@ -681,7 +681,7 @@
                                                          To="14" Duration="0:0:0.2" />
                                         <ColorAnimation Storyboard.TargetName="glow"
                                                         Storyboard.TargetProperty="Color"
-                                                        To="#FAE20A" Duration="0:0:0.2" />
+                                                        To="#788F94" Duration="0:0:0.2" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -734,12 +734,12 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#14FFFFFF" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#18FFFFFF" />
+                            <Setter TargetName="border" Property="Background" Value="#14C4B7A7" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#18C4B7A7" />
                             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#22FFFFFF" />
+                            <Setter TargetName="border" Property="Background" Value="#22C4B7A7" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -770,11 +770,11 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#18FFFFFF" />
+                            <Setter TargetName="border" Property="Background" Value="#18C4B7A7" />
                             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#22FFFFFF" />
+                            <Setter TargetName="border" Property="Background" Value="#22C4B7A7" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -785,8 +785,8 @@
     <Style x:Key="TitleBarCloseButton" TargetType="Button" BasedOn="{StaticResource TitleBarButton}">
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#EF4444" />
-                <Setter Property="Foreground" Value="#FFFFFF" />
+                <Setter Property="Background" Value="#C4675C" />
+                <Setter Property="Foreground" Value="#040404" />
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -825,12 +825,12 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#1AFFFFFF" />
+                            <Setter TargetName="border" Property="Background" Value="#1AC4B7A7" />
                             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#1AFAE20A" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#22FAE20A" />
+                            <Setter TargetName="border" Property="Background" Value="#1A788F94" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#22788F94" />
                             <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
@@ -843,7 +843,7 @@
                                                          To="16" Duration="0:0:0.2" />
                                         <ColorAnimation Storyboard.TargetName="glow"
                                                         Storyboard.TargetProperty="Color"
-                                                        To="#FAE20A" Duration="0:0:0.2" />
+                                                        To="#788F94" Duration="0:0:0.2" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -913,15 +913,15 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#14FFFFFF" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#0AFFFFFF" />
+                            <Setter TargetName="border" Property="Background" Value="#14C4B7A7" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#0AC4B7A7" />
                             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <ColorAnimation Storyboard.TargetName="border"
                                                         Storyboard.TargetProperty="Background.Color"
-                                                        To="#14FFFFFF" Duration="0:0:0.15" />
+                                                        To="#14C4B7A7" Duration="0:0:0.15" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -936,7 +936,7 @@
                             </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#22FFFFFF" />
+                            <Setter TargetName="border" Property="Background" Value="#22C4B7A7" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.35" />

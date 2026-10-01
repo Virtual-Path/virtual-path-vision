@@ -29,7 +29,7 @@
                                    VerticalAlignment="Center" />
 
                         <Border Grid.Column="1"
-                                Background="#0DFFFFFF"
+                                Background="#0DC4B7A7"
                                 CornerRadius="{StaticResource CornerSm}"
                                 Padding="14,6"
                                 BorderBrush="{StaticResource GlassBorderBrush}"
@@ -93,7 +93,7 @@
 
                 <!-- ═══ Threshold Panel ═══ -->
                 <Border x:Name="ThresholdPanel"
-                        Background="#0DFFFFFF"
+                        Background="#0DC4B7A7"
                         CornerRadius="{StaticResource CornerMd}"
                         Padding="18"
                         BorderBrush="{StaticResource GlassBorderBrush}"
@@ -181,7 +181,7 @@
 
                 <!-- ═══ Color Panel ═══ -->
                 <Border x:Name="ColorPanel"
-                        Background="#0DFFFFFF"
+                        Background="#0DC4B7A7"
                         CornerRadius="{StaticResource CornerMd}"
                         Padding="18"
                         BorderBrush="{StaticResource GlassBorderBrush}"
@@ -241,7 +241,7 @@
 
                 <!-- ═══ Template Panel ═══ -->
                 <Border x:Name="TemplatePanel"
-                        Background="#0DFFFFFF"
+                        Background="#0DC4B7A7"
                         CornerRadius="{StaticResource CornerMd}"
                         Padding="18"
                         BorderBrush="{StaticResource GlassBorderBrush}"
@@ -291,7 +291,7 @@
                 </Border>
 
                 <!-- ═══ Result Panel ═══ -->
-                <Border Background="#0DFFFFFF"
+                <Border Background="#0DC4B7A7"
                         CornerRadius="{StaticResource CornerMd}"
                         Padding="18"
                         BorderBrush="{StaticResource GlassBorderBrush}"
@@ -312,7 +312,7 @@
                                        Foreground="{StaticResource TextPrimaryBrush}" />
 
                             <Border Grid.Column="1"
-                                    Background="#0DFFFFFF"
+                                    Background="#0DC4B7A7"
                                     CornerRadius="{StaticResource CornerSm}"
                                     Padding="14,6"
                                     BorderBrush="{StaticResource GlassBorderBrush}"
@@ -340,7 +340,7 @@
                                 <TextBlock x:Name="FacesLabel" Text="Faces"
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}" />
-                                <Border Background="#0DFFFFFF"
+                                <Border Background="#0DC4B7A7"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
                                         BorderBrush="{StaticResource GlassBorderBrush}"
@@ -359,7 +359,7 @@
                                 <TextBlock x:Name="ObjectsLabel" Text="Objects"
                                            FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}" />
-                                <Border Background="#0DFFFFFF"
+                                <Border Background="#0DC4B7A7"
                                         CornerRadius="{StaticResource CornerSm}"
                                         Padding="14,8"
                                         BorderBrush="{StaticResource GlassBorderBrush}"
@@ -398,7 +398,7 @@
                         </Grid>
 
                         <!-- Mode Result -->
-                        <Border Background="#0DFFFFFF"
+                        <Border Background="#0DC4B7A7"
                                 CornerRadius="{StaticResource CornerSm}"
                                 Padding="14,10"
                                 BorderBrush="{StaticResource GlassBorderBrush}"

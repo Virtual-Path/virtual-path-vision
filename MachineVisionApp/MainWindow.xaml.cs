@@ -574,7 +574,7 @@ namespace MachineVisionApp
                 if (started)
                 {
                     CameraPanelCtrl.RecordButtonEl.Content = TranslationService.Instance.StopRecording;
-                    CameraPanelCtrl.RecordButtonEl.Background = new SolidColorBrush(Color.FromRgb(0xF8, 0x51, 0x49));
+                    CameraPanelCtrl.RecordButtonEl.Background = new SolidColorBrush(Color.FromRgb(0xC4, 0x67, 0x5C));
                     AppLogger.Instance.Info($"{TranslationService.Instance.RecordingStarted} {path}");
                 }
                 else
@@ -1262,11 +1262,11 @@ namespace MachineVisionApp
                 CameraPanelCtrl.SetConnected(connected, statusText);
 
                 ConnectionIndicator.Fill = connected
-                    ? new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50))
-                    : new SolidColorBrush(Color.FromRgb(0x48, 0x4F, 0x58));
+                    ? new SolidColorBrush(Color.FromRgb(0x78, 0x8F, 0x94))
+                    : new SolidColorBrush(Color.FromRgb(0x5F, 0x55, 0x4C));
                 StatusIndicator.Fill = connected
-                    ? new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50))
-                    : new SolidColorBrush(Color.FromRgb(0x48, 0x4F, 0x58));
+                    ? new SolidColorBrush(Color.FromRgb(0x78, 0x8F, 0x94))
+                    : new SolidColorBrush(Color.FromRgb(0x5F, 0x55, 0x4C));
                 StatusText.Text = statusText;
                 StatusTextFooter.Text = statusText;
 
@@ -1274,14 +1274,14 @@ namespace MachineVisionApp
                 {
                     CameraPanelCtrl.EmptyOverlayLeftEl.Visibility = Visibility.Collapsed;
                     CameraPanelCtrl.EmptyOverlayRightEl.Visibility = Visibility.Collapsed;
-                    StatusTextFooter.Foreground = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
+                    StatusTextFooter.Foreground = new SolidColorBrush(Color.FromRgb(0x78, 0x8F, 0x94));
                     AppLogger.Instance.Info("设备已连接");
                 }
                 else if (state == Components.ConnectionState.Disconnected)
                 {
                     CameraPanelCtrl.EmptyOverlayLeftEl.Visibility = Visibility.Visible;
                     CameraPanelCtrl.EmptyOverlayRightEl.Visibility = Visibility.Visible;
-                    StatusTextFooter.Foreground = new SolidColorBrush(Color.FromRgb(0x48, 0x4F, 0x58));
+                    StatusTextFooter.Foreground = new SolidColorBrush(Color.FromRgb(0x5F, 0x55, 0x4C));
                 }
                 else if (state == Components.ConnectionState.Failed)
                 {
