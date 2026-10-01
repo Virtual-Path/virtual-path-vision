@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Questions & Discussions
-    url: https://github.com/xianshi3/virtual-path-vision/discussions
+    url: https://github.com/virtual-path/virtual-path-vision/discussions
     about: Ask questions and discuss ideas with the community.
   - name: Security report
-    url: https://github.com/xianshi3/virtual-path-vision/security/advisories/new
+    url: https://github.com/virtual-path/virtual-path-vision/security/advisories/new
     about: Report a security vulnerability privately.

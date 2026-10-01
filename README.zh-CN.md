@@ -5,8 +5,8 @@
 <h1 align="center">Virtual Path Vision</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/xianshi3/virtual-path-vision?style=flat-square&label=release" alt="release"/>
-  <img src="https://img.shields.io/github/stars/xianshi3/virtual-path-vision?style=flat-square" alt="stars"/>
+  <img src="https://img.shields.io/github/v/release/virtual-path/virtual-path-vision?style=flat-square&label=release" alt="release"/>
+  <img src="https://img.shields.io/github/stars/virtual-path/virtual-path-vision?style=flat-square" alt="stars"/>
   <img src="https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=.net" alt=".NET 8"/>
   <img src="https://img.shields.io/badge/WPF-Light%20%2F%20Dark%20UI-58A6FF?style=flat-square" alt="WPF"/>
   <img src="https://img.shields.io/badge/OpenCV-5-5C3EE8?style=flat-square&logo=opencv" alt="OpenCV 5"/>
@@ -207,7 +207,7 @@ VirtualPathVision/
 
 ```bash
 # 克隆仓库
-git clone https://github.com/xianshi3/virtual-path-vision.git
+git clone https://github.com/virtual-path/virtual-path-vision.git
 cd virtual-path-vision
 
 # 还原并编译
@@ -226,7 +226,7 @@ dotnet run --project VirtualPathVision/VirtualPathVision.csproj
 
 | 图片 | 测试内容 |
 |------|----------|
-| `test_scene.png` | 全部处理模式——边缘、轮廓、形状、颜色、QR/条码（内容为 `https://github.com/xianshi3/virtual-path-vision`） |
+| `test_scene.png` | 全部处理模式——边缘、轮廓、形状、颜色、QR/条码（内容为 `https://github.com/virtual-path/virtual-path-vision`） |
 | `template_green.png` | 模板匹配（绿色方块，匹配度 ≈ 1.0） |
 | `template_qr.png` | 特征点匹配（纹理丰富的 QR 裁剪图） |
 | `face_lena.jpg` | 人脸检测 |

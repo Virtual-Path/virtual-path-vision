@@ -44,6 +44,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Real-time i18n (Chinese / English) and GitHub-dark UI.
 - Video recording, screenshots and network camera (IP Webcam) support.
 
-[Unreleased]: https://github.com/xianshi3/virtual-path-vision/compare/v3.1.0...HEAD
-[3.1.0]: https://github.com/xianshi3/virtual-path-vision/compare/v2.3.0...v3.1.0
-[2.3.0]: https://github.com/xianshi3/virtual-path-vision/releases/tag/v2.3.0
+[Unreleased]: https://github.com/virtual-path/virtual-path-vision/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/virtual-path/virtual-path-vision/compare/v2.3.0...v3.1.0
+[2.3.0]: https://github.com/virtual-path/virtual-path-vision/releases/tag/v2.3.0

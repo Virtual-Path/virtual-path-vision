@@ -5,8 +5,8 @@
 <h1 align="center">Virtual Path Vision</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/xianshi3/virtual-path-vision?style=flat-square&label=release" alt="release"/>
-  <img src="https://img.shields.io/github/stars/xianshi3/virtual-path-vision?style=flat-square" alt="stars"/>
+  <img src="https://img.shields.io/github/v/release/virtual-path/virtual-path-vision?style=flat-square&label=release" alt="release"/>
+  <img src="https://img.shields.io/github/stars/virtual-path/virtual-path-vision?style=flat-square" alt="stars"/>
   <img src="https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=.net" alt=".NET 8"/>
   <img src="https://img.shields.io/badge/WPF-Light%20%2F%20Dark%20UI-58A6FF?style=flat-square" alt="WPF"/>
   <img src="https://img.shields.io/badge/OpenCV-5-5C3EE8?style=flat-square&logo=opencv" alt="OpenCV 5"/>
@@ -207,7 +207,7 @@ Grab the latest self-contained package from [Releases](../../releases/latest):
 
 ```bash
 # Clone the repository
-git clone https://github.com/xianshi3/virtual-path-vision.git
+git clone https://github.com/virtual-path/virtual-path-vision.git
 cd virtual-path-vision
 
 # Restore and build
@@ -226,7 +226,7 @@ Open `TestImages/` from the Load Image dialog:
 
 | Image | What to test |
 |-------|--------------|
-| `test_scene.png` | All processing modes – edges, contours, shapes, colors, QR/barcode (`https://github.com/xianshi3/virtual-path-vision`) |
+| `test_scene.png` | All processing modes – edges, contours, shapes, colors, QR/barcode (`https://github.com/virtual-path/virtual-path-vision`) |
 | `template_green.png` | Template Matching (green square, score ≈ 1.0) |
 | `template_qr.png` | Feature Matching (texture-rich QR crop) |
 | `face_lena.jpg` | Face Detection |

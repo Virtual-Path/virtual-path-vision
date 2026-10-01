@@ -89,8 +89,8 @@
 
                 <TextBlock FontSize="12" Margin="0,0,0,6">
                     <Hyperlink x:Name="AboutLink"
-                               NavigateUri="https://github.com/xianshi3/virtual-path-vision"
-                               RequestNavigate="AboutLink_RequestNavigate">github.com/xianshi3/virtual-path-vision</Hyperlink>
+                               NavigateUri="https://github.com/virtual-path/virtual-path-vision"
+                               RequestNavigate="AboutLink_RequestNavigate">github.com/virtual-path/virtual-path-vision</Hyperlink>
                 </TextBlock>
 
                 <TextBlock Text="GPL-3.0 · © 2026 xianshi3 and contributors" FontSize="11"
