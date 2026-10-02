@@ -32,11 +32,11 @@
                                 HorizontalAlignment="Center">
                         <Border Width="36" Height="36" CornerRadius="10"
                                 Background="{DynamicResource AccentBrush}">
-                            <TextBlock Text="MV" FontSize="13" FontWeight="Black"
+                            <TextBlock Text="VP" FontSize="13" FontWeight="Black"
                                        Foreground="{DynamicResource TextDarkBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-                        <TextBlock x:Name="SidebarText" Text="Vision"
+                        <TextBlock x:Name="SidebarText" Text="Virtual Path Vision"
                                    FontSize="15" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    Margin="10,0,0,0" VerticalAlignment="Center"

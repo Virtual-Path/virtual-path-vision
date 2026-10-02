@@ -82,7 +82,6 @@ namespace VirtualPathVision
         public string StopCamera => GetString("StopCamera");
         public string LoadImage => GetString("LoadImage");
         public string CameraStopped => GetString("CameraStopped");
-        public string MachineVision => GetString("MachineVision");
         public string Minimize => GetString("Minimize");
         public string Maximize => GetString("Maximize");
         public string Close => GetString("Close");

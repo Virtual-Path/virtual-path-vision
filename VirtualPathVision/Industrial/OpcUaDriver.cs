@@ -88,6 +88,8 @@ namespace VirtualPathVision.Industrial
                     TraceConfiguration = new TraceConfiguration()
                 };
 
+#pragma warning disable CS0618 // OPC UA 1.5.x 将以下 API 标记为过时，其替代品要求传 ITelemetryContext；
+                // 为保持现有连接行为不变，此处继续使用旧 API 并统一抑制告警
                 await _config.Validate(ApplicationType.Client);
 
                 // 自动创建/校验应用证书（静默模式）
@@ -109,16 +111,15 @@ namespace VirtualPathVision.Industrial
                 };
 
                 // 选择无安全策略端点（None），用户名密码/证书策略可按需扩展
-#pragma warning disable CS0618
                 EndpointDescription endpoint = await CoreClientUtils.SelectEndpointAsync(
                     _config, _endpointUrl, false, 15000, CancellationToken.None);
-#pragma warning restore CS0618
                 var configuredEndpoint = new ConfiguredEndpoint(
                     null, endpoint, EndpointConfiguration.Create(_config));
 
                 _session = (Session)await new DefaultSessionFactory().CreateAsync(
                     _config, configuredEndpoint, false,
                     "VirtualPathVision Session", 60000, null, null, CancellationToken.None);
+#pragma warning restore CS0618
 
                 SetState(DeviceDriverState.Connected);
                 return true;

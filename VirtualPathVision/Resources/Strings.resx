@@ -47,7 +47,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppTitle" xml:space="preserve">
-    <value>机器视觉应用</value>
+    <value>Virtual Path Vision</value>
   </data>
   <data name="OriginalStream" xml:space="preserve">
     <value>原始视频流</value>
@@ -117,9 +117,6 @@
   </data>
   <data name="Close" xml:space="preserve">
     <value>关闭</value>
-  </data>
-  <data name="MachineVision" xml:space="preserve">
-    <value>机器视觉应用</value>
   </data>
   <data name="SourceType" xml:space="preserve">
     <value>信号源</value>

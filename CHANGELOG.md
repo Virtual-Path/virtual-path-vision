@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Dropdowns now show the selected value while closed.** The custom `GlassComboBox` template was
+  missing the `SelectionBoxItem` binding that WPF's default template uses, so every combo box
+  (signal source, processing mode, colour, serial port, baud rate, scan source, language …)
+  rendered blank until you clicked it open.
+- The Chinese `AppTitle` resource still returned the old product name “机器视觉应用”; it now
+  returns **Virtual Path Vision** (matching the English resource).
+- YOLO model loading no longer risks a null dereference when OpenCV fails to produce a network.
+- Build now compiles with **0 warnings** (was 12): fixed 2 nullable warnings in `YoloDetectionComponent`
+  and documented the OPC UA obsolete-API usage with a scoped `#pragma warning disable CS0618`.
+
+### Changed
+- Sidebar logo re-branded from “MV / Vision” to **VP / Virtual Path Vision**.
+- Removed the unused `ComboBoxStyle` resource from `App.xaml` (only `GlassComboBox` is used).
+- Regenerated the dark/light main-UI screenshots with a DPI-aware capturer (previous captures were
+  clipped on high-DPI displays).
+
 ## [3.1.1] - 2026-10-01
 
 ### Fixed

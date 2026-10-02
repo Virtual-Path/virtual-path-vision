@@ -454,11 +454,16 @@
                                 </ControlTemplate>
                             </ToggleButton.Template>
                         </ToggleButton>
+                        <!-- SelectionBoxItem：闭合状态下显示当前选中项（WPF 默认模板即用此属性，
+                             它已处理好 ComboBoxItem 的内容提取/视觉克隆，避免与下拉列表重复挂树） -->
                         <ContentPresenter x:Name="contentPresenter"
                                           IsHitTestVisible="False"
                                           Margin="{TemplateBinding Padding}"
                                           HorizontalAlignment="Left"
                                           VerticalAlignment="Center"
+                                          Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
                                           TextBlock.Foreground="{TemplateBinding Foreground}" />
                         <Popup x:Name="popup"
                                IsOpen="{TemplateBinding IsDropDownOpen}"

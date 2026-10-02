@@ -78,9 +78,13 @@ namespace VirtualPathVision.AI
 
             if (!string.IsNullOrEmpty(modelPath) && File.Exists(modelPath))
             {
-                _net = CvDnn.ReadNetFromONNX(modelPath, EngineType.Auto);
-                _net.SetPreferableBackend(backend);
-                _net.SetPreferableTarget(target);
+                Net? net = CvDnn.ReadNetFromONNX(modelPath, EngineType.Auto);
+                if (net != null)
+                {
+                    net.SetPreferableBackend(backend);
+                    net.SetPreferableTarget(target);
+                    _net = net;
+                }
             }
         }
 
@@ -268,9 +272,13 @@ namespace VirtualPathVision.AI
             try
             {
                 _net?.Dispose();
-                _net = CvDnn.ReadNetFromONNX(modelPath, EngineType.Auto);
-                _net.SetPreferableBackend(backend);
-                _net.SetPreferableTarget(target);
+                _net = null;
+                Net? net = CvDnn.ReadNetFromONNX(modelPath, EngineType.Auto);
+                if (net == null)
+                    return false;
+                net.SetPreferableBackend(backend);
+                net.SetPreferableTarget(target);
+                _net = net;
                 return true;
             }
             catch

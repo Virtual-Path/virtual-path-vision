@@ -118,9 +118,6 @@
   <data name="Close" xml:space="preserve">
     <value>Close</value>
   </data>
-  <data name="MachineVision" xml:space="preserve">
-    <value>Virtual Path Vision</value>
-  </data>
   <data name="SourceType" xml:space="preserve">
     <value>Source</value>
   </data>

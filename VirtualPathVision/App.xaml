@@ -176,60 +176,6 @@
             <DropShadowEffect x:Key="ShadowEffect" BlurRadius="16" ShadowDepth="4" Color="#000000" Opacity="0.4"/>
             <DropShadowEffect x:Key="ShadowSmall" BlurRadius="8" ShadowDepth="2" Color="#000000" Opacity="0.3"/>
 
-            <!-- ComboBox -->
-            <Style x:Key="ComboBoxStyle" TargetType="ComboBox">
-                <Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
-                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-                <Setter Property="FontSize" Value="13"/>
-                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="Padding" Value="8,4"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ComboBox">
-                            <Grid>
-                                <Border x:Name="Bg" Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        CornerRadius="6">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <ContentPresenter Grid.Column="0" Margin="{TemplateBinding Padding}"
-                                                          Content="{TemplateBinding SelectionBoxItem}"
-                                                          ContentTemplate="{TemplateBinding ItemTemplate}"
-                                                          VerticalAlignment="Center"/>
-                                        <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Fill="{DynamicResource TextSecondaryBrush}"
-                                              Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                    </Grid>
-                                </Border>
-                                <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}"
-                                       Placement="Bottom" StaysOpen="False">
-                                    <Border Background="{DynamicResource SurfaceBrush}"
-                                            BorderBrush="{DynamicResource BorderBrush}"
-                                            BorderThickness="1" CornerRadius="6"
-                                            Effect="{StaticResource ShadowEffect}">
-                                        <ScrollViewer>
-                                            <ItemsPresenter/>
-                                        </ScrollViewer>
-                                    </Border>
-                                </Popup>
-                            </Grid>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource BorderLightBrush}"/>
-                                </Trigger>
-                                <Trigger Property="IsDropDownOpen" Value="True">
-                                    <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
             <!-- ComboBoxItem -->
             <Style TargetType="ComboBoxItem">
                 <Setter Property="Background" Value="Transparent"/>
