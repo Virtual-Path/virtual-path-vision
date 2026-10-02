@@ -226,7 +226,7 @@ dotnet run --project VirtualPathVision/VirtualPathVision.csproj
 
 | 图片 | 测试内容 |
 |------|----------|
-| `test_scene.png` | 全部处理模式——边缘、轮廓、形状、颜色、QR/条码（内容为 `https://github.com/virtual-path/virtual-path-vision`） |
+| `test_scene.png` | 全部处理模式——边缘、轮廓、形状、颜色、QR（内容为 `https://github.com/virtual-path/virtual-path-vision`）与条码（内容为 `OPENCV5`） |
 | `template_green.png` | 模板匹配（绿色方块，匹配度 ≈ 1.0） |
 | `template_qr.png` | 特征点匹配（纹理丰富的 QR 裁剪图） |
 | `face_lena.jpg` | 人脸检测 |

@@ -226,7 +226,7 @@ Open `TestImages/` from the Load Image dialog:
 
 | Image | What to test |
 |-------|--------------|
-| `test_scene.png` | All processing modes – edges, contours, shapes, colors, QR/barcode (`https://github.com/virtual-path/virtual-path-vision`) |
+| `test_scene.png` | All processing modes – edges, contours, shapes, colors, QR (`https://github.com/virtual-path/virtual-path-vision`) and barcode (`OPENCV5`) |
 | `template_green.png` | Template Matching (green square, score ≈ 1.0) |
 | `template_qr.png` | Feature Matching (texture-rich QR crop) |
 | `face_lena.jpg` | Face Detection |

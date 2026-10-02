@@ -23,6 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the unused `ComboBoxStyle` resource from `App.xaml` (only `GlassComboBox` is used).
 - Regenerated the dark/light main-UI screenshots with a DPI-aware capturer (previous captures were
   clipped on high-DPI displays).
+- **Regenerated `TestImages/test_scene.png`.** The scene now carries the new title
+  “Virtual Path Vision Test Scene”, a QR code pointing at the new repository
+  (`https://github.com/virtual-path/virtual-path-vision` — the old one resolved to the pre-fork
+  project), and a Code 128 barcode encoding `OPENCV5` with proper quiet zones (the previous bars
+  ran into the image edge and could not be decoded). The stray half-barcode fragment on the right
+  edge was removed, and `TestImages/template_qr.png` was re-cropped to match.
+- Refreshed the mode screenshots `docs/images/02`–`11` against the regenerated test scene; the
+  capturer now renders through `PrintWindow`, so results no longer depend on window focus.
 
 ## [3.1.1] - 2026-10-01
 
