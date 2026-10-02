@@ -139,7 +139,6 @@
                     <Button x:Name="ApplyThresholdsButton"
                             Content="Apply"
                             Style="{StaticResource GlassButton}"
-                            Click="ApplyThresholdsButton_Click"
                             HorizontalAlignment="Stretch" />
                 </StackPanel>
             </Border>

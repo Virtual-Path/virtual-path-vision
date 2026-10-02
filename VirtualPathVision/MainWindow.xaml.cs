@@ -45,6 +45,7 @@ namespace VirtualPathVision
         private Industrial.TcpScanDriver _tcpDriver;
         private Industrial.WorkReportService _workReportService;
         private Industrial.IndustrialConfig _industrialConfig;
+        private AppConfig _appConfig = new();
 
         // ---- AI 模块 ----
         private AI.YoloDetectionComponent? _yoloComponent;
@@ -60,6 +61,11 @@ namespace VirtualPathVision
         private Cloud.LambdaClient? _lambdaClient;
         private int _detectionTotalCount;
         private int _detectionDefectCount;
+        private int _aiFramesSinceIotPublish;
+        private long _aiDetectionFrameCount;
+
+        /// <summary>AI 检测帧数达到该间隔时向 IoT 上报一次遥测</summary>
+        private const int IotPublishIntervalFrames = 30;
 
         // ---- 处理参数 ----
         private Components.ProcessingMode _currentMode = Components.ProcessingMode.Canny;
@@ -95,6 +101,10 @@ namespace VirtualPathVision
                 ProcessingPanelCtrl.Threshold1TextBoxEl, ProcessingPanelCtrl.Threshold2TextBoxEl,
                 ProcessingPanelCtrl.ApplyThresholdsButtonEl);
             _recordingComponent = new Components.RecordingComponent();
+            // 订阅录制状态变化：此前该事件无人订阅，导致语言切换时
+            // RefreshTexts 会把按钮文案无条件重置为「开始录制」，
+            // 即使此刻正在录制，按钮也会显示成开始。
+            _recordingComponent.OnRecordingStateChanged += OnRecordingStateChanged;
             _barcodeDetectionComponent = new Components.BarcodeDetectionComponent();
             _colorDetectionComponent = new Components.ColorDetectionComponent();
             _templateMatchComponent = new Components.TemplateMatchComponent();
@@ -109,6 +119,7 @@ namespace VirtualPathVision
             _tcpDriver = App.Services.GetRequiredService<Industrial.TcpScanDriver>();
             _workReportService = App.Services.GetRequiredService<Industrial.WorkReportService>();
             _industrialConfig = App.Services.GetRequiredService<Industrial.IndustrialConfig>();
+            _appConfig = App.Services.GetRequiredService<AppConfig>();
 
             // 设备驱动状态/错误事件（后台线程 → Dispatcher 封送）
             _modbusDriver.OnStateChanged += s => Dispatcher.Invoke(() => UpdateModbusState(s));
@@ -127,6 +138,9 @@ namespace VirtualPathVision
             _videoCaptureComponent.OnCaptureError += OnCaptureErrorHandler;
             _videoCaptureComponent.OnConnectionStateChanged += OnConnectionStateChangedHandler;
 
+            // 阈值来源只保留一处：ThresholdParameterComponent 的 Apply 按钮。
+            // ProcessingPanelCtrl.ThresholdsChanged（滑块）已在下面单独订阅，
+            // 若两处都订阅 UpdateThresholds，每次调整会写两条重复日志。
             _thresholdParameterComponent.OnThresholdsChanged += UpdateThresholds;
 
             TranslationService.Instance.PropertyChanged += OnLanguageChangedHandler;
@@ -147,6 +161,8 @@ namespace VirtualPathVision
 
             AIPanelCtrl.LoadModelRequested += AIPanelCtrl_LoadModelRequested;
             AIPanelCtrl.EnableChanged += AIPanelCtrl_EnableChanged;
+            // 置信度此前只有声明没有任何订阅，改了也不生效；这里接上实时更新
+            AIPanelCtrl.ConfidenceChanged += AIPanelCtrl_ConfidenceChanged;
 
             CloudPanelCtrl.InitRequested += CloudPanelCtrl_InitRequested;
             CloudPanelCtrl.UploadScreenshotRequested += CloudPanelCtrl_UploadScreenshotRequested;
@@ -231,39 +247,12 @@ namespace VirtualPathVision
             UpdateLayoutForWidth(ActualWidth);
         }
 
-        private static readonly string UserSettingsPath =
-            System.IO.Path.Combine(AppContext.BaseDirectory, "user_settings.json");
-
+        /// <summary>侧栏展开状态（统一走 UserSettings，避免与主题/语言互相覆盖）</summary>
         private static bool LoadSidebarExpanded()
-        {
-            try
-            {
-                if (System.IO.File.Exists(UserSettingsPath))
-                {
-                    var json = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(UserSettingsPath));
-                    if (json["SidebarExpanded"] != null)
-                        return json.Value<bool>("SidebarExpanded");
-                }
-            }
-            catch { }
-            return true;
-        }
+            => UserSettings.GetBool("SidebarExpanded", true);
 
         private static void SaveSidebarExpanded(bool expanded)
-        {
-            try
-            {
-                Newtonsoft.Json.Linq.JObject json;
-                if (System.IO.File.Exists(UserSettingsPath))
-                    json = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(UserSettingsPath));
-                else
-                    json = new Newtonsoft.Json.Linq.JObject();
-
-                json["SidebarExpanded"] = expanded;
-                System.IO.File.WriteAllText(UserSettingsPath, json.ToString());
-            }
-            catch { }
-        }
+            => UserSettings.Set("SidebarExpanded", expanded);
 
         // ==================== 侧边栏导航 ====================
 
@@ -495,11 +484,15 @@ namespace VirtualPathVision
             // 日志面板
             LogPanelCtrl.SetLogSource(AppLogger.Instance.Entries);
 
-            AppLogger.Instance.OnLogAdded += entry => Dispatcher.Invoke(() =>
+            // AppLogger 已把 OnLogAdded 封送到 UI 线程，这里无需再 Dispatcher.Invoke。
+            // 同时保存委托引用以便在 Closed 时退订，避免静态单例上的事件
+            // 把已关闭的窗口及其 6 个面板永久挂在内存里。
+            _logAddedHandler = _ =>
             {
                 if (LogPanelCtrl.Visibility == Visibility.Visible)
                     LogPanelCtrl.ScrollToBottom();
-            });
+            };
+            AppLogger.Instance.OnLogAdded += _logAddedHandler;
 
             // ---- 工业互联面板初始化 ----
             IndustrialPanelCtrl.SetSerialPortNames(Industrial.SerialScanDriver.GetPortNames());
@@ -515,6 +508,25 @@ namespace VirtualPathVision
             IndustrialPanelCtrl.TcpScanPortTextBoxEl.Text = _industrialConfig.TcpScanner.Port.ToString();
             IndustrialPanelCtrl.PlcRegisterTextBoxEl.Text = _industrialConfig.Report.PlcCountRegister.ToString();
             IndustrialPanelCtrl.ModbusLinkCheckBoxEl.IsChecked = _industrialConfig.Report.PlcReportEnable;
+
+            // ---- Cloud / AI 配置回填 ----
+            // 此前 AWS/AI 段落虽写在 appsettings.json，却完全没有被读取，
+            // 导致区域/桶等参数每次启动都要手工重填。
+            var aws = _appConfig.AWS;
+            if (!string.IsNullOrWhiteSpace(aws.Region))
+                CloudPanelCtrl.AwsRegionTextBoxEl.Text = aws.Region;
+            if (!string.IsNullOrWhiteSpace(aws.S3Bucket))
+                CloudPanelCtrl.S3BucketTextBoxEl.Text = aws.S3Bucket;
+            if (!string.IsNullOrWhiteSpace(aws.IoTEndpoint))
+                CloudPanelCtrl.IoTEndpointTextBoxEl.Text = aws.IoTEndpoint;
+            if (!string.IsNullOrWhiteSpace(aws.IoTTopicPrefix))
+                CloudPanelCtrl.IoTTopicTextBoxEl.Text = aws.IoTTopicPrefix;
+            if (!string.IsNullOrWhiteSpace(aws.LambdaFunctionName))
+                CloudPanelCtrl.LambdaFuncTextBoxEl.Text = aws.LambdaFunctionName;
+
+            AIPanelCtrl.SetConfidence((float)Math.Clamp(_appConfig.AI.ConfidenceThreshold, 0.01, 1.0));
+            AIPanelCtrl.SetMatchThreshold(_appConfig.AI.NmsThreshold <= 0 ? 0.6f : (float)_appConfig.AI.NmsThreshold);
+            AIPanelCtrl.SetMaxTrail(Math.Clamp(_appConfig.AI.MaxLostFrames, 2, 500));
         }
 
         /// <summary>
@@ -522,13 +534,20 @@ namespace VirtualPathVision
         /// </summary>
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
+            // 退订静态单例上的事件：否则已关闭的窗口（及其全部面板）无法被 GC 回收
+            if (_logAddedHandler != null)
+                AppLogger.Instance.OnLogAdded -= _logAddedHandler;
+            TranslationService.Instance.PropertyChanged -= OnLanguageChangedHandler;
+
             SaveWindowState();
 
             _recordingComponent.Dispose();
             _videoCaptureComponent.Dispose();
+            _thresholdParameterComponent.Dispose();
             _templateMatchComponent.Clear();
-            _featureMatchComponent.Clear();
-            _lastOriginalFrame?.Dispose();
+            _featureMatchComponent.Dispose();
+            _templateMatchComponent.Dispose();
+            DisposeLastOriginalFrame();
 
             _serialDriver.Dispose();
             _tcpDriver.Dispose();
@@ -537,7 +556,10 @@ namespace VirtualPathVision
 
             lock (_aiLock)
             {
+                // _kalmanTracker 此前从未被释放，其内部每个 KalmanFilter 持有的
+                // 原生 Mat 会在进程退出时全部泄漏
                 _yoloComponent?.Dispose();
+                _kalmanTracker?.Dispose();
                 _digitalTwin?.Dispose();
             }
             _s3Service?.Dispose();
@@ -547,12 +569,13 @@ namespace VirtualPathVision
 
         // ==================== 信号源 & 连接 ====================
 
-        /// <summary>根据 IP 和端口构建网络流 URL</summary>
+        /// <summary>根据 IP 和端口构建网络流 URL，并同步信号源类型</summary>
         private void BuildNetworkUrl()
         {
             string ip = CameraPanelCtrl.IPTextBoxEl.Text.Trim();
             string port = CameraPanelCtrl.PortTextBoxEl.Text.Trim();
             _videoCaptureComponent.NetworkUrl = $"http://{ip}:{port}/video";
+            _videoCaptureComponent.SourceType = Components.VideoSourceType.NetworkStream;
             _networkConfigured = !string.IsNullOrWhiteSpace(ip) && !string.IsNullOrWhiteSpace(port);
         }
 
@@ -674,7 +697,13 @@ namespace VirtualPathVision
                     return;
                 }
 
-                bool started = _recordingComponent.StartRecording(path, 15.0, width, height);
+                // 使用信号源实际帧率。此前硬编码 15fps，而采集循环约 33fps，
+                // 导致录出来的视频播放速度只有实际的一半。
+                double captureFps = _videoCaptureComponent.GetFrameRate();
+                if (double.IsNaN(captureFps) || double.IsInfinity(captureFps) || captureFps <= 1 || captureFps > 240)
+                    captureFps = DefaultCaptureFps;
+
+                bool started = _recordingComponent.StartRecording(path, captureFps, width, height);
                 if (started)
                 {
                     CameraPanelCtrl.RecordButtonEl.Content = TranslationService.Instance.StopRecording;
@@ -695,7 +724,8 @@ namespace VirtualPathVision
         {
             _threshold1 = t1;
             _threshold2 = t2;
-            AppLogger.Instance.Info($"阈值更新: {t1} ~ {t2}");
+            // 与 UpdateThresholds 共用节流日志，避免同一事件被记录两次
+            LogThresholdChange(t1, t2);
         }
 
         private void ProcessingPanelCtrl_ModeChanged(int index)
@@ -719,7 +749,10 @@ namespace VirtualPathVision
 
             ProcessingPanelCtrl.SetModeName(GetModeName(_currentMode));
 
-            bool showThreshold = _currentMode is Components.ProcessingMode.Canny or Components.ProcessingMode.Contour;
+            // 形状识别内部也用 Canny 提取边缘，一并开放阈值调节
+            bool showThreshold = _currentMode is Components.ProcessingMode.Canny
+                or Components.ProcessingMode.Contour
+                or Components.ProcessingMode.ShapeDetection;
             ProcessingPanelCtrl.ThresholdPanelEl.Visibility = showThreshold ? Visibility.Visible : Visibility.Collapsed;
             ProcessingPanelCtrl.ColorPanelEl.Visibility = _currentMode == Components.ProcessingMode.ColorDetection
                 ? Visibility.Visible : Visibility.Collapsed;
@@ -792,18 +825,74 @@ namespace VirtualPathVision
         }
 
         /// <summary>
+        /// 采集线程每帧写入取色用的原始帧副本，UI 线程点击时读取。
+        /// 两端会并发访问同一个原生 Mat，必须用锁交接，
+        /// 否则采集线程 Dispose 时 UI 线程可能正在 CvtColor（use-after-free）。
+        /// </summary>
+        private readonly object _pickFrameLock = new();
+
+        /// <summary>日志新增事件的具名委托（用于 Closed 时退订）</summary>
+        private Action<LogEntry>? _logAddedHandler;
+
+        /// <summary>更新取色用的帧副本（采集线程调用）</summary>
+        private void SetLastOriginalFrame(Mat frame)
+        {
+            Mat? copy = null;
+            try
+            {
+                if (frame != null && !frame.Empty())
+                    copy = frame.Clone();
+            }
+            catch { /* 拷贝失败时保留旧帧 */ }
+
+            lock (_pickFrameLock)
+            {
+                _lastOriginalFrame?.Dispose();
+                _lastOriginalFrame = copy;
+            }
+        }
+
+        /// <summary>取出一份独立的帧副本供 UI 线程安全使用（调用方负责 Dispose）</summary>
+        private Mat? TakeLastOriginalFrameCopy()
+        {
+            lock (_pickFrameLock)
+            {
+                if (_lastOriginalFrame == null || _lastOriginalFrame.Empty())
+                    return null;
+                try { return _lastOriginalFrame.Clone(); }
+                catch { return null; }
+            }
+        }
+
+        /// <summary>释放取色帧（窗口关闭时调用）</summary>
+        private void DisposeLastOriginalFrame()
+        {
+            lock (_pickFrameLock)
+            {
+                _lastOriginalFrame?.Dispose();
+                _lastOriginalFrame = null;
+            }
+        }
+
+        /// <summary>
         /// 点击左侧画面取色：将点击位置的像素颜色设为颜色检测的自定义目标。
         /// </summary>
         private void OriginalViewGrid_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (_currentMode != Components.ProcessingMode.ColorDetection || _lastOriginalFrame == null)
+            if (_currentMode != Components.ProcessingMode.ColorDetection)
+                return;
+
+            // 在锁内取出一份独立副本，之后全程只操作本地副本，
+            // 避免与采集线程的写入/释放竞争。
+            using Mat? pickFrame = TakeLastOriginalFrameCopy();
+            if (pickFrame == null)
                 return;
 
             try
             {
                 var pos = e.GetPosition(CameraPanelCtrl.OriginalImageEl);
-                double srcW = _lastOriginalFrame.Width;
-                double srcH = _lastOriginalFrame.Height;
+                double srcW = pickFrame.Width;
+                double srcH = pickFrame.Height;
                 double elemW = CameraPanelCtrl.OriginalImageEl.ActualWidth;
                 double elemH = CameraPanelCtrl.OriginalImageEl.ActualHeight;
                 if (srcW <= 0 || srcH <= 0 || elemW <= 0 || elemH <= 0)
@@ -818,7 +907,7 @@ namespace VirtualPathVision
                     return;
 
                 using Mat hsv = new Mat();
-                Cv2.CvtColor(_lastOriginalFrame, hsv, ColorConversionCodes.BGR2HSV);
+                Cv2.CvtColor(pickFrame, hsv, ColorConversionCodes.BGR2HSV);
                 var pixel = hsv.At<Vec3b>((int)py, (int)px);
                 _colorDetectionComponent.SetCustomRange(pixel.Item0, pixel.Item1, pixel.Item2);
 
@@ -848,8 +937,19 @@ namespace VirtualPathVision
 
             try
             {
+                // 按不变文化解析：AIPanel 写回时用的是不变文化，
+                // 若这里用 CurrentCulture 解析，在逗号小数文化下 "0.50" 会变成 50，
+                // 导致所有检测都被阈值拒绝。
                 float conf = 0.5f;
-                float.TryParse(AIPanelCtrl.ConfThresholdTextBoxEl.Text, out conf);
+                if (!float.TryParse(AIPanelCtrl.ConfThresholdTextBoxEl.Text,
+                        System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out conf))
+                {
+                    float.TryParse(AIPanelCtrl.ConfThresholdTextBoxEl.Text, out conf);
+                }
+                conf = Math.Clamp(conf, 0.01f, 1.0f);
+                _desiredConfidence = conf;
+                _yoloModelPath = dlg.FileName;
 
                 lock (_aiLock)
                 {
@@ -857,7 +957,10 @@ namespace VirtualPathVision
                     _yoloComponent = new AI.YoloDetectionComponent(
                         dlg.FileName, confidenceThreshold: conf);
 
-                    _kalmanTracker = new AI.KalmanTrackerComponent();
+                    // 轨迹长度上限来自 AI 面板的设置
+                    int maxTrail = ReadIntSetting(AIPanelCtrl.MaxTrailTextBoxEl.Text, DefaultMaxTrail);
+                    _kalmanTracker?.Dispose();
+                    _kalmanTracker = new AI.KalmanTrackerComponent(maxLostFrames: maxTrail);
                     _activePerception = new AI.ActivePerceptionEngine(_yoloComponent, _kalmanTracker);
                     _digitalTwin?.Dispose();
                     _digitalTwin = new AI.DigitalTwinRenderer();
@@ -873,6 +976,103 @@ namespace VirtualPathVision
                 AppLogger.Instance.Error($"YOLO 模型加载失败: {ex.Message}");
             }
         }
+
+        /// <summary>目标最大丢失帧数默认值</summary>
+        private const int DefaultMaxTrail = 10;
+
+        /// <summary>读取整数型设置项，失败时回退到默认值</summary>
+        private static int ReadIntSetting(string? text, int fallback)
+            => int.TryParse(text, System.Globalization.NumberStyles.Integer,
+                System.Globalization.CultureInfo.InvariantCulture, out int v) && v > 0
+                ? v : fallback;
+
+        /// <summary>读取浮点型设置项，失败时回退到默认值</summary>
+        private static float ReadFloatSetting(string? text, float fallback)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return fallback;
+            if (float.TryParse(text, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out float v)) return v;
+            return float.TryParse(text, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.CurrentCulture, out v) ? v : fallback;
+        }
+
+        /// <summary>按类别统计检测数量，供 AI 面板的「检测分解」区域展示</summary>
+        private static System.Collections.Generic.Dictionary<string, int> BuildClassBreakdown(
+            IReadOnlyList<AI.Detection>? detections)
+        {
+            var result = new System.Collections.Generic.Dictionary<string, int>();
+            if (detections == null) return result;
+
+            foreach (var d in detections)
+            {
+                string key = string.IsNullOrEmpty(d.ClassName) ? "?" : d.ClassName;
+                result.TryGetValue(key, out int n);
+                result[key] = n + 1;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// 统计缺陷数量。规则统一由 <see cref="AI.DefectRules"/> 定义；
+        /// 若数字孪生渲染器已创建，则沿用它可配置的关键词与置信度带，
+        /// 保证画面上的红框与统计数字始终一致。
+        /// </summary>
+        private int CountDefects(IReadOnlyList<AI.Detection>? detections)
+        {
+            if (detections == null || detections.Count == 0) return 0;
+
+            var twin = _digitalTwin;
+            if (twin != null)
+            {
+                int n = 0;
+                foreach (var d in detections)
+                {
+                    if (twin.IsDefect(d)) n++;
+                }
+                return n;
+            }
+
+            return AI.DefectRules.CountDefects(detections);
+        }
+
+        /// <summary>用户在 AI 面板设置的置信度阈值（加载模型时生效）</summary>
+        private float _desiredConfidence = 0.5f;
+
+        /// <summary>置信度实时更新：重建检测器使新阈值立即生效</summary>
+        private void AIPanelCtrl_ConfidenceChanged(float value)
+        {
+            float conf = Math.Clamp(value, 0.01f, 1.0f);
+            _desiredConfidence = conf;
+
+            lock (_aiLock)
+            {
+                if (_yoloComponent == null || !_yoloComponent.IsModelLoaded) return;
+                if (string.IsNullOrEmpty(_yoloModelPath)) return;
+
+                // ConfidenceThreshold 是模型加载期参数，YoloDetectionComponent 未暴露 setter，
+                // 因此这里按新阈值重建整条 AI 链路（仅在用户改动时发生，不在每帧路径上）。
+                try
+                {
+                    int maxTrail = ReadIntSetting(AIPanelCtrl.MaxTrailTextBoxEl.Text, DefaultMaxTrail);
+
+                    _yoloComponent.Dispose();
+                    _yoloComponent = new AI.YoloDetectionComponent(_yoloModelPath, confidenceThreshold: conf);
+
+                    _kalmanTracker?.Dispose();
+                    _kalmanTracker = new AI.KalmanTrackerComponent(maxLostFrames: maxTrail);
+                    _activePerception = new AI.ActivePerceptionEngine(_yoloComponent, _kalmanTracker);
+
+                    AppLogger.Instance.Info($"置信度已更新为 {conf:F2}");
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Instance.Warn($"置信度更新失败: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>当前加载的模型路径（用于按新阈值重建检测器）</summary>
+        private string _yoloModelPath = "";
 
         private void AIPanelCtrl_EnableChanged(object? sender, EventArgs e)
         {
@@ -893,6 +1093,8 @@ namespace VirtualPathVision
                 AIPanelCtrl.SetModelStatus(true, AIPanelCtrl.YoloModelPathTextEl.Text);
                 _detectionTotalCount = 0;
                 _detectionDefectCount = 0;
+                _aiFramesSinceIotPublish = 0;
+                _aiDetectionFrameCount = 0;
                 AppLogger.Instance.Info("AI 主动感知已启用");
             }
             else
@@ -932,20 +1134,33 @@ namespace VirtualPathVision
 
                 if (!string.IsNullOrEmpty(iotEndpoint))
                 {
-                    string certPath = Path.Combine(AppContext.BaseDirectory, "certs", "device-certificate.pem.crt");
-                    string keyPath = Path.Combine(AppContext.BaseDirectory, "certs", "private.pem.key");
+                    // 证书路径优先取 appsettings.json 的 AWS 段，未配置则回落到 BaseDirectory/certs
+                    var awsCfg = _appConfig.AWS;
+                    string certPath = !string.IsNullOrWhiteSpace(awsCfg.IoTCertificatePath)
+                        ? awsCfg.IoTCertificatePath
+                        : Path.Combine(AppContext.BaseDirectory, "certs", "device-certificate.pem.crt");
+                    string keyPath = !string.IsNullOrWhiteSpace(awsCfg.IoTPrivateKeyPath)
+                        ? awsCfg.IoTPrivateKeyPath
+                        : Path.Combine(AppContext.BaseDirectory, "certs", "private.pem.key");
+
+                    // Topic 前缀：UI 输入框优先，其次配置，最后默认值
+                    string topicPrefix = CloudPanelCtrl.IoTTopicTextBoxEl.Text.Trim();
+                    if (string.IsNullOrEmpty(topicPrefix))
+                        topicPrefix = string.IsNullOrWhiteSpace(awsCfg.IoTTopicPrefix)
+                            ? "factory/vision"
+                            : awsCfg.IoTTopicPrefix;
 
                     _iotService?.Dispose();
                     if (File.Exists(certPath) && File.Exists(keyPath))
                     {
-                        _iotService = new IoTService(iotEndpoint, certPath, keyPath);
+                        _iotService = new IoTService(iotEndpoint, certPath, keyPath, topicPrefix);
                     }
                     else
                     {
                         var handler = new System.Net.Http.HttpClientHandler();
                         _iotService = new IoTService(
                             new System.Net.Http.HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) },
-                            iotEndpoint);
+                            iotEndpoint, topicPrefix);
                         AppLogger.Instance.Warn("IoT: 未找到设备证书，使用无认证模式（仅限测试）");
                     }
                     _iotService.OnPublishSuccess += topic =>
@@ -1302,8 +1517,10 @@ namespace VirtualPathVision
                     }
                     if (ushort.TryParse(IndustrialPanelCtrl.PlcRegisterTextBoxEl.Text, out ushort register))
                     {
-                        _modbusDriver.WriteSingleRegister(register, (ushort)_workReportService.TodayCount);
-                        AppLogger.Instance.Info($"PLC联动: [{register}] = {_workReportService.TodayCount}");
+                        // TodayCount 超过 ushort 上限时饱和到 65535，而不是回绕成 0
+                        ushort plcCount = Industrial.WorkReportService.ClampToUshort(_workReportService.TodayCount);
+                        _modbusDriver.WriteSingleRegister(register, plcCount);
+                        AppLogger.Instance.Info($"PLC联动: [{register}] = {plcCount}");
                     }
                 }
                 catch (Exception ex)
@@ -1418,11 +1635,20 @@ namespace VirtualPathVision
                     return colorResult;
 
                 case Components.ProcessingMode.TemplateMatch:
+                    // 匹配阈值此前没有任何写入方（恒为 0.6），AI 面板里的
+                    // "Match Threshold" 输入框完全无效。这里接入。
+                    _templateMatchComponent.Threshold =
+                        Math.Clamp(ReadFloatSetting(AIPanelCtrl.MatchThresholdTextBoxEl.Text, 0.6f), 0.01, 1.0);
                     Mat tmResult = _templateMatchComponent.Match(grayFrame, out double score);
-                    modeResult = _templateMatchComponent.HasTemplate ? $"{score:P1}" : "";
+                    modeResult = _templateMatchComponent.HasTemplate
+                        ? (double.IsNaN(score) ? "" : $"{score:P1}")
+                        : "";
                     return tmResult;
 
                 case Components.ProcessingMode.ShapeDetection:
+                    // 同步主界面的 Canny 阈值到形状识别组件
+                    _shapeDetectionComponent.CannyLow = _threshold1;
+                    _shapeDetectionComponent.CannyHigh = _threshold2;
                     Mat shapeResult = _shapeDetectionComponent.Detect(grayFrame, out count, out string shapeSummary);
                     modeResult = shapeSummary;
                     return shapeResult;
@@ -1455,8 +1681,7 @@ namespace VirtualPathVision
 
                 if (_currentMode == Components.ProcessingMode.ColorDetection)
                 {
-                    _lastOriginalFrame?.Dispose();
-                    _lastOriginalFrame = originalFrame.Clone();
+                    SetLastOriginalFrame(originalFrame);
                 }
 
                 Mat resultImage = ProcessByMode(originalFrame, grayFrame, out int contourCount, out string modeResult);
@@ -1468,31 +1693,45 @@ namespace VirtualPathVision
                     // ---- AI 主动感知 ----
                     int aiDetCount = 0;
                     int aiTrackCount = 0;
+                    IReadOnlyList<AI.Detection>? aiDetections = null;
+                    IReadOnlyList<AI.TrackedObject>? aiTracks = null;
                     if (_aiEnabled && _activePerception != null && _yoloComponent != null && _yoloComponent.IsModelLoaded)
                     {
                         lock (_aiLock)
                         {
                             _activePerception.ProcessFrame(originalFrame);
                             _activePerception.DrawOverlay(resultImage);
-                            aiDetCount = _activePerception.CurrentDetections.Count;
-                            aiTrackCount = _activePerception.CurrentTracks.Count;
+                            var detections = _activePerception.CurrentDetections;
+                            aiDetCount = detections.Count;
+                            var tracks = _activePerception.CurrentTracks;
+                            aiTrackCount = tracks.Count;
+                            aiDetections = detections;
+                            aiTracks = tracks;
+                            _aiDetectionFrameCount++;
 
                             _detectionTotalCount += aiDetCount;
-                            int defects = _activePerception.CurrentDetections.Count(d => d.Confidence > 0.8f);
-                            _detectionDefectCount += defects;
+                            _detectionDefectCount += CountDefects(detections);
 
-                            if (_iotService != null && _detectionTotalCount % 30 == 0)
+                            // 按「帧」而非「累计目标数」节流上报。
+                            // 旧实现判断 _detectionTotalCount % 30 == 0，而该值在
+                            // 每帧累加 aiDetCount（通常 >1），会直接跨过 30 的整数倍，
+                            // 导致遥测静默停止。
+                            if (_iotService != null && ++_aiFramesSinceIotPublish >= IotPublishIntervalFrames)
                             {
+                                _aiFramesSinceIotPublish = 0;
                                 var iot = _iotService;
-                                var tracks = _activePerception.CurrentTracks;
+                                string modeName = _currentMode.ToString();
+                                int detCount = aiDetCount;
                                 _ = Task.Run(async () =>
                                 {
                                     try
                                     {
-                                        await iot.PublishDetectionResultAsync(
-                                            _currentMode.ToString(), aiDetCount, 0.8f);
+                                        await iot.PublishDetectionResultAsync(modeName, detCount, 0.8f);
                                     }
-                                    catch { }
+                                    catch (Exception ex)
+                                    {
+                                        AppLogger.Instance.Warn($"IoT 发布失败: {ex.Message}");
+                                    }
                                 });
                             }
                         }
@@ -1508,10 +1747,29 @@ namespace VirtualPathVision
                     // Dispatcher 更新 AI 面板
                     if (_aiEnabled)
                     {
+                        var perception = _activePerception;
+                        var detectionsSnapshot = aiDetections;
+                        var tracksSnapshot = aiTracks;
                         Dispatcher.Invoke(() =>
                         {
                             AIPanelCtrl.UpdateDetectionStats(aiDetCount, aiTrackCount,
-                                _activePerception?.AdaptiveInterval ?? 0);
+                                perception?.AdaptiveInterval ?? 0);
+
+                            // 主动感知统计与按类别分解此前从未被调用，
+                            // 面板上的这几项永远是初始占位值。
+                            if (perception != null && tracksSnapshot != null)
+                            {
+                                int lost = tracksSnapshot.Count(t => t.IsLost);
+                                AIPanelCtrl.UpdatePerceptionStats(
+                                    frameCount: (int)Math.Min(_aiDetectionFrameCount, int.MaxValue),
+                                    activeTracks: tracksSnapshot.Count(t => !t.IsLost),
+                                    lostTracks: lost,
+                                    interval: perception.AdaptiveInterval,
+                                    roiCount: perception.ActiveRoiCount);
+
+                                AIPanelCtrl.UpdateDetectionBreakdown(
+                                    BuildClassBreakdown(detectionsSnapshot));
+                            }
                         });
                     }
                 }
@@ -1570,11 +1828,43 @@ namespace VirtualPathVision
             }
         }
 
-        /// <summary>阈值更新回调</summary>
+        /// <summary>录制状态变化：统一刷新录像按钮的文案与配色</summary>
+        private void OnRecordingStateChanged(bool recording)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                CameraPanelCtrl.RecordButtonEl.Content = recording
+                    ? TranslationService.Instance.StopRecording
+                    : TranslationService.Instance.StartRecording;
+
+                if (recording)
+                    CameraPanelCtrl.RecordButtonEl.Background =
+                        new SolidColorBrush(Color.FromRgb(0xFF, 0x45, 0x3A));
+                else
+                    CameraPanelCtrl.RecordButtonEl.ClearValue(Button.BackgroundProperty);
+            });
+        }
+
+        /// <summary>阈值更新回调（供 ThresholdParameterComponent 使用）</summary>
         private void UpdateThresholds(int threshold1, int threshold2)
         {
             _threshold1 = threshold1;
             _threshold2 = threshold2;
+            LogThresholdChange(threshold1, threshold2);
+        }
+
+        private DateTime _lastThresholdLog = DateTime.MinValue;
+
+        /// <summary>
+        /// 记录阈值变化。滑块拖动会逐像素触发（范围 0~255、TickFrequency=1），
+        /// 若每次都写日志，一次拖动就会产生数百条日志，因此按时间节流。
+        /// </summary>
+        private void LogThresholdChange(int threshold1, int threshold2)
+        {
+            var now = DateTime.Now;
+            if ((now - _lastThresholdLog).TotalMilliseconds < 500)
+                return;
+            _lastThresholdLog = now;
             AppLogger.Instance.Info($"阈值更新: {threshold1} ~ {threshold2}");
         }
 
@@ -1614,8 +1904,7 @@ namespace VirtualPathVision
                     CameraDataTextBlock.Text = System.IO.Path.GetFileName(openFileDialog.FileName);
                     CameraPanelCtrl.SourceInfoTextEl.Text = openFileDialog.FileName;
 
-                    _lastOriginalFrame?.Dispose();
-                    _lastOriginalFrame = image.Clone();
+                    SetLastOriginalFrame(image);
                     image.Dispose();
 
                     AppLogger.Instance.Info($"已加载图片: {openFileDialog.FileName}");
@@ -1681,6 +1970,9 @@ namespace VirtualPathVision
         }
 
         private readonly DispatcherTimer _errorAutoCloseTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+
+        /// <summary>信号源未报告帧率时使用的录制帧率兜底值</summary>
+        private const double DefaultCaptureFps = 30.0;
 
         /// <summary>最近一次连接状态（语言切换时用于重绘状态文本）</summary>
         private Components.ConnectionState _lastConnState = Components.ConnectionState.Disconnected;
@@ -1797,8 +2089,9 @@ namespace VirtualPathVision
                     AIPanelCtrl.DigitalTwinImageEl.Source = Components.DpiAwareBitmapSource.FromMat(twin);
                 });
 
-                int det = _activePerception.CurrentDetections.Count;
-                int defects = _activePerception.CurrentDetections.Count(d => d.Confidence > 0.8f);
+                var twinDetections = _activePerception.CurrentDetections;
+                int det = twinDetections.Count;
+                int defects = CountDefects(twinDetections);
                 double passRate = _detectionTotalCount > 0
                     ? (double)(_detectionTotalCount - _detectionDefectCount) / _detectionTotalCount * 100
                     : 100;

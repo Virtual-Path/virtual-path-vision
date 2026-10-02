@@ -11,8 +11,16 @@ namespace VirtualPathVision.Components
     {
         private VideoWriter? _writer;
         private string? _outputPath;
-        private bool _isRecording;
+        private volatile bool _isRecording;
         private readonly object _lock = new();
+        private bool _disposed;
+
+        // 写入分辨率（用于检测运行中分辨率变化导致的静默丢帧）
+        private int _frameWidth;
+        private int _frameHeight;
+
+        /// <summary>录制过程中因分辨率不匹配而丢弃的帧数</summary>
+        public long DroppedFrames { get; private set; }
 
         /// <summary>是否正在录制</summary>
         public bool IsRecording => _isRecording;
@@ -33,9 +41,10 @@ namespace VirtualPathVision.Components
         /// <returns>是否成功启动</returns>
         public bool StartRecording(string filePath, double fps, int width, int height)
         {
+            bool started;
             lock (_lock)
             {
-                if (_isRecording)
+                if (_disposed || _isRecording)
                     return false;
 
                 try
@@ -51,30 +60,55 @@ namespace VirtualPathVision.Components
                     }
 
                     _outputPath = filePath;
+                    _frameWidth = width;
+                    _frameHeight = height;
+                    DroppedFrames = 0;
                     _isRecording = true;
-                    OnRecordingStateChanged?.Invoke(true);
-                    return true;
+                    started = true;
                 }
                 catch
                 {
                     _writer?.Dispose();
                     _writer = null;
+                    _isRecording = false;
                     return false;
                 }
             }
+
+            // 在锁外触发事件，避免订阅者阻塞时卡住写帧线程
+            if (started)
+                OnRecordingStateChanged?.Invoke(true);
+            return started;
         }
 
         /// <summary>写入一帧到视频文件</summary>
         public void WriteFrame(Mat frame)
         {
-            if (!_isRecording || _writer == null)
+            if (!_isRecording || frame == null || frame.Empty())
                 return;
 
+            // 全部访问都在锁内完成：避免 StopRecording 并发把 _writer 置空
             lock (_lock)
             {
-                if (_isRecording && _writer != null)
+                var writer = _writer;
+                if (!_isRecording || writer == null)
+                    return;
+
+                // 运行中分辨率变化会让 VideoWriter 静默丢弃每一帧，必须显式拦截并计数
+                if (frame.Width != _frameWidth || frame.Height != _frameHeight)
                 {
-                    _writer.Write(frame);
+                    DroppedFrames++;
+                    return;
+                }
+
+                try
+                {
+                    if (!writer.Write(frame))
+                        DroppedFrames++;
+                }
+                catch
+                {
+                    DroppedFrames++;
                 }
             }
         }
@@ -88,15 +122,24 @@ namespace VirtualPathVision.Components
                     return;
 
                 _isRecording = false;
-                _writer?.Release();
+                var writer = _writer;
                 _writer = null;
-                OnRecordingStateChanged?.Invoke(false);
+                // Release 释放原生资源，Dispose 释放托管包装（两者都需要）
+                try { writer?.Release(); } catch { }
+                writer?.Dispose();
             }
+
+            OnRecordingStateChanged?.Invoke(false);
         }
 
         /// <summary>释放资源</summary>
         public void Dispose()
         {
+            lock (_lock)
+            {
+                if (_disposed) return;
+                _disposed = true;
+            }
             StopRecording();
             GC.SuppressFinalize(this);
         }

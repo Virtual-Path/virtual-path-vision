@@ -131,12 +131,19 @@ public partial class CloudPanel : UserControl
         FunctionLabel.Text = t.FieldFunction;
         LastResultLabel.Text = t.LastResult;
 
-        // 状态（未连接时用本地化占位文本）
-        if (!_s3Connected) S3StatusText.Text = t.StatusNotConfigured;
-        if (!_iotConnected) IoTStatusText.Text = t.StatusNotConfigured;
-        if (!_lambdaConnected) LambdaStatusText.Text = t.StatusNotConfigured;
+        // 状态：无论是否已连接都要重绘。
+        // 旧实现只在「未连接」时刷新，已连接时保留上一次写入的文本，
+        // 于是切换语言后状态标签仍是旧语言（中文界面显示「已连接」）。
+        S3StatusText.Text = _s3Connected ? t.StatusConnected : t.StatusNotConfigured;
+        IoTStatusText.Text = _iotConnected ? t.StatusConnected : t.StatusNotConfigured;
+        LambdaStatusText.Text = _lambdaConnected ? t.StatusReady : t.StatusNotConfigured;
+
         bool anyConnected = _s3Connected || _iotConnected || _lambdaConnected;
-        if (!anyConnected) CloudOverallStatus.Text = t.StatusServicesNotInit;
+        CloudOverallStatus.Text = anyConnected ? t.StatusConnected : t.StatusServicesNotInit;
+        CloudOverallStatus.Foreground = anyConnected
+            ? (Brush)FindResource("SuccessBrush")
+            : (Brush)FindResource("TextMutedBrush");
+
         if (_uploadsEmpty) S3UploadListText.Text = t.NoUploads;
     }
 
@@ -178,10 +185,11 @@ public partial class CloudPanel : UserControl
     {
         CloudOverallStatus.Text = text;
 
-        bool anyConnected =
-            S3StatusDot.Fill == (Brush)FindResource("SuccessBrush") ||
-            IoTStatusDot.Fill == (Brush)FindResource("SuccessBrush") ||
-            LambdaStatusDot.Fill == (Brush)FindResource("SuccessBrush");
+        // 用 _s3Connected/_iotConnected/_lambdaConnected 字段判断，
+        // 不要拿指示点的 Fill 去和 FindResource 的结果做引用比较：
+        // 主题切换会替换资源字典里的画刷实例，引用比较必然失配，
+        // 导致服务明明已连接却显示成未连接。
+        bool anyConnected = _s3Connected || _iotConnected || _lambdaConnected;
 
         CloudOverallStatus.Foreground = anyConnected
             ? (Brush)FindResource("SuccessBrush")

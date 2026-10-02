@@ -494,7 +494,7 @@
     <value>Last Barcode:</value>
   </data>
   <data name="FieldMaxTrailLength" xml:space="preserve">
-    <value>Max Trail Length:</value>
+    <value>Max Lost Frames:</value>
   </data>
   <data name="FieldMatchThreshold" xml:space="preserve">
     <value>Match Threshold:</value>
@@ -593,7 +593,7 @@
     <value>Disabled</value>
   </data>
   <data name="MaxTrailLength" xml:space="preserve">
-    <value>Max Trail Length:</value>
+    <value>Max Lost Frames:</value>
   </data>
   <data name="MatchThreshold" xml:space="preserve">
     <value>Match Threshold:</value>
@@ -624,6 +624,9 @@
   </data>
   <data name="NoUploads" xml:space="preserve">
     <value>No uploads yet</value>
+  </data>
+  <data name="NoBarcodeYet" xml:space="preserve">
+    <value>No barcode yet</value>
   </data>
   <data name="Thresholds" xml:space="preserve">
     <value>Thresholds</value>

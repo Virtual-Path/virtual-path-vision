@@ -19,51 +19,58 @@ namespace VirtualPathVision
         private static readonly TranslationService _instance = new();
         public static TranslationService Instance => _instance;
 
-        private static readonly string SettingsPath = Path.Combine(
-            AppContext.BaseDirectory, "user_settings.json");
+        /// <summary>支持的语言：英语（默认）与简体中文</summary>
+        private static readonly string[] SupportedCultures = { "en-US", "zh-CN" };
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public void ChangeLanguage(string cultureName)
         {
-            CultureInfo.CurrentUICulture = new CultureInfo(cultureName);
-            CultureInfo.CurrentCulture = new CultureInfo(cultureName);
-            SaveLanguage(cultureName);
+            if (!TryNormalizeCulture(cultureName, out string normalized))
+                normalized = "en-US";
+
+            var culture = new CultureInfo(normalized);
+
+            // 仅设置 CurrentUICulture/CurrentCulture 只影响调用线程。
+            // 采集循环等长期存活的任务在启动时就把 CultureInfo 捕获进了 ExecutionContext，
+            // 之后切换语言对它们无效（例如形状标签会永久停留在旧语言）。
+            // 因此必须同时设置 DefaultThreadCurrent*，让所有新线程继承新语言。
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.CurrentUICulture = culture;
+            CultureInfo.CurrentCulture = culture;
+
+            SaveLanguage(normalized);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(""));
         }
 
         public string CurrentLanguage => CultureInfo.CurrentUICulture.Name;
 
-        private void SaveLanguage(string culture)
+        private static bool TryNormalizeCulture(string? cultureName, out string normalized)
         {
-            try
-            {
-                // 保留其他键（如 Theme），只更新 Language 字段
-                Newtonsoft.Json.Linq.JObject json;
-                if (File.Exists(SettingsPath))
-                    json = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(SettingsPath));
-                else
-                    json = new Newtonsoft.Json.Linq.JObject();
+            normalized = "en-US";
+            if (string.IsNullOrWhiteSpace(cultureName))
+                return false;
 
-                json["Language"] = culture;
-                File.WriteAllText(SettingsPath, json.ToString());
+            foreach (var supported in SupportedCultures)
+            {
+                if (string.Equals(supported, cultureName, StringComparison.OrdinalIgnoreCase))
+                {
+                    normalized = supported;
+                    return true;
+                }
             }
-            catch { }
+            return false;
         }
+
+        private void SaveLanguage(string culture) => UserSettings.Set("Language", culture);
 
         public string LoadLanguage()
         {
-            try
-            {
-                if (File.Exists(SettingsPath))
-                {
-                    string json = File.ReadAllText(SettingsPath);
-                    if (json.Contains("zh-CN")) return "zh-CN";
-                    if (json.Contains("en-US")) return "en-US";
-                }
-            }
-            catch { }
-            return "en-US";
+            // 精确读取 Language 键，而不是在整份 JSON 文本里搜子串
+            // （旧实现只要文件任意位置出现 "zh-CN" 就会误判语言）
+            var saved = UserSettings.GetString("Language");
+            return TryNormalizeCulture(saved, out string normalized) ? normalized : "en-US";
         }
 
         public string this[string key] => GetString(key);
@@ -199,6 +206,7 @@ namespace VirtualPathVision
         public string BtnLoadModel => GetString("BtnLoadModel");
         public string StatusLoaded => GetString("StatusLoaded");
         public string NoUploads => GetString("NoUploads");
+        public string NoBarcodeYet => GetString("NoBarcodeYet");
         public string Thresholds => GetString("Thresholds");
         public string Objects => GetString("Objects");
         public string EndpointUrl => GetString("EndpointUrl");

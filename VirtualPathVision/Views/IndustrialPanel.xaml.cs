@@ -218,8 +218,12 @@ public partial class IndustrialPanel : UserControl
 
     public void UpdateReportStats(int todayCount, string lastBarcode)
     {
-        TodayCountTextBlock.Text = todayCount.ToString();
-        LastBarcodeTextBlock.Text = string.IsNullOrEmpty(lastBarcode) ? "--" : lastBarcode;
+        var t = TranslationService.Instance;
+        TodayCountTextBlock.Text = todayCount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        // 旧实现硬编码英文占位符 "--"，从不随语言切换
+        LastBarcodeTextBlock.Text = string.IsNullOrEmpty(lastBarcode)
+            ? (t.NoBarcodeYet ?? "--")
+            : lastBarcode;
     }
 
     public void SetSerialPortNames(string[] ports)

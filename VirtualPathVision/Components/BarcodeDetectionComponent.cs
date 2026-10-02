@@ -17,7 +17,7 @@ namespace VirtualPathVision.Components
         private int _frameCounter;                   // 帧计数器（用于节流）
         private const int DecodeIntervalFrames = 6;  // 每 6 帧识别一次
         private string? _lastText;                   // 最近一次识别的文本
-        private DateTime _lastDecodeTime = DateTime.MinValue; // 最近一次成功识别时间
+        private long _lastDecodeTime;                   // 最近一次成功识别时间（Stopwatch 时间戳）
 
         public BarcodeDetectionComponent()
         {
@@ -62,8 +62,13 @@ namespace VirtualPathVision.Components
             try
             {
                 // 转 RGB 字节数组（ZXing 需要 RGB24 格式）
-                using Mat rgb = new Mat();
-                Cv2.CvtColor(frame, rgb, ColorConversionCodes.BGR2RGB);
+                using Mat rgbFull = new Mat();
+                Cv2.CvtColor(frame, rgbFull, ColorConversionCodes.BGR2RGB);
+
+                // Marshal.Copy 要求缓冲区连续；若将来传入 ROI/子 Mat，
+                // 直接按 Total*ElemSize 拷贝会得到错位像素数据。
+                using Mat rgb = rgbFull.IsContinuous() ? rgbFull : rgbFull.Clone();
+
                 byte[] buffer = new byte[rgb.Total() * rgb.ElemSize()];
                 System.Runtime.InteropServices.Marshal.Copy(rgb.Data, buffer, 0, buffer.Length);
 
@@ -73,7 +78,9 @@ namespace VirtualPathVision.Components
                 if (result != null && !string.IsNullOrWhiteSpace(result.Text))
                 {
                     _lastText = result.Text;
-                    _lastDecodeTime = DateTime.Now;
+                    // 使用单调时钟而非 DateTime.Now：后者受 NTP 校时/DST 影响，
+                    // 时钟回拨会让结果永不过期，时钟前跳会提前清除结果。
+                    _lastDecodeTime = System.Diagnostics.Stopwatch.GetTimestamp();
                     DrawLastResult(display);
                     return _lastText;
                 }
@@ -84,18 +91,30 @@ namespace VirtualPathVision.Components
             }
 
             // 超过 1.5 秒未识别到新码则清除旧结果
-            if (_lastText != null && (DateTime.Now - _lastDecodeTime).TotalSeconds > 1.5)
+            if (_lastText != null && ElapsedSecondsSinceLastDecode() > 1.5)
                 _lastText = null;
 
             DrawLastResult(display);
             return _lastText;
         }
 
+        /// <summary>距上次成功解码经过的秒数（基于单调时钟）</summary>
+        private double ElapsedSecondsSinceLastDecode()
+            => (System.Diagnostics.Stopwatch.GetTimestamp() - _lastDecodeTime)
+               / (double)System.Diagnostics.Stopwatch.Frequency;
+
         /// <summary>在显示图像左上角绘制最近识别结果</summary>
         private void DrawLastResult(Mat display)
         {
             if (string.IsNullOrEmpty(_lastText)) return;
-            Cv2.PutText(display, _lastText, new OpenCvSharp.Point(20, 40),
+
+            // 过长文本会溢出画面，按画面宽度截断
+            string text = _lastText!;
+            int maxChars = Math.Max(8, display.Width / 14);
+            if (text.Length > maxChars)
+                text = text[..maxChars];
+
+            Cv2.PutText(display, text, new OpenCvSharp.Point(20, 40),
                 HersheyFonts.HersheySimplex, 0.9, new Scalar(0, 200, 255), 2, LineTypes.AntiAlias);
         }
     }

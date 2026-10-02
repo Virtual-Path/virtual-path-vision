@@ -81,7 +81,9 @@ public partial class CameraPanel : UserControl
     /// </summary>
     private void DualViewToggle_Click(object sender, RoutedEventArgs e)
     {
-        bool enabled = DualViewToggle.IsChecked == true;
+        // 与下方两处保持一致的 null 检查风格。InitializeComponent 生成的字段不会为 null，
+        // 但 DualViewToggle 此前完全没有保护，异常会逃逸到全局异常处理器。
+        bool enabled = DualViewToggle != null && DualViewToggle.IsChecked == true;
         if (SecondViewBorder != null)
             SecondViewBorder.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
         if (SecondViewColumn != null)

@@ -36,10 +36,13 @@ namespace VirtualPathVision
             CultureInfo.CurrentUICulture = culture;
             CultureInfo.CurrentCulture = culture;
 
-            // 1. 配置系统：appsettings.json（工业互联参数、可热重载）
+            // 1. 配置系统：appsettings.json（工业互联 / AI / AWS 参数，启动时读取一次）
+            //    注意：reloadOnChange 只让配置源本身可重载，
+            //    本应用在启动时一次性绑定 POCO，此后不再重新读取，
+            //    因此修改 appsettings.json 需要重启程序才生效。
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
                 .Build();
 
             // 2. 依赖注入容器：协议驱动、扫码源、报工服务
@@ -48,6 +51,8 @@ namespace VirtualPathVision
             services.AddSingleton(configuration
                 .GetSection("Industrial")
                 .Get<IndustrialConfig>() ?? new IndustrialConfig());
+            // AI / AWS 段落此前写在 appsettings.json 里却无人读取，现已接入
+            services.AddSingleton(configuration.Get<AppConfig>() ?? new AppConfig());
             services.AddSingleton(sp =>
             {
                 var cfg = sp.GetRequiredService<IndustrialConfig>();

@@ -17,6 +17,9 @@ namespace VirtualPathVision.Components
         /// <returns>增强后的图像</returns>
         public Mat Enhance(Mat grayFrame)
         {
+            if (grayFrame == null || grayFrame.Empty())
+                return new Mat();
+
             // 1. CLAHE 自适应直方图均衡：局部对比度增强
             using Mat clahe = new Mat();
             using (var c = Cv2.CreateCLAHE(2.0, new Size(8, 8)))

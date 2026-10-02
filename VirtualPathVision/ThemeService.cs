@@ -2,8 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Windows;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace VirtualPathVision
 {
@@ -94,36 +92,19 @@ namespace VirtualPathVision
         }
 
         private void SaveThemePreference(AppTheme theme)
-        {
-            try
-            {
-                var path = Path.Combine(AppContext.BaseDirectory, "user_settings.json");
-                JObject json;
-                if (File.Exists(path))
-                    json = JObject.Parse(File.ReadAllText(path));
-                else
-                    json = new JObject();
-                
-                json["Theme"] = theme.ToString();
-                File.WriteAllText(path, json.ToString());
-            }
-            catch { }
-        }
+            => UserSettings.Set("Theme", theme.ToString());
 
         private AppTheme LoadThemePreference()
         {
-            try
+            // 只接受精确的枚举名：Enum.TryParse 会把 "0" 之类的数字串也解析成功，
+            // 导致损坏的配置被静默当成 Light 而不是回落到默认 Dark。
+            var themeStr = UserSettings.GetString("Theme");
+            if (themeStr != null &&
+                Enum.TryParse<AppTheme>(themeStr, ignoreCase: false, out var theme) &&
+                Enum.IsDefined(typeof(AppTheme), theme))
             {
-                var path = Path.Combine(AppContext.BaseDirectory, "user_settings.json");
-                if (File.Exists(path))
-                {
-                    var json = JObject.Parse(File.ReadAllText(path));
-                    if (json["Theme"]?.ToString() is string themeStr && 
-                        Enum.TryParse<AppTheme>(themeStr, out var theme))
-                        return theme;
-                }
+                return theme;
             }
-            catch { }
             return AppTheme.Dark; // 默认深色
         }
     }

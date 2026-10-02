@@ -217,16 +217,60 @@ public partial class AIPanel : UserControl
 
     private void ConfThresholdTextBox_LostFocus(object sender, RoutedEventArgs e)
     {
-        if (float.TryParse(ConfThresholdTextBox.Text, System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out float value))
+        if (TryReadConfidence(ConfThresholdTextBox.Text, out float value))
         {
             value = Math.Clamp(value, 0f, 1f);
+            _lastConfidence = value;
             ConfThresholdTextBox.Text = value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
             ConfidenceChanged?.Invoke(value);
         }
         else
         {
-            ConfThresholdTextBox.Text = "0.5";
+            // 解析失败时恢复上一次的有效值，而不是硬编码回 0.5
+            ConfThresholdTextBox.Text = _lastConfidence
+                .ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
         }
+    }
+
+    private float _lastConfidence = 0.5f;
+
+    /// <summary>
+    /// 解析置信度输入。
+    /// 先按不变文化解析（本面板写回时用的是不变文化），
+    /// 再回退到当前文化，以兼容用户直接键入本地化小数分隔符的情况。
+    /// </summary>
+    private static bool TryReadConfidence(string? text, out float value)
+    {
+        value = 0.5f;
+        if (string.IsNullOrWhiteSpace(text)) return false;
+
+        string t = text.Trim();
+        if (float.TryParse(t, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out value))
+            return true;
+
+        return float.TryParse(t, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.CurrentCulture, out value);
+    }
+
+    /// <summary>把外部设置写入置信度输入框（加载模型后回填）</summary>
+    public void SetConfidence(float value)
+    {
+        _lastConfidence = Math.Clamp(value, 0f, 1f);
+        ConfThresholdTextBox.Text = _lastConfidence
+            .ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>把外部设置写入模板匹配阈值输入框</summary>
+    public void SetMatchThreshold(float value)
+    {
+        MatchThresholdTextBox.Text = value.ToString("0.##",
+            System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>把外部设置写入「最大丢失帧数」输入框</summary>
+    public void SetMaxTrail(int value)
+    {
+        MaxTrailTextBox.Text = value.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 }

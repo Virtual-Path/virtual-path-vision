@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using OpenCvSharp;
 
@@ -23,17 +24,31 @@ namespace VirtualPathVision.Components
     /// <summary>
     /// 视频采集组件，支持本地摄像头和网络视频流两种信号源。
     /// 提供异步帧捕获、连接状态管理以及资源释放功能。
+    ///
+    /// 线程模型约定（重要）：
+    /// VideoCapture 的所有原生句柄（_capture/_frame/_grayFrame）只允许由采集循环线程
+    /// 或在采集循环已退出后访问。StopCapture() 不会直接释放句柄，
+    /// 而是先通知循环退出、等循环结束后由 Cleanup 统一释放，从而避免 Read() 执行中途被释放。
+    /// 面向 UI 的查询接口（GetFrameRate/GetResolution）只读取缓存的标量，不触碰原生句柄。
     /// </summary>
     public class VideoCaptureComponent : IDisposable
     {
-        private VideoCapture? _capture;   // OpenCV 视频捕获对象
+        private VideoCapture? _capture;   // OpenCV 视频捕获对象（仅采集循环/已停止时访问）
         private Mat? _frame;              // 原始帧
         private Mat? _grayFrame;          // 灰度帧
-        private bool _isRunning;          // 捕获循环运行标志
+        private volatile bool _isRunning; // 捕获循环运行标志
         private readonly object _lock = new(); // 多线程锁
         private bool _disposed;           // 是否已释放
+        private int _cleanupDone;         // Interlocked 守卫：确保原生资源只释放一次
+        private ManualResetEventSlim? _loopFinished;
+        private Task? _captureLoop;
         private VideoSourceType _sourceType = VideoSourceType.LocalCamera;
         private string _networkUrl = "";
+
+        // 缓存的采集参数，供 UI 线程安全读取（不触碰原生句柄）
+        private double _cachedFps;
+        private int _cachedWidth;
+        private int _cachedHeight;
 
         /// <summary>当前使用的信号源类型</summary>
         public VideoSourceType SourceType
@@ -73,45 +88,49 @@ namespace VirtualPathVision.Components
         {
             lock (_lock)
             {
-                if (_isRunning)
-                    return true;
+                if (_disposed) return false;
+                if (_isRunning) return true;
+
+                // 若上一次采集循环仍在收尾，先把它的原生资源释放掉
+                CleanupCapture();
 
                 try
                 {
-                    State = ConnectionState.Connecting;
-                    OnConnectionStateChanged?.Invoke(State);
+                    SetState(ConnectionState.Connecting);
 
                     // 根据信号源类型选择打开方式
-                    if (_sourceType == VideoSourceType.LocalCamera)
-                        _capture = OpenLocalCamera();
-                    else
-                        _capture = OpenNetworkStream();
+                    _capture = _sourceType == VideoSourceType.LocalCamera
+                        ? OpenLocalCamera()
+                        : OpenNetworkStream();
 
                     // 检查摄像头是否成功打开
                     if (_capture == null || !_capture.IsOpened())
                     {
-                        State = ConnectionState.Failed;
-                        OnConnectionStateChanged?.Invoke(State);
-                        OnCaptureError?.Invoke(TranslationService.GetStringStatic("CameraOpenError"));
                         _capture?.Release();
                         _capture = null;
+                        SetState(ConnectionState.Failed);
+                        OnCaptureError?.Invoke(TranslationService.GetStringStatic("CameraOpenError"));
                         return false;
                     }
 
                     _frame = new Mat();
                     _grayFrame = new Mat();
+                    _cachedFps = _capture.Get(VideoCaptureProperties.Fps);
+                    _cachedWidth = (int)_capture.Get(VideoCaptureProperties.FrameWidth);
+                    _cachedHeight = (int)_capture.Get(VideoCaptureProperties.FrameHeight);
+
+                    Interlocked.Exchange(ref _cleanupDone, 0);
+                    _loopFinished = new ManualResetEventSlim(false);
                     _isRunning = true;
-                    State = ConnectionState.Connected;
-                    OnConnectionStateChanged?.Invoke(State);
+                    SetState(ConnectionState.Connected);
 
                     // 启动后台异步捕获循环
-                    _ = CaptureAndProcessAsync();
+                    _captureLoop = Task.Run(() => CaptureAndProcessAsync(_loopFinished));
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    State = ConnectionState.Failed;
-                    OnConnectionStateChanged?.Invoke(State);
+                    SetState(ConnectionState.Failed);
                     OnCaptureError?.Invoke(TranslationService.GetStringStatic("CameraError") + $": {ex.Message}");
                     _isRunning = false;
                     _capture?.Release();
@@ -134,14 +153,23 @@ namespace VirtualPathVision.Components
             {
                 foreach (VideoCaptureAPIs api in apis)
                 {
+                    VideoCapture? cap = null;
                     try
                     {
-                        var cap = new VideoCapture(index, api);
+                        cap = new VideoCapture(index, api);
                         if (cap.IsOpened())
                             return cap;
-                        cap.Release();
                     }
                     catch { /* 当前组合失败，尝试下一个 */ }
+                    finally
+                    {
+                        // 仅在没被返回时才释放，避免泄漏
+                        if (cap != null && !cap.IsOpened())
+                        {
+                            cap.Release();
+                            cap.Dispose();
+                        }
+                    }
                 }
             }
             return null;
@@ -160,34 +188,97 @@ namespace VirtualPathVision.Components
 
             foreach (VideoCaptureAPIs api in apis)
             {
+                VideoCapture? cap = null;
                 try
                 {
-                    var cap = new VideoCapture(_networkUrl, api);
+                    cap = new VideoCapture(_networkUrl, api);
                     if (cap.IsOpened())
                         return cap;
-                    cap.Release();
                 }
                 catch { }
+                finally
+                {
+                    if (cap != null && !cap.IsOpened())
+                    {
+                        cap.Release();
+                        cap.Dispose();
+                    }
+                }
             }
             return null;
         }
 
-        /// <summary>停止视频捕获，释放摄像头资源</summary>
+        /// <summary>
+        /// 停止视频捕获。
+        /// 先通知采集循环退出并等待其结束，再统一释放原生资源，
+        /// 以免在 Read() 执行过程中释放 VideoCapture。
+        /// </summary>
         public void StopCapture()
         {
+            Task? loop;
+            ManualResetEventSlim? finished;
+
             lock (_lock)
             {
-                if (!_isRunning)
+                if (!_isRunning && _capture == null)
+                {
+                    // 采集循环已自行退出并清理完毕
                     return;
-
+                }
                 _isRunning = false;
-                _capture?.Release();
-                _capture = null;
-
-                State = ConnectionState.Disconnected;
-                OnConnectionStateChanged?.Invoke(State);
-                OnCaptureStopped?.Invoke(null);
+                loop = _captureLoop;
+                finished = _loopFinished;
             }
+
+            // 等待采集循环结束（最多 1 秒）。正常情况下循环会在 ~130ms 内退出。
+            // 采集线程在退出时不会再反向等待 UI 线程（finished 先于事件触发），
+            // 因此这里不会死锁。
+            if (loop != null && finished != null && !finished.Wait(1000))
+            {
+                OnCaptureError?.Invoke(TranslationService.GetStringStatic("CameraError") +
+                    ": capture loop did not stop in time");
+            }
+
+            // 循环若已自行清理，这里是空操作；否则强制清理
+            CleanupCapture();
+
+            bool wasDisconnected;
+            lock (_lock)
+            {
+                wasDisconnected = State == ConnectionState.Disconnected;
+                _loopFinished?.Dispose();
+                _loopFinished = null;
+                _captureLoop = null;
+            }
+
+            if (wasDisconnected)
+                OnCaptureStopped?.Invoke(null);
+        }
+
+        /// <summary>
+        /// 统一释放原生资源。用 Interlocked 守卫保证并发调用下只执行一次，
+        /// 且重复调用不会重复触发状态事件。
+        /// </summary>
+        private void CleanupCapture()
+        {
+            if (Interlocked.Exchange(ref _cleanupDone, 1) == 1)
+                return;
+
+            var capture = _capture;
+            _capture = null;
+            _frame?.Dispose();
+            _frame = null;
+            _grayFrame?.Dispose();
+            _grayFrame = null;
+            _isRunning = false;
+            try { capture?.Release(); } catch { }
+        }
+
+        /// <summary>更新连接状态并通知订阅者（调用方需持有 _lock）</summary>
+        private void SetState(ConnectionState state)
+        {
+            State = state;
+            OnConnectionStateChanged?.Invoke(state);
         }
 
         /// <summary>
@@ -195,68 +286,77 @@ namespace VirtualPathVision.Components
         /// 持续从摄像头读取帧 → 转灰度 → 触发事件回调。
         /// 当 _isRunning 为 false 时自动退出并清理资源。
         /// </summary>
-        private async Task CaptureAndProcessAsync()
+        private Task CaptureAndProcessAsync(ManualResetEventSlim finished)
         {
-            while (_isRunning)
+            string? error = null;
+            try
             {
-                if (_capture == null || _frame == null || _grayFrame == null)
+                while (_isRunning)
                 {
-                    await Task.Delay(50);
-                    continue;
-                }
-
-                try
-                {
-                    // 读取一帧
-                    bool readSuccess = _capture.Read(_frame);
-                    if (!readSuccess || _frame.Empty())
+                    var capture = _capture;
+                    var frame = _frame;
+                    var gray = _grayFrame;
+                    if (capture == null || frame == null || gray == null)
                     {
-                        await Task.Delay(100);
+                        Task.Delay(50).GetAwaiter().GetResult();
                         continue;
                     }
 
-                    // 转灰度后触发回调
-                    Cv2.CvtColor(_frame, _grayFrame, ColorConversionCodes.BGR2GRAY);
-                    OnFrameCaptured?.Invoke(_frame, _grayFrame);
-                }
-                catch (Exception ex)
-                {
-                    // 摄像头异常断开/驱动错误：上报错误并退出循环
-                    OnCaptureError?.Invoke(TranslationService.GetStringStatic("CameraError") + $": {ex.Message}");
-                    break;
-                }
+                    try
+                    {
+                        // 读取一帧
+                        bool readSuccess = capture.Read(frame);
+                        if (!readSuccess || frame.Empty())
+                        {
+                            Task.Delay(100).GetAwaiter().GetResult();
+                            continue;
+                        }
 
-                await Task.Delay(30); // ~33 FPS 上限
+                        // 转灰度后触发回调（同步执行，调用返回前结果已被消费）
+                        Cv2.CvtColor(frame, gray, ColorConversionCodes.BGR2GRAY);
+                        OnFrameCaptured?.Invoke(frame, gray);
+                    }
+                    catch (Exception ex)
+                    {
+                        // 摄像头异常断开/驱动错误：上报错误并退出循环
+                        error = TranslationService.GetStringStatic("CameraError") + $": {ex.Message}";
+                        break;
+                    }
+
+                    Task.Delay(30).GetAwaiter().GetResult(); // ~33 FPS 上限
+                }
             }
-
-            // 循环退出后的资源清理
-            lock (_lock)
+            finally
             {
-                try { _capture?.Release(); _capture = null; } catch { }
-                _isRunning = false;
-                if (State != ConnectionState.Disconnected)
+                // 循环退出后的资源清理（此后已无人再访问原生句柄）
+                CleanupCapture();
+
+                // 必须先 Set 再触发任何会 Dispatcher.Invoke 的事件：
+                // StopCapture() 在 UI 线程上等待 finished，
+                // 若在 Set 之前同步通知订阅者，UI 线程会被反向等待而死锁。
+                finished.Set();
+
+                lock (_lock)
                 {
-                    State = ConnectionState.Disconnected;
-                    OnConnectionStateChanged?.Invoke(State);
+                    if (State != ConnectionState.Disconnected)
+                        SetState(ConnectionState.Disconnected);
                 }
-                OnCaptureStopped?.Invoke(TranslationService.GetStringStatic("CameraStopped"));
             }
+
+            if (error != null)
+                OnCaptureError?.Invoke(error);
+            OnCaptureStopped?.Invoke(error == null
+                ? TranslationService.GetStringStatic("CameraStopped")
+                : null);
+            return Task.CompletedTask;
         }
 
-        /// <summary>获取当前视频帧率</summary>
-        public double GetFrameRate()
-        {
-            return _capture?.Get(VideoCaptureProperties.Fps) ?? 0;
-        }
+        /// <summary>获取当前视频帧率（读取缓存值，不触碰原生句柄）</summary>
+        public double GetFrameRate() => _cachedFps;
 
-        /// <summary>获取当前视频分辨率</summary>
+        /// <summary>获取当前视频分辨率（读取缓存值，不触碰原生句柄）</summary>
         public System.Windows.Size GetResolution()
-        {
-            if (_capture == null) return new System.Windows.Size(0, 0);
-            int width = (int)_capture.Get(VideoCaptureProperties.FrameWidth);
-            int height = (int)_capture.Get(VideoCaptureProperties.FrameHeight);
-            return new System.Windows.Size(width, height);
-        }
+            => new System.Windows.Size(_cachedWidth, _cachedHeight);
 
         /// <summary>获取当前信号源描述信息</summary>
         public string GetSourceInfo()
@@ -272,8 +372,7 @@ namespace VirtualPathVision.Components
             if (_disposed) return;
             _disposed = true;
             StopCapture();
-            _frame?.Dispose();
-            _grayFrame?.Dispose();
+            CleanupCapture();
             GC.SuppressFinalize(this);
         }
     }

@@ -33,7 +33,7 @@
 ## 功能特性
 
 - **双信号源** – 本地 USB 摄像头或网络 IP 摄像头（RTSP / MJPEG over HTTP）
-- **人脸检测** – Haar 级联分类器，支持自定义检测框样式
+- **人脸检测** – OpenCV 5 DNN 检测器（YuNet ONNX），绘制检测框、5 个面部关键点与置信度
 - **11 种处理模式** – Canny、Sobel、Laplacian、二值化、轮廓、QR/条码、颜色检测、模板匹配、形状识别、特征点匹配、图像增强
 - **QR / 条码** – 实时解码二维码与一维条码（EAN/UPC/Code128/Code39），画面直接显示识别结果
 - **颜色检测** – 基于 HSV 的 9 种预设颜色检测与目标计数，支持点击画面直接取色
@@ -46,7 +46,7 @@
 - **网络摄像头** – 通过 IP Webcam 类应用连接手机摄像头
 - **双语支持** – 内置中文与英文，运行时一键切换
 - **明暗双主题** – Apple 风格卡片界面，运行时切换主题（含"跟随系统"）与可折叠侧边栏
-- **AI 主动感知** – YOLO 目标检测、卡尔曼多目标跟踪与数字孪生叠加
+- **AI 主动感知** – YOLO 目标检测、卡尔曼多目标跟踪与数字孪生叠加（需自行提供 `.onnx` 模型，仓库不含模型）
 - **AWS 云服务** – S3 截图上传、IoT Core 遥测、Lambda 调用
 - **工业互联** – Modbus TCP、OPC UA、串口 / TCP 条码枪与报工导出
 - **自适应布局** – 窄窗口自动堆叠；2K/4K 屏清晰（PerMonitorV2 DPI）
@@ -117,37 +117,43 @@
 ## 项目结构
 
 ```
-VirtualPathVision/
-├── App.xaml / App.xaml.cs           # 应用入口、DI 容器、主题初始化
-├── MainWindow.xaml / .cs            # 主界面、导航与事件编排
-├── SettingsWindow.xaml / .cs        # 设置窗口（语言 + 主题）
-├── ThemeService.cs                  # 明/暗/跟随系统 主题切换
-├── TranslationService.cs            # i18n 单例服务（INotifyPropertyChanged）
-├── AppLogger.cs                     # 日志服务（单例）
-├── app.manifest                     # PerMonitorV2 DPI 感知
-├── Resources/
-│   ├── Strings.resx                 # 中文资源（回退语言）
-│   └── Strings.en.resx              # 英文资源
-├── Themes/
-│   ├── LightTheme.xaml              # Apple 风格浅色配色 + 控件样式
-│   └── DarkTheme.xaml               # Apple 风格深色配色 + 控件样式
-├── Views/                           # 每页一个 UserControl
-│   ├── CameraPanel.xaml / .cs       # 首页：采集、预览、截图/录像
-│   ├── ProcessingPanel.xaml / .cs   # 11 种处理模式 + 阈值
-│   ├── AIPanel.xaml / .cs           # YOLO 检测、跟踪、数字孪生
-│   ├── CloudPanel.xaml / .cs        # AWS S3 / IoT Core / Lambda
-│   ├── IndustrialPanel.xaml / .cs   # Modbus / OPC UA / 条码枪 / 报工
-│   ├── LogPanel.xaml / .cs          # 应用日志
-├── AI/                              # 主动感知、卡尔曼跟踪、数字孪生
-├── Cloud/                           # S3Service、IoTService、LambdaClient
-├── Industrial/                      # Modbus、OPC UA、串口/TCP 条码枪、DI 工厂
-├── Components/                      # 采集 + 10 个图像处理组件
-├── Converters/                      # 值转换器（日志级别 → 颜色 等）
+├── VirtualPathVision/               # 应用工程
+│   ├── App.xaml / App.xaml.cs       # 应用入口、DI 容器、全局异常兜底
+│   ├── MainWindow.xaml / .cs        # 主界面、导航与事件编排
+│   ├── SettingsWindow.xaml / .cs    # 设置窗口（语言 + 主题）
+│   ├── ThemeService.cs              # 明/暗/跟随系统 主题切换
+│   ├── TranslationService.cs        # i18n 单例服务（INotifyPropertyChanged）
+│   ├── UserSettings.cs              # user_settings.json 的加锁 + 原子读写
+│   ├── AppConfig.cs                 # AI / AWS 配置段的强类型绑定
+│   ├── AppLogger.cs                 # 日志服务（单例，封送到 UI 线程）
+│   ├── app.manifest                 # PerMonitorV2 DPI 感知
+│   ├── appsettings.json             # 工业互联 / AI / AWS 参数（启动时读取一次）
+│   ├── Resources/
+│   │   ├── Strings.resx             # 中文资源（回退语言）
+│   │   └── Strings.en.resx          # 英文资源
+│   ├── Themes/
+│   │   ├── LightTheme.xaml          # Apple 风格浅色配色 + 控件样式
+│   │   └── DarkTheme.xaml           # Apple 风格深色配色 + 控件样式
+│   ├── Views/                       # 每页一个 UserControl
+│   │   ├── CameraPanel.xaml / .cs   # 首页：采集、预览、截图/录像
+│   │   ├── ProcessingPanel.xaml / .cs   # 11 种处理模式 + 阈值
+│   │   ├── AIPanel.xaml / .cs       # YOLO 检测、跟踪、数字孪生
+│   │   ├── CloudPanel.xaml / .cs    # AWS S3 / IoT Core / Lambda
+│   │   ├── IndustrialPanel.xaml / .cs   # Modbus / OPC UA / 条码枪 / 报工
+│   │   └── LogPanel.xaml / .cs      # 应用日志
+│   ├── AI/                          # 主动感知、卡尔曼跟踪、数字孪生、缺陷判定
+│   ├── Cloud/                       # S3Service、IoTService、LambdaClient
+│   ├── Industrial/                  # Modbus、OPC UA、串口/TCP 条码枪、报工存储
+│   ├── Components/                  # 采集 + 图像处理组件
+│   ├── Converters/                  # 值转换器（日志级别 → 颜色 等）
+│   ├── face_detection_yunet_2023mar.onnx
+│   └── haarcascade_frontalface_default.xml
 ├── TestImages/                      # 测试图片（场景、模板、人脸照片）
-├── docs/images/                     # README 使用的截图
-├── face_detection_yunet_2023mar.onnx
-└── haarcascade_frontalface_default.xml
+└── docs/images/                     # README 使用的截图
 ```
+
+> **说明：** `haarcascade_frontalface_default.xml` 已不再使用——人脸检测完全基于
+> YuNet DNN 模型，该文件仅作参考保留。
 
 ### 核心架构
 
@@ -156,25 +162,27 @@ VirtualPathVision/
 | `VideoCaptureComponent` | `LocalCamera` / `NetworkStream` 双信号源，自动降级尝试 API（DSHOW → MSMF → ANY），连接状态机 |
 | `ImageDisplayComponent` | 批量 `Dispatcher.Invoke` 双图更新 |
 | `ImageProcessingComponent` | 5 种经典模式：Canny、Sobel、Laplacian、二值化、轮廓检测 |
-| `FaceDetectionComponent` | `DetectMultiScale` + 直方图均衡预处理 + 检测框绘制 |
-| `BarcodeDetectionComponent` | ZXing.Net 解码 QR/DataMatrix/EAN/UPC/Code128/Code39，帧节流 + 结果缓存 |
-| `ColorDetectionComponent` | HSV `InRange` 掩码 + 形态学 + 轮廓计数，9 种预设色 + 点击取色 |
-| `TemplateMatchComponent` | `MatchTemplate`（CCoeffNormed）+ 阈值过滤 + 分数叠加 |
-| `ShapeDetectionComponent` | Canny + 多边形逼近 + 圆形度分析，分类圆形/矩形/三角形/五边形/多边形 |
+| `FaceDetectionComponent` | OpenCV 5 `FaceDetectorYN`（YuNet ONNX）——检测框 + 5 个关键点 + 置信度；模型缺失时优雅降级为"不可用" |
+| `BarcodeDetectionComponent` | ZXing.Net 解码 QR/DataMatrix/EAN/UPC/Code128/Code39，帧节流 + 结果缓存（单调时钟计时） |
+| `ColorDetectionComponent` | HSV `InRange` 掩码 + 形态学 + 轮廓计数，9 种预设色 + 点击取色（支持跨色环接缝） |
+| `TemplateMatchComponent` | `MatchTemplate`（CCoeffNormed）+ 阈值过滤 + 分数叠加，模板读写加锁 |
+| `ShapeDetectionComponent` | Canny + 多边形逼近 + 圆形度分析，分类圆形/矩形/三角形/五边形/多边形；共用主界面的 Canny 阈值滑块 |
 | `FeatureMatchComponent` | ORB 特征点 + BFMatcher 比率测试 + RANSAC 单应矩阵，绘制透视定位框 |
 | `EnhancementComponent` | CLAHE 直方图均衡 + 非锐化掩模 |
-| `RecordingComponent` | `VideoWriter` AVI 录制（MJPG 编码） |
-| `ThresholdParameterComponent` | 输入校验并触发 `OnThresholdsChanged` |
-| `TranslationService` | `INotifyPropertyChanged` 单例，基于 `ResourceManager`，切换文化时全量刷新 |
-| `AppLogger` | `ObservableCollection<LogEntry>` 单例，INFO/WARN/ERROR 三级 |
+| `RecordingComponent` | `VideoWriter` AVI 录制（MJPG 编码，帧率取自信号源实际值） |
+| `ThresholdParameterComponent` | 范围/大小关系校验并触发 `OnThresholdsChanged` |
+| `TranslationService` | `INotifyPropertyChanged` 单例，基于 `ResourceManager`，同时设置 `DefaultThreadCurrent*` 以覆盖后台线程 |
+| `AppLogger` | 单例日志，INFO/WARN/ERROR 三级，上限 2000 条，自动封送到 UI 线程 |
 
 ---
 
 ## 国际化
 
 - 默认语言为**英文**（点击标题栏 **EN/中** 切换到中文）
-- 所有 UI 文案由 `.resx` 资源文件管理
+- 所有面向用户的 UI 文案由 `.resx` 资源文件管理
 - 新增语言：复制 `Strings.en.resx`，重命名为 `Strings.xx.resx` 并翻译即可
+
+> **说明：** 各驱动/组件输出的诊断日志目前仍为中文，仅出现在**日志**面板，尚未国际化。
 
 ---
 
@@ -190,6 +198,17 @@ VirtualPathVision/
   - `AWSSDK.S3` / `AWSSDK.Lambda` / `AWSSDK.SimpleNotificationService` – AWS 集成
   - `NModbus` / `OPCFoundation.NetStandard.Opc.Ua.*` – 工业协议
   - `Microsoft.Data.Sqlite` – 本地报工数据存储
+
+### 配置说明
+
+`VirtualPathVision/appsettings.json` 只在**启动时读取一次**，修改后需重启程序才会生效。
+界面偏好（语言、主题、侧栏展开状态）保存在可执行文件同目录的 `user_settings.json`。
+
+| 配置段 | 内容 |
+|--------|------|
+| `Industrial` | Modbus TCP、OPC UA、串口条码枪、TCP 条码枪、报工数据库 |
+| `AI` | YOLO 模型路径、置信度 / NMS 阈值、输入尺寸、最大丢失帧数 |
+| `AWS` | 区域、S3 桶、IoT 端点与证书路径、Topic 前缀、Lambda 函数 |
 
 ---
 

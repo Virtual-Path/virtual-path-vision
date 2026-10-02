@@ -27,13 +27,13 @@ namespace VirtualPathVision.Components
     {
         private int _gaussianKernelSize = 5;
 
-        /// <summary>高斯模糊核大小（奇数，默认 5）</summary>
+        /// <summary>高斯模糊核大小（奇数，默认 5）。OpenCV 对 ksize 有上限约束，这里限制在 3~99。</summary>
         public int GaussianKernelSize
         {
             get => _gaussianKernelSize;
             set
             {
-                int v = Math.Max(value, 3);
+                int v = Math.Clamp(value, 3, 99);
                 _gaussianKernelSize = v % 2 == 1 ? v : v + 1;
             }
         }
@@ -50,6 +50,10 @@ namespace VirtualPathVision.Components
         public Mat Process(Mat grayFrame, ProcessingMode mode, int threshold1, int threshold2, out int contourCount)
         {
             contourCount = 0;
+
+            // 空图直接返回，避免 OpenCV 内部断言失败
+            if (grayFrame == null || grayFrame.Empty())
+                return new Mat();
 
             using Mat blurred = new Mat();
             Cv2.GaussianBlur(grayFrame, blurred, new Size(_gaussianKernelSize, _gaussianKernelSize), 1.5);
@@ -76,7 +80,10 @@ namespace VirtualPathVision.Components
         /// <summary>Sobel 梯度幅值</summary>
         private static Mat ProcessSobel(Mat blurred)
         {
-            Mat gradX = new Mat(), gradY = new Mat(), grad = new Mat();
+            // gradX/gradY 仅为中间量，必须释放，否则每帧泄漏两个原生 Mat
+            using Mat gradX = new Mat();
+            using Mat gradY = new Mat();
+            Mat grad = new Mat();
             Cv2.Sobel(blurred, gradX, MatType.CV_16S, 1, 0, 3);
             Cv2.Sobel(blurred, gradY, MatType.CV_16S, 0, 1, 3);
             Cv2.ConvertScaleAbs(gradX, gradX);
@@ -112,15 +119,14 @@ namespace VirtualPathVision.Components
             using Mat edges = new Mat();
             Cv2.Canny(blurred, edges, t1, t2);
 
-            // 膨胀使边缘连续
+            // 膨胀使边缘连续（kernel 为原生 Mat，必须释放）
             using Mat dilated = new Mat();
-            Mat kernel = Cv2.GetStructuringElement(MorphShapes.Rect, new Size(3, 3));
+            using Mat kernel = Cv2.GetStructuringElement(MorphShapes.Rect, new Size(3, 3));
             Cv2.Dilate(edges, dilated, kernel);
 
             // 查找轮廓
-            OpenCvSharp.Point[][] contours;
-            HierarchyIndex[] hierarchy;
-            Cv2.FindContours(dilated, out contours, out hierarchy, RetrievalModes.External, ContourApproximationModes.ApproxSimple);
+            Cv2.FindContours(dilated, out OpenCvSharp.Point[][] contours, out _,
+                RetrievalModes.External, ContourApproximationModes.ApproxSimple);
 
             // 在彩色底图上绘制轮廓
             Mat result = new Mat();

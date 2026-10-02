@@ -40,8 +40,14 @@ public partial class LogPanel : UserControl
         ClearRequested?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// 列表选中变化时不再强制滚到底。
+    /// 旧实现让用户每次点击历史日志都会被强行拉回最新一条，
+    /// 导致旧日志无法查看。
+    /// 自动滚动已由 MainWindow 监听 AppLogger.OnLogAdded 完成。
+    /// </summary>
     private void LogListBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
-        ScrollToBottom();
+        // 故意留空：仅保留以便 XAML 事件绑定不失效
     }
 }

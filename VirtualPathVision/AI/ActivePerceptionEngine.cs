@@ -12,21 +12,56 @@ namespace VirtualPathVision.AI
         private readonly YoloDetectionComponent _detector;
         private readonly KalmanTrackerComponent _tracker;
 
-        // 主动感知参数
-        private int _frameCount;
-        private int _adaptiveInterval = 1;       // 自适应采样间隔（帧）
-        private readonly int _minInterval = 1;   // 最小采样间隔
-        private readonly int _maxInterval = 5;   // 最大采样间隔
+        // 自适应采样状态（_frameCount 用 long，避免 2^31 帧后溢出为负数）
+        private long _frameCount;
+        private long _detectionFrameIndex;                 // 检测帧计数（仅在执行检测时递增）
+        private int _adaptiveInterval = 1;                 // 自适应采样间隔（帧）
+        private readonly int _minInterval = 1;             // 最小采样间隔
+        private readonly int _maxInterval = 5;             // 最大采样间隔
 
         // 兴趣区域（ROI）管理
         private readonly List<Rect> _regionsOfInterest = new();
-        private readonly int _maxRois = 5;
+        private readonly int _maxRois = 5;                 // 最多保留的 ROI 数量
+        private readonly int _maxRoisPerFrame = 2;         // 单个检测帧最多执行的 ROI 推理次数
+        private readonly int _roiDetectInterval = 3;       // ROI 推理帧间隔（按检测帧计数）
 
-        /// <summary>当前帧的检测结果</summary>
-        public List<Detection> CurrentDetections { get; private set; } = new();
+        // 去重参数
+        private const float MinDedupTolerance = 30f;       // 去重容差下限(px)
+        private const float DedupToleranceRatio = 0.5f;    // 去重容差 = 比例 * 目标尺寸
 
-        /// <summary>当前跟踪目标</summary>
-        public List<TrackedObject> CurrentTracks { get; private set; } = new();
+        // ROI 最小边长：过小的 ROI 送入网络没有意义，且放大误差会放大检测结果
+        private const int MinRoiSize = 24;
+
+        /// <summary>运动目标才建立 ROI 的最小速度(px/frame)</summary>
+        private const float RoiMinSpeed = 2.0f;
+
+        private readonly object _stateLock = new();
+
+        // 已发布状态：发布后不再就地修改，外部只能拿到快照
+        private List<Detection> _currentDetections = new();
+        private List<TrackedObject> _currentTracks = new();
+
+        /// <summary>
+        /// 当前帧的检测结果（返回副本，UI 线程可安全读取）。
+        /// </summary>
+        public List<Detection> CurrentDetections
+        {
+            get
+            {
+                lock (_stateLock) return new List<Detection>(_currentDetections);
+            }
+        }
+
+        /// <summary>
+        /// 当前跟踪目标（返回副本；元素为跟踪器的状态快照，UI 线程可安全读取）。
+        /// </summary>
+        public List<TrackedObject> CurrentTracks
+        {
+            get
+            {
+                lock (_stateLock) return new List<TrackedObject>(_currentTracks);
+            }
+        }
 
         /// <summary>当前自适应采样间隔</summary>
         public int AdaptiveInterval => _adaptiveInterval;
@@ -52,6 +87,9 @@ namespace VirtualPathVision.AI
         /// <returns>当前帧是否需要执行完整检测（自适应采样）</returns>
         public bool ProcessFrame(Mat frame)
         {
+            if (frame is null || frame.Empty())
+                return false;
+
             _frameCount++;
 
             // 自适应采样：根据场景复杂度调整检测频率
@@ -60,10 +98,8 @@ namespace VirtualPathVision.AI
             if (shouldDetect)
             {
                 // 在全局或 ROI 区域执行检测
-                CurrentDetections = DetectInRegions(frame);
-
-                // 更新跟踪器
-                CurrentTracks = _tracker.Update(CurrentDetections);
+                var detections = DetectInRegions(frame);
+                Publish(detections, _tracker.Update(detections));
 
                 // 根据跟踪状态调整策略
                 AdjustPerceptionStrategy();
@@ -71,10 +107,24 @@ namespace VirtualPathVision.AI
             else
             {
                 // 非检测帧：仅用 Kalman 预测维持跟踪状态
-                CurrentTracks = _tracker.Update(new List<Detection>());
+                // 注意：这里会让所有轨迹的 FramesSinceUpdate 递增，因此
+                // maxLostFrames 实际约束的是"允许跳过的总帧数"，此处保持原有行为不变。
+                Publish(_currentDetections, _tracker.Update(new List<Detection>()));
             }
 
             return shouldDetect;
+        }
+
+        /// <summary>
+        /// 发布本帧状态（原子替换，外部通过快照读取）。
+        /// </summary>
+        private void Publish(List<Detection> detections, List<TrackedObject> tracks)
+        {
+            lock (_stateLock)
+            {
+                _currentDetections = detections;
+                _currentTracks = tracks;
+            }
         }
 
         /// <summary>
@@ -84,17 +134,34 @@ namespace VirtualPathVision.AI
         {
             var allDetections = new List<Detection>();
 
-            // 全局检测
+            // 全局检测（每次检测帧一次推理，覆盖常规目标）
             var globalDetections = _detector.Detect(frame);
             allDetections.AddRange(globalDetections);
 
-            // 在 ROI 区域执行局部检测（提高小目标检出率）
-            foreach (var roi in _regionsOfInterest)
+            // ---- ROI 局部检测的算力取舍 ----
+            // ROI 推理与全局推理是同一个 640x640 网络，单次耗时相同。若每帧都跑满 _maxRois(5) 个 ROI，
+            // 单帧最多 6 次 CPU 推理，实时帧率会被直接压垮。
+            // 因此：每 _roiDetectInterval(3) 个检测帧才执行一次 ROI，且单帧最多 _maxRoisPerFrame(2) 个 ROI。
+            // 代价是小目标/偶发漏检目标的复查频率下降；收益是检测帧耗时可控且仍保留 ROI 增强效果。
+            bool runRoiPass = _detectionFrameIndex % _roiDetectInterval == 0;
+            int roiBudget = runRoiPass ? _maxRoisPerFrame : 0;
+            _detectionFrameIndex++;
+
+            int roiCount = Math.Min(roiBudget, _regionsOfInterest.Count);
+            for (int i = 0; i < roiCount; i++)
             {
-                // 确保 ROI 在帧范围内
+                var roi = _regionsOfInterest[i];
+
+                // 确保 ROI 完全落在帧范围内；越界/过小直接跳过，
+                // 否则 new Mat(frame, roi) 会触发 OpenCVSharp 的 ROI 断言异常
                 var safeRoi = ClampRoi(roi, frame.Width, frame.Height);
+                if (safeRoi.Width <= 0 || safeRoi.Height <= 0)
+                    continue;
+
                 using Mat roiMat = new Mat(frame, safeRoi);
                 var roiDetections = _detector.Detect(roiMat);
+                if (roiDetections.Count == 0)
+                    continue;
 
                 // 将 ROI 检测坐标转换回全局坐标
                 foreach (var det in roiDetections)
@@ -109,12 +176,24 @@ namespace VirtualPathVision.AI
                         det.Center.Y + safeRoi.Y);
                 }
 
-                // 避免重复（与全局检测去重）
+                // 与已有检测（全局 + 已处理的 ROI）去重，容差随目标尺寸成比例放大
                 foreach (var roiDet in roiDetections)
                 {
-                    bool isDuplicate = allDetections.Any(g =>
-                        Math.Abs(g.Center.X - roiDet.Center.X) < 30 &&
-                        Math.Abs(g.Center.Y - roiDet.Center.Y) < 30);
+                    bool isDuplicate = false;
+                    foreach (var g in allDetections)
+                    {
+                        float tol = MathF.Max(MinDedupTolerance,
+                            DedupToleranceRatio * MathF.Max(
+                                MathF.Max(g.BoundingBox.Width, g.BoundingBox.Height),
+                                MathF.Max(roiDet.BoundingBox.Width, roiDet.BoundingBox.Height)));
+                        if (MathF.Abs(g.Center.X - roiDet.Center.X) < tol &&
+                            MathF.Abs(g.Center.Y - roiDet.Center.Y) < tol)
+                        {
+                            isDuplicate = true;
+                            break;
+                        }
+                    }
+
                     if (!isDuplicate)
                         allDetections.Add(roiDet);
                 }
@@ -129,7 +208,7 @@ namespace VirtualPathVision.AI
         private void AdjustPerceptionStrategy()
         {
             int activeCount = _tracker.ActiveCount;
-            int lostCount = CurrentTracks.Count(t => t.IsLost);
+            int lostCount = _currentTracks.Count(t => t.IsLost);
 
             // 策略 1：目标多时降低采样频率（节省算力）
             if (activeCount > 10)
@@ -153,18 +232,21 @@ namespace VirtualPathVision.AI
         {
             _regionsOfInterest.Clear();
 
-            foreach (var track in CurrentTracks.Where(t => !t.IsLost))
+            foreach (var track in _currentTracks)
             {
-                // 根据速度预测下一步可能位置
+                if (track.IsLost) continue;
+
+                // 根据速度预测下一步可能位置（跟踪器每帧都会刷新该预测）
                 var predicted = track.PredictedNextPosition;
                 if (predicted == default) continue;
+                if (!float.IsFinite(predicted.X) || !float.IsFinite(predicted.Y)) continue;
 
                 float speed = MathF.Sqrt(
                     track.Velocity.X * track.Velocity.X +
                     track.Velocity.Y * track.Velocity.Y);
 
                 // 只对运动目标创建 ROI
-                if (speed > 2.0f)
+                if (speed > RoiMinSpeed)
                 {
                     int roiSize = Math.Max(track.BoundingBox.Width, track.BoundingBox.Height) * 2;
                     var roi = new Rect(
@@ -189,7 +271,7 @@ namespace VirtualPathVision.AI
             }
 
             // 绘制检测结果
-            _detector.DrawDetections(frame, CurrentDetections);
+            _detector.DrawDetections(frame, _currentDetections);
 
             // 绘制跟踪结果（含轨迹和预测）
             _tracker.DrawTracks(frame);
@@ -206,18 +288,21 @@ namespace VirtualPathVision.AI
 
             string[] lines = {
                 $"[Active Perception] Frame: {_frameCount}",
-                $"Detections: {CurrentDetections.Count}",
-                $"Tracks: {CurrentTracks.Count} (Active: {_tracker.ActiveCount})",
+                $"Detections: {_currentDetections.Count}",
+                $"Tracks: {_currentTracks.Count} (Active: {_tracker.ActiveCount})",
                 $"Sample Interval: {_adaptiveInterval}",
                 $"ROI Regions: {_regionsOfInterest.Count}"
             };
 
+            int panelWidth = Math.Min(280, Math.Max(40, frame.Width - 20));
+            int panelHeight = Math.Min(lines.Length * lineHeight + 16, Math.Max(lineHeight + 16, frame.Height - 20));
+
             // 背景面板
             Cv2.Rectangle(frame,
-                new Rect(10, 10, 280, lines.Length * lineHeight + 16),
+                new Rect(10, 10, panelWidth, panelHeight),
                 new Scalar(0, 0, 0), Cv2.FILLED);
             Cv2.Rectangle(frame,
-                new Rect(10, 10, 280, lines.Length * lineHeight + 16),
+                new Rect(10, 10, panelWidth, panelHeight),
                 new Scalar(100, 100, 100), 1);
 
             foreach (var line in lines)
@@ -229,25 +314,41 @@ namespace VirtualPathVision.AI
             }
         }
 
-        /// <summary>将 ROI 裁剪到帧范围内</summary>
+        /// <summary>
+        /// 将 ROI 与帧范围求交，并把结果裁剪到帧内。
+        /// 四个边界都会裁剪；完全不相交（或裁剪后小于 <see cref="MinRoiSize"/>）时返回
+        /// 宽度/高度为 0 的无效 Rect，调用方必须据此跳过 ROI Mat 的构造。
+        /// </summary>
         private static Rect ClampRoi(Rect roi, int width, int height)
         {
-            int x = Math.Max(0, roi.X);
-            int y = Math.Max(0, roi.Y);
-            int w = Math.Min(roi.Width, width - x);
-            int h = Math.Min(roi.Height, height - y);
-            return new Rect(x, y, Math.Max(w, 1), Math.Max(h, 1));
+            if (width <= 0 || height <= 0 || roi.Width <= 0 || roi.Height <= 0)
+                return default;
+
+            // 左/上边界裁剪
+            int x1 = Math.Max(0, roi.X);
+            int y1 = Math.Max(0, roi.Y);
+            // 右/下边界裁剪（同样不能越界，否则 new Mat(frame, roi) 断言失败）
+            int x2 = Math.Min(width, roi.X + roi.Width);
+            int y2 = Math.Min(height, roi.Y + roi.Height);
+
+            int w = x2 - x1;
+            int h = y2 - y1;
+
+            if (w < MinRoiSize || h < MinRoiSize)
+                return default; // 无有效交集区域
+
+            return new Rect(x1, y1, w, h);
         }
 
         /// <summary>重置引擎状态</summary>
         public void Reset()
         {
             _frameCount = 0;
+            _detectionFrameIndex = 0;
             _adaptiveInterval = 1;
             _regionsOfInterest.Clear();
             _tracker.Reset();
-            CurrentDetections = new List<Detection>();
-            CurrentTracks = new List<TrackedObject>();
+            Publish(new List<Detection>(), new List<TrackedObject>());
         }
     }
 }

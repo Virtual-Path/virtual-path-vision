@@ -87,7 +87,7 @@ public partial class ProcessingPanel : UserControl
     {
         if (_suppressEvents || Threshold1TextBox == null || Threshold2Slider == null) return;
 
-        Threshold1TextBox.Text = ((int)Threshold1Slider.Value).ToString();
+        Threshold1TextBox.Text = ((int)Threshold1Slider.Value).ToString(System.Globalization.CultureInfo.InvariantCulture);
         ThresholdsChanged?.Invoke((int)Threshold1Slider.Value, (int)Threshold2Slider.Value);
     }
 
@@ -95,37 +95,65 @@ public partial class ProcessingPanel : UserControl
     {
         if (_suppressEvents || Threshold2TextBox == null || Threshold1Slider == null) return;
 
-        Threshold2TextBox.Text = ((int)Threshold2Slider.Value).ToString();
+        Threshold2TextBox.Text = ((int)Threshold2Slider.Value).ToString(System.Globalization.CultureInfo.InvariantCulture);
         ThresholdsChanged?.Invoke((int)Threshold1Slider.Value, (int)Threshold2Slider.Value);
     }
 
-    private void ApplyThresholdsButton_Click(object sender, RoutedEventArgs e)
-    {
-        ThresholdsChanged?.Invoke((int)Threshold1Slider.Value, (int)Threshold2Slider.Value);
-    }
+    // 注意：Apply 按钮的点击已不在本面板处理。
+    // 它由 ThresholdParameterComponent 统一订阅（MainWindow 构造时注入），
+    // 因为只有那里会做范围与大小关系校验。
+    // 此前本面板另有一个无校验的 Click 处理器，导致输入非法时
+    // 一边弹错误提示、一边又按滑块值静默生效。
 
+    /// <summary>
+    /// 处理模式下拉框变化。
+    ///
+    /// 旧实现依赖下拉项的显示文本判断该显示哪些面板，但下拉项是本地化后的
+    /// <see cref="string"/>（MainWindow.RefreshLocalizedControls 统一赋值），
+    /// 因此取到的 mode 恒为空串，整段可见性判断永远是 False。
+    /// 这里改为直接依据下拉索引（与 ProcessingMode 枚举顺序一致）判断，
+    /// 与语言无关。
+    /// </summary>
     private void ProcessingModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_suppressEvents || ThresholdPanel == null || ColorPanel == null || TemplatePanel == null || ModeLabelText == null) return;
 
         int index = ProcessingModeComboBox.SelectedIndex;
         if (index < 0 || index >= ProcessingModeComboBox.Items.Count) return;
-        string mode = ProcessingModeComboBox.Items[index] is ComboBoxItem item
-            ? item.Content?.ToString() ?? ""
-            : "";
 
-        ModeLabelText.Text = mode;
+        // 索引与 MainWindow.ProcessingPanelCtrl_ModeChanged 的映射保持一致
+        var mode = index switch
+        {
+            1 => Components.ProcessingMode.Sobel,
+            2 => Components.ProcessingMode.Laplacian,
+            3 => Components.ProcessingMode.Binary,
+            4 => Components.ProcessingMode.Contour,
+            5 => Components.ProcessingMode.QRCode,
+            6 => Components.ProcessingMode.ColorDetection,
+            7 => Components.ProcessingMode.TemplateMatch,
+            8 => Components.ProcessingMode.ShapeDetection,
+            9 => Components.ProcessingMode.FeatureMatch,
+            10 => Components.ProcessingMode.Enhancement,
+            _ => Components.ProcessingMode.Canny
+        };
 
-        bool showThreshold = mode is "Canny" or "Contour";
+        // 形状识别内部同样使用 Canny，故一并开放阈值调节
+        bool showThreshold = mode is Components.ProcessingMode.Canny
+            or Components.ProcessingMode.Contour
+            or Components.ProcessingMode.ShapeDetection;
         ThresholdPanel.Visibility = showThreshold ? Visibility.Visible : Visibility.Collapsed;
 
-        ColorPanel.Visibility = mode == "Color Detection" ? Visibility.Visible : Visibility.Collapsed;
-        PickColorHintText.Visibility = mode == "Color Detection" ? Visibility.Visible : Visibility.Collapsed;
+        bool isColorMode = mode == Components.ProcessingMode.ColorDetection;
+        ColorPanel.Visibility = isColorMode ? Visibility.Visible : Visibility.Collapsed;
+        PickColorHintText.Visibility = isColorMode ? Visibility.Visible : Visibility.Collapsed;
 
-        TemplatePanel.Visibility = mode is "Template Match" or "Feature Match"
+        TemplatePanel.Visibility = mode is Components.ProcessingMode.TemplateMatch
+            or Components.ProcessingMode.FeatureMatch
             ? Visibility.Visible
             : Visibility.Collapsed;
 
+        // 显示名由 MainWindow 通过 SetModeName 统一设置（使用当前语言的资源），
+        // 此处不再用可能为空的显示文本覆盖它。
         ModeChanged?.Invoke(index);
     }
 

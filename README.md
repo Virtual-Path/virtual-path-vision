@@ -33,7 +33,7 @@
 ## Features
 
 - **Dual Source** – Local USB camera or network IP camera (RTSP / MJPEG over HTTP)
-- **Face Detection** – Haar cascade classifier with configurable overlay style
+- **Face Detection** – OpenCV 5 DNN detector (YuNet ONNX) drawing bounding boxes plus 5 facial landmarks and a confidence score
 - **11 Processing Modes** – Canny, Sobel, Laplacian, Binary, Contour, QR/Barcode, Color Detection, Template Matching, Shape Detection, Feature Matching, Enhancement
 - **QR / Barcode** – Real-time decoding of QR codes and 1D barcodes (EAN/UPC/Code128/Code39) with on-screen result display
 - **Color Detection** – HSV-based detection with 9 preset colors, object counting, and click-to-pick sampling directly from the live image
@@ -46,7 +46,7 @@
 - **Network Camera** – Connect to phone cameras via IP Webcam apps
 - **i18n Support** – Built-in English and Chinese, switchable at runtime
 - **Light / Dark Themes** – Apple-style card UI with runtime theme switch (incl. *Follow system*) and a collapsible sidebar
-- **AI Active Perception** – YOLO object detection, Kalman multi-object tracking and a digital-twin overlay
+- **AI Active Perception** – YOLO object detection, Kalman multi-object tracking and a digital-twin overlay (you supply the `.onnx` model; none is bundled)
 - **AWS Cloud** – S3 screenshot upload, IoT Core telemetry and Lambda invocation
 - **Industrial Connectivity** – Modbus TCP, OPC UA, serial / TCP barcode scanners and work-report export
 - **Responsive Layout** – panels adapt and stack on narrow windows; crisp on 2K/4K displays (PerMonitorV2 DPI)
@@ -117,37 +117,43 @@ The app automatically constructs the MJPEG URL and starts streaming.
 ## Project Structure
 
 ```
-VirtualPathVision/
-├── App.xaml / App.xaml.cs           # Application entry, DI container, theme init
-├── MainWindow.xaml / .cs            # Main UI, navigation and event orchestration
-├── SettingsWindow.xaml / .cs        # Settings dialog (language + theme)
-├── ThemeService.cs                  # Light / Dark / System theme switching
-├── TranslationService.cs            # i18n singleton with INotifyPropertyChanged
-├── AppLogger.cs                     # Logging service (singleton)
-├── app.manifest                     # PerMonitorV2 DPI awareness
-├── Resources/
-│   ├── Strings.resx                 # Chinese resource strings (fallback)
-│   └── Strings.en.resx              # English resource strings
-├── Themes/
-│   ├── LightTheme.xaml              # Apple-style light palette + control styles
-│   └── DarkTheme.xaml               # Apple-style dark palette + control styles
-├── Views/                           # One UserControl per page
-│   ├── CameraPanel.xaml / .cs       # Home: capture, preview, screenshot / record
-│   ├── ProcessingPanel.xaml / .cs   # 11 processing modes + thresholds
-│   ├── AIPanel.xaml / .cs           # YOLO detection, tracking, digital twin
-│   ├── CloudPanel.xaml / .cs        # AWS S3 / IoT Core / Lambda
-│   ├── IndustrialPanel.xaml / .cs   # Modbus / OPC UA / scanners / work report
-│   ├── LogPanel.xaml / .cs          # Application log
-├── AI/                              # Active perception, Kalman tracking, digital twin
-├── Cloud/                           # S3Service, IoTService, LambdaClient
-├── Industrial/                      # Modbus, OPC UA, serial/TCP scanners, DI factory
-├── Components/                      # Capture + 10 image-processing components
-├── Converters/                      # Value converters (log level → colour, …)
+├── VirtualPathVision/               # Application project
+│   ├── App.xaml / App.xaml.cs       # Application entry, DI container, global exception handling
+│   ├── MainWindow.xaml / .cs        # Main UI, navigation and event orchestration
+│   ├── SettingsWindow.xaml / .cs    # Settings dialog (language + theme)
+│   ├── ThemeService.cs              # Light / Dark / System theme switching
+│   ├── TranslationService.cs        # i18n singleton with INotifyPropertyChanged
+│   ├── UserSettings.cs              # Thread-safe, atomic reader/writer for user_settings.json
+│   ├── AppConfig.cs                 # Typed binding for the AI / AWS config sections
+│   ├── AppLogger.cs                 # Bounded logging service (singleton, UI-thread marshalled)
+│   ├── app.manifest                 # PerMonitorV2 DPI awareness
+│   ├── appsettings.json             # Industrial / AI / AWS parameters (read once at startup)
+│   ├── Resources/
+│   │   ├── Strings.resx             # Chinese resource strings (fallback)
+│   │   └── Strings.en.resx          # English resource strings
+│   ├── Themes/
+│   │   ├── LightTheme.xaml          # Apple-style light palette + control styles
+│   │   └── DarkTheme.xaml           # Apple-style dark palette + control styles
+│   ├── Views/                       # One UserControl per page
+│   │   ├── CameraPanel.xaml / .cs   # Home: capture, preview, screenshot / record
+│   │   ├── ProcessingPanel.xaml / .cs   # 11 processing modes + thresholds
+│   │   ├── AIPanel.xaml / .cs       # YOLO detection, tracking, digital twin
+│   │   ├── CloudPanel.xaml / .cs    # AWS S3 / IoT Core / Lambda
+│   │   ├── IndustrialPanel.xaml / .cs   # Modbus / OPC UA / scanners / work report
+│   │   └── LogPanel.xaml / .cs      # Application log
+│   ├── AI/                          # Active perception, Kalman tracking, digital twin, defect rules
+│   ├── Cloud/                       # S3Service, IoTService, LambdaClient
+│   ├── Industrial/                  # Modbus, OPC UA, serial/TCP scanners, work-report store
+│   ├── Components/                  # Capture + image-processing components
+│   ├── Converters/                  # Value converters (log level → colour, …)
+│   ├── face_detection_yunet_2023mar.onnx
+│   └── haarcascade_frontalface_default.xml
 ├── TestImages/                      # Sample test images (scene, templates, face photo)
-├── docs/images/                     # Screenshots used by this README
-├── face_detection_yunet_2023mar.onnx
-└── haarcascade_frontalface_default.xml
+└── docs/images/                     # Screenshots used by this README
 ```
+
+> **Note:** `haarcascade_frontalface_default.xml` is no longer used — face detection
+> runs entirely on the YuNet DNN model. The file is kept only for reference.
 
 ### Key Architecture
 
@@ -156,25 +162,28 @@ VirtualPathVision/
 | `VideoCaptureComponent` | `VideoSourceType.LocalCamera` / `.NetworkStream`, auto-fallback APIs (DSHOW → MSMF → ANY), connection state machine |
 | `ImageDisplayComponent` | Batched `Dispatcher.Invoke` for dual-image update |
 | `ImageProcessingComponent` | 5 classic modes: Canny, Sobel, Laplacian, Binary Threshold, Contour Detection |
-| `FaceDetectionComponent` | `DetectMultiScale` + histogram equalization preprocessing + bounding box rendering |
+| `FaceDetectionComponent` | OpenCV 5 `FaceDetectorYN` (YuNet ONNX) — bounding box + 5 landmarks + confidence; degrades gracefully to "unavailable" if the model is missing |
 | `BarcodeDetectionComponent` | ZXing.Net decoding of QR/DataMatrix/EAN/UPC/Code128/Code39, frame-throttled with result caching |
 | `ColorDetectionComponent` | HSV `InRange` masks + morphology + contour counting for 9 preset colors, plus click-to-pick custom sampling |
 | `TemplateMatchComponent` | `MatchTemplate` (CCoeffNormed) with threshold gating and score overlay |
-| `ShapeDetectionComponent` | Canny + contour polygon approximation + circularity analysis, classifies circles/rects/triangles/pentagons/polygons |
+| `ShapeDetectionComponent` | Canny + contour polygon approximation + circularity analysis, classifies circles/rects/triangles/pentagons/polygons; shares the Canny threshold sliders |
 | `FeatureMatchComponent` | ORB keypoints + BFMatcher ratio test + RANSAC homography, draws perspective detection box |
 | `EnhancementComponent` | CLAHE histogram equalization + unsharp masking |
 | `RecordingComponent` | `VideoWriter`-based AVI recording with MJPG codec |
 | `ThresholdParameterComponent` | Validates input and fires `OnThresholdsChanged` |
 | `TranslationService` | `INotifyPropertyChanged` singleton, `ResourceManager`-backed, fires full refresh on culture switch |
-| `AppLogger` | `ObservableCollection<LogEntry>` singleton with INFO/WARN/ERROR levels |
+| `AppLogger` | Singleton with INFO/WARN/ERROR levels; capped at 2000 entries and marshalled onto the UI thread so it is safe to call from the capture thread |
 
 ---
 
 ## Internationalization
 
 - Default language is **English** (click **EN/中** in the title bar to switch to Chinese)
-- All UI strings are managed via `.resx` resource files
+- All user-facing UI labels are managed via `.resx` resource files
 - To add a new language: copy `Strings.en.resx`, rename to `Strings.xx.resx`, and translate the values
+
+> **Note:** diagnostic log messages emitted by the drivers are still written in
+> Chinese. They appear in the **Log** panel and are not translated yet.
 
 ---
 
@@ -190,6 +199,18 @@ VirtualPathVision/
   - `AWSSDK.S3` / `AWSSDK.Lambda` / `AWSSDK.SimpleNotificationService` – AWS integration
   - `NModbus` / `OPCFoundation.NetStandard.Opc.Ua.*` – industrial protocols
   - `Microsoft.Data.Sqlite` – local work-report storage
+
+### Configuration
+
+`VirtualPathVision/appsettings.json` is read **once at startup** — editing it takes
+effect after restarting the application. `user_settings.json` (written next to the
+executable) persists UI preferences such as language, theme and sidebar state.
+
+| Section | Keys |
+|---------|------|
+| `Industrial` | Modbus TCP, OPC UA, serial scanner, TCP scanner, work-report database |
+| `AI` | YOLO model path, confidence / NMS thresholds, input size, trail settings |
+| `AWS` | Region, S3 bucket, IoT endpoint + certificate paths, topic prefix, Lambda function |
 
 ---
 
