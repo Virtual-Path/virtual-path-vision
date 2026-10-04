@@ -7,6 +7,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <Platforms>AnyCPU;x64</Platforms>
+    <!--
+      限定 win-x64：不设 RID 时 SDK 会把每个依赖包里所有平台的原生资产都拷进
+      输出目录，Linux / macOS / win-arm 的 .so / .dylib / .a 在本应用里永远用不到
+      （实测每个配置约 18 MB）。AppendRuntimeIdentifierToOutputPath=false 是为了
+      保持输出路径仍为 bin\<Cfg>\net8.0-windows\，不变 bin\<Cfg>\net8.0-windows\win-x64\。
+    -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Version>3.1.1</Version>
     <Product>Virtual Path Vision</Product>

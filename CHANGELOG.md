@@ -27,6 +27,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and documented the OPC UA obsolete-API usage with a scoped `#pragma warning disable CS0618`.
 
 ### Changed
+- **Build output no longer ships foreign-platform native libraries.** Without a `RuntimeIdentifier`
+  the SDK copies every platform's native assets out of each dependency, so Linux/macOS/win-arm
+  `.so`/`.dylib`/`.a` files landed in the output of a Windows-only app — 18 MB per configuration.
+  The project now targets `win-x64`, cutting each configuration from 154 MB to 132 MB. The output
+  path is unchanged (`bin\<Cfg>\net8.0-windows\`, not `…\win-x64\`) and the win-x64 natives are
+  still shipped, now placed directly in the app root instead of under `runtimes\win-x64\native\`.
+- Removed the unreferenced `SidebarIcon` and `NavButton` styles from both themes (154 lines total).
+  Both were marked *“legacy, kept for compatibility”* but nothing referenced them via `StaticResource`,
+  `DynamicResource` or code.
 - **Sidebar redesigned.** The six nav items are split into *Workspace* (Camera, Image Processing,
   AI Detection) and *System & Integrations* (Cloud, Industrial, Log) groups with captions and a
   divider; settings and the collapse toggle became full-width rows matching the nav items instead of
