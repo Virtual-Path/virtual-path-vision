@@ -175,6 +175,36 @@
   <data name="ModeContour" xml:space="preserve">
     <value>轮廓检测</value>
   </data>
+  <data name="NavGroupWorkspace" xml:space="preserve">
+    <value>工作区</value>
+  </data>
+  <data name="NavGroupSystem" xml:space="preserve">
+    <value>系统与集成</value>
+  </data>
+  <data name="NavCamera" xml:space="preserve">
+    <value>摄像头</value>
+  </data>
+  <data name="NavImage" xml:space="preserve">
+    <value>图像处理</value>
+  </data>
+  <data name="NavAI" xml:space="preserve">
+    <value>AI 检测</value>
+  </data>
+  <data name="NavCloud" xml:space="preserve">
+    <value>云服务</value>
+  </data>
+  <data name="NavIndustrial" xml:space="preserve">
+    <value>工业互联</value>
+  </data>
+  <data name="NavLog" xml:space="preserve">
+    <value>运行日志</value>
+  </data>
+  <data name="NavCollapse" xml:space="preserve">
+    <value>折叠侧边栏</value>
+  </data>
+  <data name="NavExpand" xml:space="preserve">
+    <value>展开侧边栏</value>
+  </data>
   <data name="DualView" xml:space="preserve">
     <value>双视图</value>
   </data>

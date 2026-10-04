@@ -24,29 +24,38 @@
                 BorderBrush="{DynamicResource GlassBorderBrush}"
                 Background="{DynamicResource SidebarBgBrush}">
             <DockPanel LastChildFill="False">
-                <!-- Logo -->
-                <Border DockPanel.Dock="Top" Height="72"
+                <!-- Logo / drag strip -->
+                <Border DockPanel.Dock="Top" Height="64"
                         MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                    <StackPanel Orientation="Horizontal"
-                                VerticalAlignment="Center"
-                                HorizontalAlignment="Center">
-                        <Border Width="36" Height="36" CornerRadius="10"
+                    <StackPanel x:Name="SidebarLogoStack" Orientation="Horizontal"
+                                VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <Border Width="34" Height="34" CornerRadius="10"
                                 Background="{DynamicResource AccentBrush}">
-                            <TextBlock Text="VP" FontSize="13" FontWeight="Black"
+                            <Border.Effect>
+                                <DropShadowEffect Color="#0A84FF" ShadowDepth="0"
+                                                  BlurRadius="12" Opacity="0.45" />
+                            </Border.Effect>
+                            <TextBlock Text="VP" FontSize="12.5" FontWeight="Black"
                                        Foreground="{DynamicResource TextDarkBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock x:Name="SidebarText" Text="Virtual Path Vision"
-                                   FontSize="15" FontWeight="SemiBold"
+                                   FontSize="14.5" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    Margin="10,0,0,0" VerticalAlignment="Center"
                                    Visibility="Collapsed"/>
                     </StackPanel>
                 </Border>
 
-                <StackPanel DockPanel.Dock="Top" Margin="0,6,0,0">
+                <!-- ── Group: Workspace ── -->
+                <TextBlock x:Name="SidebarGroupWorkspace" DockPanel.Dock="Top"
+                           Text="WORKSPACE" Visibility="Collapsed"
+                           Style="{StaticResource SidebarSectionHeader}" />
+
+                <StackPanel DockPanel.Dock="Top">
                     <RadioButton x:Name="NavVision" GroupName="Nav" IsChecked="True"
                                  Click="NavButton_Click" Tag="Vision"
+                                 ToolTip="Camera"
                                  Style="{StaticResource SidebarNavRadio}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE8B4;" FontFamily="Segoe MDL2 Assets" FontSize="17"
@@ -57,6 +66,7 @@
                     </RadioButton>
                     <RadioButton x:Name="NavProcessing" GroupName="Nav"
                                  Click="NavButton_Click" Tag="Processing"
+                                 ToolTip="Image Processing"
                                  Style="{StaticResource SidebarNavRadio}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE74F;" FontFamily="Segoe MDL2 Assets" FontSize="17"
@@ -67,6 +77,7 @@
                     </RadioButton>
                     <RadioButton x:Name="NavAI" GroupName="Nav"
                                  Click="NavButton_Click" Tag="AI"
+                                 ToolTip="AI Detection"
                                  Style="{StaticResource SidebarNavRadio}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE99A;" FontFamily="Segoe MDL2 Assets" FontSize="17"
@@ -75,8 +86,22 @@
                                        Margin="10,0,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
                         </StackPanel>
                     </RadioButton>
+                </StackPanel>
+
+                <!-- Divider between nav groups -->
+                <Border x:Name="SidebarGroupDivider" DockPanel.Dock="Top" Height="1"
+                        Margin="12,10,12,0" Background="{DynamicResource GlassDividerBrush}"
+                        Visibility="Collapsed" />
+
+                <!-- ── Group: System & Integrations ── -->
+                <TextBlock x:Name="SidebarGroupSystem" DockPanel.Dock="Top"
+                           Text="SYSTEM" Visibility="Collapsed"
+                           Style="{StaticResource SidebarSectionHeader}" />
+
+                <StackPanel DockPanel.Dock="Top">
                     <RadioButton x:Name="NavCloud" GroupName="Nav"
                                  Click="NavButton_Click" Tag="Cloud"
+                                 ToolTip="Cloud"
                                  Style="{StaticResource SidebarNavRadio}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE753;" FontFamily="Segoe MDL2 Assets" FontSize="17"
@@ -87,6 +112,7 @@
                     </RadioButton>
                     <RadioButton x:Name="NavIndustrial" GroupName="Nav"
                                  Click="NavButton_Click" Tag="Industrial"
+                                 ToolTip="Industrial"
                                  Style="{StaticResource SidebarNavRadio}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="17"
@@ -97,6 +123,7 @@
                     </RadioButton>
                     <RadioButton x:Name="NavLog" GroupName="Nav"
                                  Click="NavButton_Click" Tag="Log"
+                                 ToolTip="Log"
                                  Style="{StaticResource SidebarNavRadio}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" FontSize="17"
@@ -107,21 +134,35 @@
                     </RadioButton>
                 </StackPanel>
 
-                <!-- Settings at bottom (bottom-most) -->
-                <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,14"
-                            HorizontalAlignment="Center">
-                    <Button x:Name="SettingsButton" Content="&#xE713;" FontFamily="Segoe MDL2 Assets"
-                            FontSize="16" Style="{StaticResource SidebarIconButton}"
-                            Click="SettingsButton_Click" ToolTip="Settings / 设置"/>
-                </StackPanel>
+                <!-- ── Footer cluster ──
+                     DockPanel 底部停靠按声明顺序自下而上堆叠：
+                     折叠开关在最底边，设置按钮在其上方，分隔线再往上。 -->
+                <Button x:Name="SidebarToggleButton" DockPanel.Dock="Bottom"
+                        Margin="12,1,12,12"
+                        Click="SidebarToggleButton_Click" ToolTip="Collapse sidebar"
+                        Style="{StaticResource SidebarFooterButton}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="SidebarToggleIcon" Text="&#xE76B;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Width="22" TextAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="SidebarToggleLabel" Text="Collapse" FontSize="13"
+                                   Margin="10,0,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
+                    </StackPanel>
+                </Button>
 
-                <!-- Collapse / expand toggle (above settings) -->
-                <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,2"
-                            HorizontalAlignment="Center">
-                    <Button x:Name="SidebarToggleButton" Content="&#xE76B;" FontFamily="Segoe MDL2 Assets"
-                            FontSize="14" Style="{StaticResource SidebarIconButton}"
-                            Click="SidebarToggleButton_Click" ToolTip="折叠 / 展开侧边栏"/>
-                </StackPanel>
+                <Button x:Name="SettingsButton" DockPanel.Dock="Bottom" Margin="12,1"
+                        Click="SettingsButton_Click" ToolTip="Settings"
+                        Style="{StaticResource SidebarFooterButton}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="16" Width="22" TextAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="SidebarSettingsLabel" Text="Settings" FontSize="13"
+                                   Margin="10,0,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
+                    </StackPanel>
+                </Button>
+
+                <Border x:Name="SidebarFooterDivider" DockPanel.Dock="Bottom" Height="1"
+                        Margin="12,6,12,10" Background="{DynamicResource GlassDividerBrush}"
+                        Visibility="Collapsed" />
             </DockPanel>
         </Border>
 

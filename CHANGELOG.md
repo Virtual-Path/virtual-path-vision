@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The camera connection badge kept its English XAML default (`Disconnected`) after a language switch,
   because only runtime state changes ever wrote to it. `CameraPanel` now tracks its `ConnectionState`
   and re-renders the badge in `RefreshTexts`.
+- The sidebar no longer jumps on startup: its width was applied in `Loaded`, so the first frame was
+  rendered at the XAML width and then resized.
 - **Dropdowns now show the selected value while closed.** The custom `GlassComboBox` template was
   missing the `SelectionBoxItem` binding that WPF's default template uses, so every combo box
   (signal source, processing mode, colour, serial port, baud rate, scan source, language …)
@@ -25,6 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and documented the OPC UA obsolete-API usage with a scoped `#pragma warning disable CS0618`.
 
 ### Changed
+- **Sidebar redesigned.** The six nav items are split into *Workspace* (Camera, Image Processing,
+  AI Detection) and *System & Integrations* (Cloud, Industrial, Log) groups with captions and a
+  divider; settings and the collapse toggle became full-width rows matching the nav items instead of
+  two floating icons. Nav labels use short, localized names (`NavCamera`, `NavImage`, …) rather than
+  the panel titles, which overflowed the sidebar, and every row now carries a localized tooltip — the
+  only label visible when the sidebar is collapsed. Selected/hover states animate (the pill indicator
+  scales in, the hover wash fades), the logo aligns with the icon column, and the sidebar widened
+  from 200 px to 216 px to fit them.
 - Sidebar logo re-branded from “MV / Vision” to **VP / Virtual Path Vision**.
 - Removed the unused `ComboBoxStyle` resource from `App.xaml` (only `GlassComboBox` is used).
 - Regenerated the dark/light main-UI screenshots with a DPI-aware capturer (previous captures were

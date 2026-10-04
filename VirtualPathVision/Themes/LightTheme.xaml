@@ -758,11 +758,24 @@
     </Style>
 
     <!-- ───────────────────────────────────────────────────────────────
+         SidebarSectionHeader — group caption above nav sections
+         ─────────────────────────────────────────────────────────────── -->
+    <Style x:Key="SidebarSectionHeader" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        <Setter Property="Opacity" Value="0.75" />
+        <!-- 左内边距与导航项图标左边缘对齐（12 外边距 + 1 边框 + 14 内容内边距） -->
+        <Setter Property="Margin" Value="27,12,0,6" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!-- ───────────────────────────────────────────────────────────────
          SidebarNavRadio — glass nav items with pill indicator
          ─────────────────────────────────────────────────────────────── -->
     <Style x:Key="SidebarNavRadio" TargetType="RadioButton">
         <Setter Property="Height" Value="42" />
-        <Setter Property="Margin" Value="10,2" />
+        <Setter Property="Margin" Value="12,1" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
         <Setter Property="Background" Value="Transparent" />
@@ -771,6 +784,7 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="GroupName" Value="Nav" />
+        <Setter Property="Focusable" Value="False" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
@@ -779,38 +793,67 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="14"
+                            CornerRadius="12"
                             SnapsToDevicePixels="True">
                         <Border.Effect>
                             <DropShadowEffect x:Name="glow"
                                               Color="Transparent" ShadowDepth="0"
                                               BlurRadius="0" Opacity="0" />
                         </Border.Effect>
-                        <Grid>
-                            <!-- Left pill indicator -->
-                            <Border x:Name="pill" Width="3" Height="0" CornerRadius="2"
-                                    HorizontalAlignment="Left" Margin="3,0,0,0"
-                                    Background="{DynamicResource AccentBrush}"/>
+                        <Grid ClipToBounds="True">
+                            <!-- Hover 底色：与选中态背景分层，两者可叠加 -->
+                            <Border x:Name="hoverWash" CornerRadius="12"
+                                    Background="#0D000000" Opacity="0" />
+                            <!-- 左侧选中指示条：高度固定，靠 ScaleY 动画展开/收起 -->
+                            <Border x:Name="pill" Width="3" Height="20" CornerRadius="2"
+                                    HorizontalAlignment="Left" VerticalAlignment="Center"
+                                    Margin="4,0,0,0" Opacity="0"
+                                    Background="{DynamicResource AccentBrush}"
+                                    RenderTransformOrigin="0.5,0.5">
+                                <Border.RenderTransform>
+                                    <ScaleTransform x:Name="pillScale" ScaleX="1" ScaleY="0" />
+                                </Border.RenderTransform>
+                            </Border>
                             <ContentPresenter x:Name="contentPresenter"
-                                              HorizontalAlignment="Left"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="Center"
-                                              Margin="16,0,12,0" />
+                                              Margin="14,0,10,0" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#0D000000" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#0D000000" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#14000000" />
                             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="hoverWash"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.12" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="hoverWash"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="0:0:0.18" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="border" Property="Background" Value="#26007AFF" />
                             <Setter TargetName="border" Property="BorderBrush" Value="#40007AFF" />
                             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
-                            <Setter TargetName="pill" Property="Height" Value="20" />
+                            <Setter TargetName="pill" Property="Opacity" Value="1" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="pillScale"
+                                                         Storyboard.TargetProperty="ScaleY"
+                                                         To="1" Duration="0:0:0.18" />
                                         <DoubleAnimation Storyboard.TargetName="glow"
                                                          Storyboard.TargetProperty="Opacity"
                                                          To="0.25" Duration="0:0:0.2" />
@@ -826,6 +869,9 @@
                             <Trigger.ExitActions>
                                 <BeginStoryboard>
                                     <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="pillScale"
+                                                         Storyboard.TargetProperty="ScaleY"
+                                                         To="0" Duration="0:0:0.15" />
                                         <DoubleAnimation Storyboard.TargetName="glow"
                                                          Storyboard.TargetProperty="Opacity"
                                                          To="0" Duration="0:0:0.25" />
@@ -849,16 +895,21 @@
     </Style>
 
     <!-- ───────────────────────────────────────────────────────────────
-         SidebarIconButton — settings at bottom
+         SidebarFooterButton — settings / collapse rows at the bottom
+         与导航项同一视觉语言，但没有左侧选中指示条
          ─────────────────────────────────────────────────────────────── -->
-    <Style x:Key="SidebarIconButton" TargetType="Button">
-        <Setter Property="Width" Value="38" />
-        <Setter Property="Height" Value="38" />
+    <Style x:Key="SidebarFooterButton" TargetType="Button">
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Margin" Value="12,1" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -866,18 +917,45 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="10"
+                            CornerRadius="12"
                             SnapsToDevicePixels="True">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Grid ClipToBounds="True">
+                            <Border x:Name="hoverWash" CornerRadius="12"
+                                    Background="#0D000000" Opacity="0" />
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center"
+                                              Margin="14,0,10,0" />
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#0D000000" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="#0D000000" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#14000000" />
                             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="hoverWash"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.12" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="hoverWash"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="0:0:0.18" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#1A000000" />
+                            <Setter TargetName="border" Property="Background" Value="#141A1C1E" />
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.35" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

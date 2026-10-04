@@ -245,6 +245,20 @@ namespace VirtualPathVision
         public string Settings => GetString("Settings");
         public string About => GetString("About");
 
+        // ---- Sidebar navigation (short labels + group headers) ----
+        // 侧边栏宽度有限，导航项不能直接复用 SectionXxx 面板标题
+        // （例如「AI 检测 (YOLO)」「AWS S3 存储」在 76px 折叠态下会被截断）。
+        public string NavGroupWorkspace => GetString("NavGroupWorkspace");
+        public string NavGroupSystem => GetString("NavGroupSystem");
+        public string NavCamera => GetString("NavCamera");
+        public string NavImage => GetString("NavImage");
+        public string NavAI => GetString("NavAI");
+        public string NavCloud => GetString("NavCloud");
+        public string NavIndustrial => GetString("NavIndustrial");
+        public string NavLog => GetString("NavLog");
+        public string NavCollapse => GetString("NavCollapse");
+        public string NavExpand => GetString("NavExpand");
+
         /// <summary>扫码源名称列表（供报工面板下拉框使用）</summary>
         public string[] ScanSourceNames => new[]
         {

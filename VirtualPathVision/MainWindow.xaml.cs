@@ -186,6 +186,15 @@ namespace VirtualPathVision
 
             LogPanelCtrl.ClearRequested += LogPanelCtrl_ClearRequested;
 
+            // 侧栏行控件缓存：折叠/展开时需要批量切换内容对齐方式
+            _sidebarNavItems = new Control[] { NavVision, NavProcessing, NavAI, NavCloud, NavIndustrial, NavLog };
+            _sidebarFooterItems = new Control[] { SettingsButton, SidebarToggleButton };
+
+            // 尽早应用侧栏布局：此前等到 Loaded 才设置，首帧会先按 XAML 里的
+            // 宽度渲染再跳变一次，视觉上像闪烁。
+            _sidebarUserExpanded = LoadSidebarExpanded();
+            UpdateLayoutForWidth(Width);
+
             Loaded += MainWindow_Loaded;
             Closed += MainWindow_Closed;
             SizeChanged += MainWindow_SizeChanged;
@@ -207,36 +216,130 @@ namespace VirtualPathVision
         /// <summary>侧栏用户偏好：是否展开（持久化到 user_settings.json）</summary>
         private bool _sidebarUserExpanded = true;
 
+        /// <summary>侧栏宽度：展开 / 折叠</summary>
+        private const double SidebarExpandedWidth = 216;
+        private const double SidebarCollapsedWidth = 76;
+
+        /// <summary>窗口窄于此宽度时侧栏强制折叠</summary>
+        private const double SidebarNarrowThresholdWidth = 1180;
+
+        /// <summary>
+        /// 侧栏当前的实际展开状态（= 用户偏好 && 窗口够宽）。
+        /// 与 _sidebarUserExpanded 区分：窗口过窄时用户偏好仍是展开，
+        /// 但视觉上已折叠，折叠按钮文案必须按这个值走。
+        /// </summary>
+        private bool _sidebarCurrentlyExpanded = true;
+
+        /// <summary>
+        /// 侧栏行控件（导航项 / 底栏按钮）。折叠态需要把内容整体居中，
+        /// 而这些控件只在 XAML 中定义一次，故集中缓存以便统一调整对齐方式。
+        /// 构造函数中 InitializeComponent 之后赋值。
+        /// </summary>
+        private readonly Control[] _sidebarNavItems = Array.Empty<Control>();
+        private readonly Control[] _sidebarFooterItems = Array.Empty<Control>();
+
         /// <summary>
         /// 根据用户偏好与窗口宽度调整侧栏：
-        /// - 展开：200px（显示导航文字）
-        /// - 折叠：76px（仅图标）
+        /// - 展开：216px（图标 + 文字 + 分组标题）
+        /// - 折叠：76px（仅图标，文字与分组标题隐藏）
         /// 窗口过窄时强制折叠并隐藏折叠按钮。
         /// </summary>
         private void UpdateLayoutForWidth(double width)
         {
-            bool narrowWindow = width < 1180;
+            bool narrowWindow = width < SidebarNarrowThresholdWidth;
             bool expanded = _sidebarUserExpanded && !narrowWindow;
+            _sidebarCurrentlyExpanded = expanded;
 
             if (SidebarColumn != null)
-                SidebarColumn.Width = new GridLength(expanded ? 200 : 76);
+                SidebarColumn.Width = new GridLength(expanded ? SidebarExpandedWidth : SidebarCollapsedWidth);
 
             var vis = expanded ? Visibility.Visible : Visibility.Collapsed;
-            if (SidebarText != null) SidebarText.Visibility = vis;
-            if (NavVisionLabel != null) NavVisionLabel.Visibility = vis;
-            if (NavProcessingLabel != null) NavProcessingLabel.Visibility = vis;
-            if (NavAILabel != null) NavAILabel.Visibility = vis;
-            if (NavCloudLabel != null) NavCloudLabel.Visibility = vis;
-            if (NavIndustrialLabel != null) NavIndustrialLabel.Visibility = vis;
-            if (NavLogLabel != null) NavLogLabel.Visibility = vis;
+            SetVisibility(SidebarText, vis);
+            SetVisibility(SidebarGroupWorkspace, vis);
+            SetVisibility(SidebarGroupSystem, vis);
+            SetVisibility(SidebarGroupDivider, vis);
+            SetVisibility(SidebarSettingsLabel, vis);
+            SetVisibility(SidebarToggleLabel, vis);
+            SetVisibility(NavVisionLabel, vis);
+            SetVisibility(NavProcessingLabel, vis);
+            SetVisibility(NavAILabel, vis);
+            SetVisibility(NavCloudLabel, vis);
+            SetVisibility(NavIndustrialLabel, vis);
+            SetVisibility(NavLogLabel, vis);
+
+            // 折叠态只剩图标，内容需整体居中；展开态左对齐到导航图标列。
+            var contentAlign = expanded ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+            foreach (var item in _sidebarNavItems)
+                item.HorizontalContentAlignment = contentAlign;
+            foreach (var item in _sidebarFooterItems)
+                item.HorizontalContentAlignment = contentAlign;
+
+            // Logo：展开时左对齐到导航图标列，折叠时整体居中
+            if (SidebarLogoStack != null)
+            {
+                SidebarLogoStack.HorizontalAlignment = expanded ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+                SidebarLogoStack.Margin = expanded ? new Thickness(27, 0, 0, 0) : new Thickness(0);
+            }
 
             if (SidebarToggleButton != null)
-            {
                 SidebarToggleButton.Visibility = narrowWindow ? Visibility.Collapsed : Visibility.Visible;
-                // E76B = 左箭头（可折叠）；E76C = 右箭头（可展开）
-                SidebarToggleButton.Content = expanded ? "\uE76B" : "\uE76C";
-                SidebarToggleButton.ToolTip = expanded ? "折叠侧边栏" : "展开侧边栏";
-            }
+
+            UpdateSidebarToggleAffordance(expanded);
+        }
+
+        /// <summary>刷新折叠按钮的图标方向、提示文案与底部分组分隔线</summary>
+        private void UpdateSidebarToggleAffordance(bool expanded)
+        {
+            var t = TranslationService.Instance;
+
+            // E76B = 左箭头（可折叠）；E76C = 右箭头（可展开）
+            if (SidebarToggleIcon != null)
+                SidebarToggleIcon.Text = expanded ? "\uE76B" : "\uE76C";
+
+            if (SidebarToggleButton != null)
+                SidebarToggleButton.ToolTip = expanded ? t.NavCollapse : t.NavExpand;
+
+            // 折叠态只剩两枚图标按钮，分隔线反而多余
+            if (SidebarFooterDivider != null)
+                SidebarFooterDivider.Visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        /// <summary>侧边栏文字/分组标题的显隐统一入口</summary>
+        private static void SetVisibility(UIElement? element, Visibility visibility)
+        {
+            if (element != null) element.Visibility = visibility;
+        }
+
+        /// <summary>
+        /// 侧边栏文案刷新。导航项使用短标签而非面板标题
+        /// （「AI 检测 (YOLO)」「AWS S3 存储」在窄侧栏里会被截断）。
+        /// </summary>
+        private void RefreshSidebarTexts()
+        {
+            var t = TranslationService.Instance;
+
+            NavVisionLabel.Text = t.NavCamera;
+            NavProcessingLabel.Text = t.NavImage;
+            NavAILabel.Text = t.NavAI;
+            NavCloudLabel.Text = t.NavCloud;
+            NavIndustrialLabel.Text = t.NavIndustrial;
+            NavLogLabel.Text = t.NavLog;
+
+            SidebarGroupWorkspace.Text = t.NavGroupWorkspace;
+            SidebarGroupSystem.Text = t.NavGroupSystem;
+            SidebarSettingsLabel.Text = t.Settings;
+            SidebarToggleLabel.Text = _sidebarCurrentlyExpanded ? t.NavCollapse : t.NavExpand;
+
+            // 折叠态没有文字可看，Tooltip 是唯一标识，必须跟着语言走
+            NavVision.ToolTip = t.NavCamera;
+            NavProcessing.ToolTip = t.NavImage;
+            NavAI.ToolTip = t.NavAI;
+            NavCloud.ToolTip = t.NavCloud;
+            NavIndustrial.ToolTip = t.NavIndustrial;
+            NavLog.ToolTip = t.NavLog;
+            SettingsButton.ToolTip = t.Settings;
+
+            UpdateSidebarToggleAffordance(_sidebarCurrentlyExpanded);
         }
 
         /// <summary>折叠 / 展开侧边栏</summary>
@@ -245,6 +348,8 @@ namespace VirtualPathVision
             _sidebarUserExpanded = !_sidebarUserExpanded;
             SaveSidebarExpanded(_sidebarUserExpanded);
             UpdateLayoutForWidth(ActualWidth);
+            // 折叠按钮自身的文字也要跟着切换（折叠 / 展开）
+            RefreshSidebarTexts();
         }
 
         /// <summary>侧栏展开状态（统一走 UserSettings，避免与主题/语言互相覆盖）</summary>
@@ -345,20 +450,12 @@ namespace VirtualPathVision
         {
             RefreshLocalizedControls();
 
-            // 侧边栏导航文字（宽侧栏时显示）
-            var t = TranslationService.Instance;
-            if (NavVisionLabel != null)
-            {
-                NavVisionLabel.Text = t.SectionCamera;
-                NavProcessingLabel.Text = t.SectionImageProcessing;
-                NavAILabel.Text = t.SectionAIDetection;
-                NavCloudLabel.Text = t.SectionAWSS3;
-                NavIndustrialLabel.Text = t.Industrial;
-                NavLogLabel.Text = t.Log;
-            }
+            // 侧边栏导航文字与提示（宽侧栏时显示文字，折叠态靠 Tooltip）
+            RefreshSidebarTexts();
 
             // 标题栏/状态栏连接状态文本按当前语言重绘
-            string connText = TranslationService.Instance.GetConnectionStatusText(_lastConnState);
+            var t = TranslationService.Instance;
+            string connText = t.GetConnectionStatusText(_lastConnState);
             StatusText.Text = connText;
             StatusTextFooter.Text = connText;
 
@@ -478,8 +575,7 @@ namespace VirtualPathVision
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             RestoreWindowState();
-            _sidebarUserExpanded = LoadSidebarExpanded();
-            UpdateLayoutForWidth(ActualWidth); // 初始化侧栏布局（展开/折叠）
+            UpdateLayoutForWidth(ActualWidth); // RestoreWindowState 可能改变宽度，重算一次
             RefreshAllTexts(); // 语言切换 + 本地化控件全部刷新（启动时按已保存语言初始化）
 
             // 日志面板

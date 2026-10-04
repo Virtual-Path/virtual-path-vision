@@ -175,6 +175,36 @@
   <data name="ModeContour" xml:space="preserve">
     <value>Contour Detection</value>
   </data>
+  <data name="NavGroupWorkspace" xml:space="preserve">
+    <value>Workspace</value>
+  </data>
+  <data name="NavGroupSystem" xml:space="preserve">
+    <value>System &amp; Integrations</value>
+  </data>
+  <data name="NavCamera" xml:space="preserve">
+    <value>Camera</value>
+  </data>
+  <data name="NavImage" xml:space="preserve">
+    <value>Image Processing</value>
+  </data>
+  <data name="NavAI" xml:space="preserve">
+    <value>AI Detection</value>
+  </data>
+  <data name="NavCloud" xml:space="preserve">
+    <value>Cloud</value>
+  </data>
+  <data name="NavIndustrial" xml:space="preserve">
+    <value>Industrial</value>
+  </data>
+  <data name="NavLog" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="NavCollapse" xml:space="preserve">
+    <value>Collapse sidebar</value>
+  </data>
+  <data name="NavExpand" xml:space="preserve">
+    <value>Expand sidebar</value>
+  </data>
   <data name="DualView" xml:space="preserve">
     <value>Dual View</value>
   </data>
