@@ -175,6 +175,12 @@
   <data name="ModeContour" xml:space="preserve">
     <value>Contour Detection</value>
   </data>
+  <data name="DualView" xml:space="preserve">
+    <value>Dual View</value>
+  </data>
+  <data name="DualViewHint" xml:space="preserve">
+    <value>Show or hide the second preview panel</value>
+  </data>
   <data name="SaveScreenshot" xml:space="preserve">
     <value>Save Snapshot</value>
   </data>

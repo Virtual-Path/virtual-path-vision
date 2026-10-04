@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **The dual-view toggle is now translated.** Its label was hardcoded Chinese (`双视图`), so it stayed
+  in Chinese on English builds. The tooltip was hardcoded bilingual (`第二视图 / Dual View`) and is now
+  localized too (`DualView`, `DualViewHint`).
+- The camera connection badge kept its English XAML default (`Disconnected`) after a language switch,
+  because only runtime state changes ever wrote to it. `CameraPanel` now tracks its `ConnectionState`
+  and re-renders the badge in `RefreshTexts`.
 - **Dropdowns now show the selected value while closed.** The custom `GlassComboBox` template was
   missing the `SelectionBoxItem` binding that WPF's default template uses, so every combo box
   (signal source, processing mode, colour, serial port, baud rate, scan source, language …)

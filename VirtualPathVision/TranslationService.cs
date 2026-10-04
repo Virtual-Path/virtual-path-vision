@@ -259,6 +259,8 @@ namespace VirtualPathVision
             GetString("ColorCyan"), GetString("ColorWhite"), GetString("ColorBlack"),
             GetString("ColorCustom")
         };
+        public string DualView => GetString("DualView");
+        public string DualViewHint => GetString("DualViewHint");
         public string SaveScreenshot => GetString("SaveScreenshot");
         public string StartRecording => GetString("StartRecording");
         public string StopRecording => GetString("StopRecording");

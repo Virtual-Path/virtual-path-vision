@@ -362,7 +362,8 @@ namespace VirtualPathVision
             StatusText.Text = connText;
             StatusTextFooter.Text = connText;
 
-            CameraPanelCtrl.RefreshTexts();            ProcessingPanelCtrl.RefreshTexts();
+            CameraPanelCtrl.RefreshTexts();
+            ProcessingPanelCtrl.RefreshTexts();
             AIPanelCtrl.RefreshTexts();
             CloudPanelCtrl.RefreshTexts();
             IndustrialPanelCtrl.RefreshTexts();
@@ -1580,7 +1581,7 @@ namespace VirtualPathVision
                 string statusText = TranslationService.Instance.GetConnectionStatusText(state);
                 bool connected = state == Components.ConnectionState.Connected;
 
-                CameraPanelCtrl.SetConnected(connected, statusText);
+                CameraPanelCtrl.SetConnected(state);
 
                 ConnectionIndicator.Fill = connected
                     ? new SolidColorBrush(Color.FromRgb(0x0A, 0x84, 0xFF))

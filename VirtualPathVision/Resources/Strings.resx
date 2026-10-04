@@ -175,6 +175,12 @@
   <data name="ModeContour" xml:space="preserve">
     <value>轮廓检测</value>
   </data>
+  <data name="DualView" xml:space="preserve">
+    <value>双视图</value>
+  </data>
+  <data name="DualViewHint" xml:space="preserve">
+    <value>显示或隐藏第二个预览画面</value>
+  </data>
   <data name="SaveScreenshot" xml:space="preserve">
     <value>保存截图</value>
   </data>

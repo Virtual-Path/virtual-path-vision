@@ -3,11 +3,18 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using VirtualPathVision.Components;
 
 namespace VirtualPathVision.Views;
 
 public partial class CameraPanel : UserControl
 {
+    /// <summary>
+    /// 最近一次的连接状态。状态徽标文案由 XAML 里的英文默认值起步，
+    /// 语言切换时需要按这个状态重绘，否则中文界面仍显示 "Disconnected"。
+    /// </summary>
+    private ConnectionState _connectionState = ConnectionState.Disconnected;
+
     // ── Exposed Elements ─────────────────────────────────────────────
     public Ellipse ConnectionDotEl => ConnectionDot;
     public TextBlock ConnectionStatusTextEl => ConnectionStatusText;
@@ -55,17 +62,24 @@ public partial class CameraPanel : UserControl
         StopCameraButton.Content = t.StopCamera;
         SaveScreenshotButton.Content = t.SaveScreenshot;
         RecordButton.Content = t.StartRecording;
+        DualViewLabelText.Text = t.DualView;
+        DualViewToggle.ToolTip = t.DualViewHint;
         SectionTitleText.Text = t.SectionCamera;
         SourceLabel.Text = t.FieldSource;
         CameraIpLabel.Text = t.FieldIP;
         NoSignalOriginalText.Text = t.StatusNoSignal;
         NoSignalEdgeText.Text = t.StatusNoSignal;
+        ConnectionStatusText.Text = t.GetConnectionStatusText(_connectionState);
     }
 
-    public void SetConnected(bool connected, string statusText)
+    /// <summary>按当前连接状态刷新指示灯、状态徽标与按钮可用性</summary>
+    public void SetConnected(ConnectionState state)
     {
+        _connectionState = state;
+        bool connected = state == ConnectionState.Connected;
+
         if (ConnectionDot == null || ConnectionStatusText == null || ConnectButton == null || DisconnectButton == null || StartCameraButton == null) return;
-        ConnectionStatusText.Text = statusText;
+        ConnectionStatusText.Text = TranslationService.Instance.GetConnectionStatusText(state);
         ConnectionDot.Fill = connected
             ? (Brush)FindResource("SuccessBrush")
             : (Brush)FindResource("DangerBrush");
