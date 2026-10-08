@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <AssemblyName>VirtualPathVision.Tests</AssemblyName>
+    <RootNamespace>VirtualPathVision.Tests</RootNamespace>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <!-- 这些用例覆盖产线编排的时序逻辑，不需要窗口；
+         显式关闭 WPF 语义以便在无 UI 进程中运行 -->
+    <UseWPF>false</UseWPF>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="ProductionLineTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VirtualPathVision\VirtualPathVision.csproj" />
+  </ItemGroup>
+
+</Project>
