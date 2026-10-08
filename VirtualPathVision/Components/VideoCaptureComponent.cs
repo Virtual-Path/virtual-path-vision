@@ -1,15 +1,17 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using OpenCvSharp;
 
 namespace VirtualPathVision.Components
 {
-    /// <summary>视频信号源类型：本地摄像头 / 网络视频流</summary>
+    /// <summary>视频信号源类型：本地摄像头 / 网络视频流 / 录像文件回放</summary>
     public enum VideoSourceType
     {
         LocalCamera,   // 本地 USB 摄像头
-        NetworkStream  // 网络 RTSP / HTTP MJPEG 流
+        NetworkStream, // 网络 RTSP / HTTP MJPEG 流
+        FileReplay     // 本地录像文件回放
     }
 
     /// <summary>网络连接状态</summary>
@@ -44,6 +46,14 @@ namespace VirtualPathVision.Components
         private Task? _captureLoop;
         private VideoSourceType _sourceType = VideoSourceType.LocalCamera;
         private string _networkUrl = "";
+        private string _replayPath = "";
+
+        // 回放专用状态。回放需要在帧率上做节流，否则 VideoCapture 会以最快速度
+        // 读完整段录像，产线节拍与录像真实帧率脱节。
+        private double _replayTargetFps;
+        private bool _replayLoop;
+        private long _replayTotalFrames;
+        private long _replayPosition;
 
         // 缓存的采集参数，供 UI 线程安全读取（不触碰原生句柄）
         private double _cachedFps;
@@ -62,6 +72,47 @@ namespace VirtualPathVision.Components
         {
             get => _networkUrl;
             set => _networkUrl = value;
+        }
+
+        /// <summary>录像文件路径（SourceType 为 FileReplay 时使用）</summary>
+        public string ReplayPath
+        {
+            get => _replayPath;
+            set => _replayPath = value;
+        }
+
+        /// <summary>
+        /// 回放节流帧率。设为 0 表示不节流，按文件原始速度尽快读取。
+        /// 默认 25fps，与产线相机常见帧率一致。
+        /// </summary>
+        public double ReplayFps
+        {
+            get => _replayTargetFps;
+            set => _replayTargetFps = value > 0 ? value : 0;
+        }
+
+        /// <summary>回放到文件末尾后是否从头循环。默认 false，播完即停止。</summary>
+        public bool ReplayLoop
+        {
+            get => _replayLoop;
+            set => _replayLoop = value;
+        }
+
+        /// <summary>回放已读帧数（仅 FileReplay 源有效，供 UI 显示进度）</summary>
+        public long ReplayPosition => Interlocked.Read(ref _replayPosition);
+
+        /// <summary>回放总帧数（仅 FileReplay 源有效，0 表示未知）</summary>
+        public long ReplayTotalFrames => Interlocked.Read(ref _replayTotalFrames);
+
+        /// <summary>回放进度百分比，0 表示无法确定</summary>
+        public double ReplayProgress
+        {
+            get
+            {
+                long total = ReplayTotalFrames;
+                if (total <= 0) return 0;
+                return Math.Clamp((double)ReplayPosition / total * 100.0, 0, 100);
+            }
         }
 
         /// <summary>当前连接状态</summary>
@@ -99,9 +150,12 @@ namespace VirtualPathVision.Components
                     SetState(ConnectionState.Connecting);
 
                     // 根据信号源类型选择打开方式
-                    _capture = _sourceType == VideoSourceType.LocalCamera
-                        ? OpenLocalCamera()
-                        : OpenNetworkStream();
+                    _capture = _sourceType switch
+                    {
+                        VideoSourceType.LocalCamera => OpenLocalCamera(),
+                        VideoSourceType.FileReplay => OpenFileReplay(),
+                        _ => OpenNetworkStream()
+                    };
 
                     // 检查摄像头是否成功打开
                     if (_capture == null || !_capture.IsOpened())
@@ -209,6 +263,54 @@ namespace VirtualPathVision.Components
         }
 
         /// <summary>
+        /// 打开录像文件用于回放。
+        ///
+        /// 文件路径交给 OpenCV 自行解析，因此 mp4/avi/mkv 等容器以及
+        /// 图像序列目录都能直接使用，无需在本组件里做格式判断。
+        /// 回放专用状态（总帧数、位置）在此处一次性初始化。
+        /// </summary>
+        private VideoCapture? OpenFileReplay()
+        {
+            if (string.IsNullOrWhiteSpace(_replayPath))
+                return null;
+
+            if (!File.Exists(_replayPath))
+            {
+                OnCaptureError?.Invoke(
+                    TranslationService.GetStringStatic("CameraOpenError") +
+                    $": replay file not found: {_replayPath}");
+                return null;
+            }
+
+            VideoCapture? cap = null;
+            try
+            {
+                cap = new VideoCapture(_replayPath, VideoCaptureAPIs.ANY);
+                if (!cap.IsOpened())
+                    return null;
+
+                // 文件源的 FPS 属性在部分容器里读不出来，
+                // 此时退回回放节流帧率，再不行则不节流。
+                double fileFps = cap.Get(VideoCaptureProperties.Fps);
+                if (fileFps > 0.01)
+                    _replayTargetFps = fileFps;
+                else if (_replayTargetFps <= 0)
+                    _replayTargetFps = 25.0;
+
+                long total = (long)cap.Get(VideoCaptureProperties.FrameCount);
+                Interlocked.Exchange(ref _replayTotalFrames, total > 0 ? total : 0);
+                Interlocked.Exchange(ref _replayPosition, 0);
+
+                return cap;
+            }
+            catch
+            {
+                cap?.Release();
+                return null;
+            }
+        }
+
+        /// <summary>
         /// 停止视频捕获。
         /// 先通知采集循环退出并等待其结束，再统一释放原生资源，
         /// 以免在 Read() 执行过程中释放 VideoCapture。
@@ -304,13 +406,43 @@ namespace VirtualPathVision.Components
 
                     try
                     {
-                        // 读取一帧
+                        // 读取一帧。文件源读到末尾时 Read() 返回 false 且帧为空，
+                        // 此时按 ReplayLoop 决定是停下还是回绕，不能当作异常重试。
                         bool readSuccess = capture.Read(frame);
+
                         if (!readSuccess || frame.Empty())
                         {
+                            if (_sourceType == VideoSourceType.FileReplay)
+                            {
+                                if (!_replayLoop)
+                                {
+                                    // 播完即止：正常结束，不是错误
+                                    _isRunning = false;
+                                    break;
+                                }
+
+                                // 回绕到开头。Read() 失败后句柄位置不确定，
+                                // 直接再次读取可能仍返回空帧，因此显式重置。
+                                // OpenCvSharp 未把 CAP_PROP_POS_FRAMES 暴露为可读写的枚举，
+                                // 但 VideoCapture.Set(int, double) 直接透传原生属性码。
+                                const int CapPropPosFrames = 1;
+                                if (!capture.Set(CapPropPosFrames, 0))
+                                {
+                                    error = TranslationService.GetStringStatic("CameraError") +
+                                            ": failed to rewind replay file";
+                                    break;
+                                }
+
+                                Interlocked.Exchange(ref _replayPosition, 0);
+                                continue;
+                            }
+
                             Task.Delay(100).GetAwaiter().GetResult();
                             continue;
                         }
+
+                        if (_sourceType == VideoSourceType.FileReplay)
+                            Interlocked.Increment(ref _replayPosition);
 
                         // 转灰度后触发回调（同步执行，调用返回前结果已被消费）
                         Cv2.CvtColor(frame, gray, ColorConversionCodes.BGR2GRAY);
@@ -323,7 +455,17 @@ namespace VirtualPathVision.Components
                         break;
                     }
 
-                    Task.Delay(30).GetAwaiter().GetResult(); // ~33 FPS 上限
+                    // 节流。文件源按 ReplayFps 节流以还原录像真实节拍；
+                    // 摄像头/网络流保持原来的 ~33 FPS 上限。
+                    if (_sourceType == VideoSourceType.FileReplay && _replayTargetFps > 0)
+                    {
+                        int interval = (int)Math.Round(1000.0 / _replayTargetFps);
+                        Task.Delay(interval).GetAwaiter().GetResult();
+                    }
+                    else
+                    {
+                        Task.Delay(30).GetAwaiter().GetResult(); // ~33 FPS 上限
+                    }
                 }
             }
             finally
@@ -361,9 +503,12 @@ namespace VirtualPathVision.Components
         /// <summary>获取当前信号源描述信息</summary>
         public string GetSourceInfo()
         {
-            if (_sourceType == VideoSourceType.LocalCamera)
-                return "Local Camera";
-            return _networkUrl;
+            return _sourceType switch
+            {
+                VideoSourceType.LocalCamera => "Local Camera",
+                VideoSourceType.FileReplay => _replayPath,
+                _ => _networkUrl
+            };
         }
 
         /// <summary>释放所有资源</summary>
