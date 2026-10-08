@@ -96,6 +96,8 @@
                                       IsSelected="True" />
                         <ComboBoxItem Content="Network Stream"
                                       Style="{StaticResource GlassComboBoxItem}" />
+                        <ComboBoxItem Content="File Replay"
+                                      Style="{StaticResource GlassComboBoxItem}" />
                     </ComboBox>
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
@@ -116,6 +118,98 @@
                                 Click="LoadImageButton_Click" />
                     </StackPanel>
                 </Grid>
+
+                <!-- Replay config (collapsible) -->
+                <Border x:Name="ReplayConfigPanel"
+                        Visibility="Collapsed"
+                        Background="{DynamicResource InsetBrush}"
+                        CornerRadius="{StaticResource CornerSm}"
+                        Padding="14"
+                        BorderBrush="{DynamicResource GlassBorderBrush}"
+                        BorderThickness="1">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock x:Name="ReplayFileLabel" Text="Video:"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0" />
+                            <TextBox x:Name="ReplayPathTextBox"
+                                     Grid.Column="1"
+                                     Text=""
+                                     Style="{StaticResource GlassTextBox}"
+                                     VerticalContentAlignment="Center"
+                                     Margin="0,0,8,0" />
+                            <Button x:Name="BrowseReplayButton"
+                                    Grid.Column="2"
+                                    Content="Browse..."
+                                    Style="{StaticResource GlassButton}"
+                                    Click="BrowseReplayButton_Click" />
+                        </Grid>
+
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock x:Name="ReplayFpsLabel" Text="FPS:"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0" />
+                            <TextBox x:Name="ReplayFpsTextBox"
+                                     Grid.Column="1"
+                                     Text="25"
+                                     Style="{StaticResource GlassTextBox}"
+                                     Width="60"
+                                     VerticalContentAlignment="Center"
+                                     Margin="0,0,16,0"
+                                     TextChanged="ReplayConfig_Changed" />
+
+                            <TextBlock x:Name="ReplayLoopLabel" Grid.Column="2"
+                                       Text="Loop:"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0" />
+                            <CheckBox x:Name="ReplayLoopCheckBox"
+                                      Grid.Column="3"
+                                      IsChecked="True"
+                                      VerticalAlignment="Center"
+                                      HorizontalAlignment="Left"
+                                      Margin="0,0,16,0"
+                                      Checked="ReplayConfig_Changed"
+                                      Unchecked="ReplayConfig_Changed" />
+
+                            <TextBlock x:Name="ReplayProgressLabel" Grid.Column="4"
+                                       Text="0 / 0"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0" />
+                            <ProgressBar x:Name="ReplayProgressBar"
+                                         Grid.Column="5"
+                                         Width="130"
+                                         Height="6"
+                                         Minimum="0"
+                                         Maximum="100"
+                                         Value="0"
+                                         VerticalAlignment="Center" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
 
                 <!-- Network config (collapsible) -->
                 <Border x:Name="NetworkConfigPanel"

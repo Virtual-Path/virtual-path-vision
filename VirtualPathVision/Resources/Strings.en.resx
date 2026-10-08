@@ -127,6 +127,12 @@
   <data name="NetworkStream" xml:space="preserve">
     <value>Network Stream</value>
   </data>
+  <data name="FileReplay" xml:space="preserve">
+    <value>File Replay</value>
+  </data>
+  <data name="SelectReplayFile" xml:space="preserve">
+    <value>Select Replay File</value>
+  </data>
   <data name="IPAddress" xml:space="preserve">
     <value>IP Address</value>
   </data>

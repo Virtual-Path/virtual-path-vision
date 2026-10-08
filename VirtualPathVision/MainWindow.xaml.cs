@@ -138,6 +138,9 @@ namespace VirtualPathVision
             _videoCaptureComponent.OnCaptureError += OnCaptureErrorHandler;
             _videoCaptureComponent.OnConnectionStateChanged += OnConnectionStateChangedHandler;
 
+            CameraPanelCtrl.BrowseReplayRequested += CameraPanelCtrl_BrowseReplayRequested;
+            CameraPanelCtrl.ReplayConfigChanged += (_s, _e) => ApplyReplaySettings();
+
             // 阈值来源只保留一处：ThresholdParameterComponent 的 Apply 按钮。
             // ProcessingPanelCtrl.ThresholdsChanged（滑块）已在下面单独订阅，
             // 若两处都订阅 UpdateThresholds，每次调整会写两条重复日志。
@@ -486,7 +489,8 @@ namespace VirtualPathVision
                 CameraPanelCtrl.SourceTypeComboBoxEl.ItemsSource = new string[]
                 {
                     TranslationService.Instance.LocalCamera,
-                    TranslationService.Instance.NetworkStream
+                    TranslationService.Instance.NetworkStream,
+                    TranslationService.Instance.FileReplay
                 };
                 CameraPanelCtrl.SourceTypeComboBoxEl.SelectedIndex = srcIndex < 0 ? 0 : srcIndex;
 
@@ -676,16 +680,67 @@ namespace VirtualPathVision
             _networkConfigured = !string.IsNullOrWhiteSpace(ip) && !string.IsNullOrWhiteSpace(port);
         }
 
+        /// <summary>
+        /// 把回放面板的输入同步到采集组件：文件路径、节流帧率、循环开关。
+        /// FPS 留空或非数字时保持组件内的既有值，不强行改成 0（0 表示不节流）。
+        /// </summary>
+        private void ApplyReplaySettings()
+        {
+            string path = CameraPanelCtrl.ReplayPathTextBoxEl.Text.Trim();
+            if (!string.IsNullOrWhiteSpace(path))
+                _videoCaptureComponent.ReplayPath = path;
+
+            if (double.TryParse(CameraPanelCtrl.ReplayFpsTextBoxEl.Text.Trim(),
+                                out double fps) && fps > 0)
+            {
+                _videoCaptureComponent.ReplayFps = fps;
+            }
+
+            _videoCaptureComponent.ReplayLoop =
+                CameraPanelCtrl.ReplayLoopCheckBoxEl.IsChecked == true;
+
+            _videoCaptureComponent.SourceType = Components.VideoSourceType.FileReplay;
+        }
+
+        /// <summary>弹出文件选择器选择录像文件，取消则保持原路径。</summary>
+        private void CameraPanelCtrl_BrowseReplayRequested(object? sender, EventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = TranslationService.GetStringStatic("SelectReplayFile"),
+                Filter = "Video files|*.mp4;*.avi;*.mkv;*.mov;*.wmv;*.m4v|" +
+                         "All files|*.*",
+                CheckFileExists = true,
+            };
+
+            if (dialog.ShowDialog() != true) return;
+
+            CameraPanelCtrl.ReplayPathTextBoxEl.Text = dialog.FileName;
+            ApplyReplaySettings();
+        }
+
         // ==================== CameraPanel 事件处理 ====================
 
         private void CameraPanelCtrl_ConnectRequested(object? sender, EventArgs e)
         {
-            if (CameraPanelCtrl.SourceTypeComboBoxEl.SelectedIndex == 1)
+            int srcIndex = CameraPanelCtrl.SourceTypeComboBoxEl.SelectedIndex;
+
+            if (srcIndex == 1)
             {
                 BuildNetworkUrl();
                 if (!_networkConfigured)
                 {
                     ShowError(TranslationService.GetStringStatic("CameraOpenError"));
+                    return;
+                }
+            }
+            else if (srcIndex == 2)
+            {
+                ApplyReplaySettings();
+                if (string.IsNullOrWhiteSpace(_videoCaptureComponent.ReplayPath))
+                {
+                    ShowError(TranslationService.GetStringStatic("CameraOpenError") +
+                              ": replay file not selected");
                     return;
                 }
             }
@@ -1895,6 +1950,14 @@ namespace VirtualPathVision
 
                     FpsTextBlock.Text = $"{_currentFps:F1} FPS";
                     ProcessTimeTextBlock.Text = $"{processTimeMs} ms";
+
+                    // 回放进度只在回放源下才有意义，避免在实时采集时做无谓的字符串拼接
+                    if (_videoCaptureComponent.SourceType == Components.VideoSourceType.FileReplay)
+                    {
+                        CameraPanelCtrl.UpdateReplayProgress(
+                            _videoCaptureComponent.ReplayPosition,
+                            _videoCaptureComponent.ReplayTotalFrames);
+                    }
 
                     // QR/条码识别到新内容时记录日志（去重）+ 摄像头扫码报工
                     if (_currentMode == Components.ProcessingMode.QRCode &&

@@ -22,6 +22,21 @@ public partial class CameraPanel : UserControl
     public Border NetworkConfigPanelEl => NetworkConfigPanel;
     public TextBox IPTextBoxEl => IPTextBox;
     public TextBox PortTextBoxEl => PortTextBox;
+
+    // ── Replay config ────────────────────────────────────────────────
+    public Border ReplayConfigPanelEl => ReplayConfigPanel;
+    public TextBox ReplayPathTextBoxEl => ReplayPathTextBox;
+    public TextBox ReplayFpsTextBoxEl => ReplayFpsTextBox;
+    public CheckBox ReplayLoopCheckBoxEl => ReplayLoopCheckBox;
+    public TextBlock ReplayProgressLabelEl => ReplayProgressLabel;
+    public ProgressBar ReplayProgressBarEl => ReplayProgressBar;
+    public Button BrowseReplayButtonEl => BrowseReplayButton;
+
+    /// <summary>回放配置变更（选择文件、改 FPS 或循环开关）时触发。</summary>
+    public event EventHandler? ReplayConfigChanged;
+
+    /// <summary>点击 Browse 时触发，由主窗口负责弹出文件选择器。</summary>
+    public event EventHandler? BrowseReplayRequested;
     public Button ConnectButtonEl => ConnectButton;
     public Button DisconnectButtonEl => DisconnectButton;
     public Button LoadImageButtonEl => LoadImageButton;
@@ -67,6 +82,24 @@ public partial class CameraPanel : UserControl
         SectionTitleText.Text = t.SectionCamera;
         SourceLabel.Text = t.FieldSource;
         CameraIpLabel.Text = t.FieldIP;
+
+        // 回放面板的字段名目前只有中英文两种语言，先按当前 UI 语言固定字面量，
+        // 避免在 resx 里再堆一批只服务单一控件的键。
+        bool zh = TranslationService.Instance.CurrentLanguage.StartsWith("zh", StringComparison.OrdinalIgnoreCase);
+        if (zh)
+        {
+            ReplayFileLabel.Text = "视频：";
+            ReplayFpsLabel.Text = "帧率：";
+            ReplayLoopLabel.Text = "循环：";
+            BrowseReplayButton.Content = "浏览…";
+        }
+        else
+        {
+            ReplayFileLabel.Text = "Video:";
+            ReplayFpsLabel.Text = "FPS:";
+            ReplayLoopLabel.Text = "Loop:";
+            BrowseReplayButton.Content = "Browse...";
+        }
         NoSignalOriginalText.Text = t.StatusNoSignal;
         NoSignalEdgeText.Text = t.StatusNoSignal;
         ConnectionStatusText.Text = t.GetConnectionStatusText(_connectionState);
@@ -107,13 +140,44 @@ public partial class CameraPanel : UserControl
     private void SourceTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (NetworkConfigPanel == null) return;
-        if (SourceTypeComboBox.SelectedIndex == 1)
+
+        // 索引与 VideoSourceType 枚举顺序一一对应：
+        // 0=LocalCamera 1=NetworkStream 2=FileReplay
+        bool network = SourceTypeComboBox.SelectedIndex == 1;
+        bool replay = SourceTypeComboBox.SelectedIndex == 2;
+
+        NetworkConfigPanel.Visibility = network ? Visibility.Visible : Visibility.Collapsed;
+        if (ReplayConfigPanel != null)
+            ReplayConfigPanel.Visibility = replay ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void BrowseReplayButton_Click(object sender, RoutedEventArgs e)
+    {
+        BrowseReplayRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ReplayConfig_Changed(object sender, RoutedEventArgs e)
+    {
+        ReplayConfigChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// 把回放进度写回界面。位置与总帧数取自采集组件，
+    /// 在 UI 线程的定时刷新里调用。
+    /// </summary>
+    public void UpdateReplayProgress(long position, long totalFrames)
+    {
+        if (ReplayProgressLabel == null || ReplayProgressBar == null) return;
+
+        if (totalFrames > 0)
         {
-            NetworkConfigPanel.Visibility = Visibility.Visible;
+            ReplayProgressLabel.Text = $"{position} / {totalFrames}";
+            ReplayProgressBar.Value = Math.Clamp((double)position / totalFrames * 100.0, 0, 100);
         }
         else
         {
-            NetworkConfigPanel.Visibility = Visibility.Collapsed;
+            ReplayProgressLabel.Text = $"{position} / ?";
+            ReplayProgressBar.Value = 0;
         }
     }
 

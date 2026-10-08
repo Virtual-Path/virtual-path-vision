@@ -95,6 +95,8 @@ namespace VirtualPathVision
         public string SourceType => GetString("SourceType");
         public string LocalCamera => GetString("LocalCamera");
         public string NetworkStream => GetString("NetworkStream");
+        public string FileReplay => GetString("FileReplay");
+        public string SelectReplayFile => GetString("SelectReplayFile");
         public string IPAddress => GetString("IPAddress");
         public string Port => GetString("Port");
         public string Connect => GetString("Connect");

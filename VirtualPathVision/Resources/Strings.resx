@@ -127,6 +127,12 @@
   <data name="NetworkStream" xml:space="preserve">
     <value>网络视频流</value>
   </data>
+  <data name="FileReplay" xml:space="preserve">
+    <value>录像回放</value>
+  </data>
+  <data name="SelectReplayFile" xml:space="preserve">
+    <value>选择录像文件</value>
+  </data>
   <data name="IPAddress" xml:space="preserve">
     <value>IP 地址</value>
   </data>
