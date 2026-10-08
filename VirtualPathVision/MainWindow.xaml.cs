@@ -28,6 +28,22 @@ namespace VirtualPathVision
         private Components.VideoCaptureComponent _videoCaptureComponent;
         private Components.ImageDisplayComponent _imageDisplayComponent;
         private Components.ThresholdParameterComponent _thresholdParameterComponent;
+
+        // ---- 产线编排 ----
+        // 编排层默认不启用：它会引入计数与 MES 上报这类有外部副作用的行为，
+        // 必须由用户在界面上显式打开。
+        private Industrial.ProductionLineService? _productionLine;
+        private readonly List<Components.ColorDetectionComponent.Detection> _detectionBuffer = new();
+        private readonly List<Industrial.ProductionLineService.Detection> _lineDetectionBuffer = new();
+        private string _colorNameForTracking = "Red";
+
+        /// <summary>
+        /// 检测区 ROI。
+        ///
+        /// 默认对准传送带中部的检测工位（画面中部偏下）。
+        /// 真实产线需要按相机标定结果调整，这里先给一个可用值并允许用户后续改。
+        /// </summary>
+        private OpenCvSharp.Rect InspectionRoiRect => new(360, 180, 560, 280);
         private Components.FaceDetectionComponent _faceDetectionComponent;
         private Components.ImageProcessingComponent _imageProcessingComponent;
         private Components.RecordingComponent _recordingComponent;
@@ -137,6 +153,9 @@ namespace VirtualPathVision
             _videoCaptureComponent.OnCaptureStopped += OnCaptureStoppedHandler;
             _videoCaptureComponent.OnCaptureError += OnCaptureErrorHandler;
             _videoCaptureComponent.OnConnectionStateChanged += OnConnectionStateChangedHandler;
+
+            IndustrialPanelCtrl.LineCard.EnabledChanged += (_s, _e) => ApplyProductionLineSettings();
+            IndustrialPanelCtrl.LineCard.SettingsChanged += (_s, _e) => ApplyProductionLineSettings();
 
             CameraPanelCtrl.BrowseReplayRequested += CameraPanelCtrl_BrowseReplayRequested;
             CameraPanelCtrl.ReplayConfigChanged += (_s, _e) => ApplyReplaySettings();
@@ -644,6 +663,8 @@ namespace VirtualPathVision
 
             _recordingComponent.Dispose();
             _videoCaptureComponent.Dispose();
+            _productionLine?.Dispose();
+            _productionLine = null;
             _thresholdParameterComponent.Dispose();
             _templateMatchComponent.Clear();
             _featureMatchComponent.Dispose();
@@ -721,7 +742,141 @@ namespace VirtualPathVision
 
         // ==================== CameraPanel 事件处理 ====================
 
-        private void CameraPanelCtrl_ConnectRequested(object? sender, EventArgs e)
+        /// <summary>
+    /// 把本帧的颜色检出喂给产线编排层：过滤 ROI 外的目标，交给稳定判定器，
+    /// 并更新界面计数。
+    /// </summary>
+    /// <remarks>
+    /// <b>ROI 的必要性</b>：不做 ROI 时，背景墙上与工件同色的诱饵色块、地面的
+    /// 网格线都会满足 HSV 阈值并被当成工件。端到端实测 150 帧虚报 76 件，
+    /// 而场景里只有 4 件在循环；加上 ROI 后降到 18 件。
+    /// </remarks>
+    /// <summary>
+    /// 根据界面上的开关与参数重建（或释放）产线编排层。
+    ///
+    /// 编排层带外部副作用（计数、MES 上报），因此任何参数变化都整体重建而非就地修改，
+    /// 避免旧实例残留未完成的判定状态。
+    /// </summary>
+    private void ApplyProductionLineSettings()
+    {
+        var card = IndustrialPanelCtrl.LineCard;
+
+        _productionLine?.Dispose();
+        _productionLine = null;
+
+        if (!card.IsLineEnabled)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                card.ResetCounters();
+                card.SetMesState("Off");
+                card.ShowEvent("");
+            });
+            AppLogger.Instance.Info("产线编排已停用");
+            return;
+        }
+
+        var stability = new Industrial.StabilityFilter(
+            requiredFrames: card.StableFrames,
+            timeoutSeconds: 1.0);
+
+        Industrial.MesClient? mes = null;
+        string url = card.MesUrl;
+        if (!string.IsNullOrWhiteSpace(url))
+        {
+            try
+            {
+                mes = new Industrial.MesClient(url);
+            }
+            catch (Exception ex)
+            {
+                // 网关地址非法不应阻断采集：编排层降级为"只统计不上报"
+                AppLogger.Instance.Warn($"MES 客户端创建失败，仅本地统计: {ex.Message}");
+                Dispatcher.Invoke(() => card.SetMesState("Invalid", isError: true));
+            }
+        }
+
+        _productionLine = new Industrial.ProductionLineService(stability, mes);
+
+        _productionLine.OnPieceSettled += piece => Dispatcher.Invoke(() =>
+        {
+            IndustrialPanelCtrl.LineCard.UpdateCounters(
+                _productionLine?.PassedCount ?? 0,
+                _productionLine?.FailedCount ?? 0,
+                _productionLine?.YieldRate ?? 0);
+
+            string tag = piece.Passed ? "PASS" : "FAIL";
+            IndustrialPanelCtrl.LineCard.ShowEvent(
+                $"{DateTime.Now:HH:mm:ss}  {tag}  {piece.WorkpieceId}  ({piece.StableFrames} frames)");
+        });
+
+        _productionLine.OnMesReportFailed += (id, result) => Dispatcher.Invoke(() =>
+        {
+            IndustrialPanelCtrl.LineCard.SetMesState($"{result.StatusCode}", isError: true);
+            AppLogger.Instance.Warn(
+                $"MES 上报失败 {id}: state={result.State} status={result.StatusCode} {result.ResponseBody}");
+        });
+
+        Dispatcher.Invoke(() =>
+        {
+            IndustrialPanelCtrl.LineCard.UpdateCounters(0, 0, 0);
+            IndustrialPanelCtrl.LineCard.SetMesState(mes != null ? "Ready" : "Local only");
+        });
+
+        AppLogger.Instance.Info(
+            $"产线编排已启用：稳定帧={card.StableFrames} ROI={(card.UseRoi ? "开" : "关")} " +
+            $"MES={(mes != null ? url : "未配置")}");
+    }
+
+    /// <summary>
+    /// 把本帧的颜色检出喂给产线编排层：过滤 ROI 外的目标，交给稳定判定器，
+    /// 并更新界面计数。
+    /// </summary>
+    /// <remarks>
+    /// <b>ROI 的必要性</b>：不做 ROI 时，背景墙上与工件同色的诱饵色块、地面的
+    /// 网格线都会满足 HSV 阈值并被当成工件。端到端实测 150 帧虚报 76 件，
+    /// 而场景里只有 4 件在循环；加上 ROI 后降到 18 件。
+    /// </remarks>
+    private void FeedProductionLine(Mat frame, int rawCount)
+    {
+        if (_productionLine == null) return;
+
+        var card = IndustrialPanelCtrl.LineCard;
+        var dets = _lineDetectionBuffer;
+        dets.Clear();
+
+        OpenCvSharp.Rect? roi = null;
+        if (card.UseRoi)
+        {
+            var r = InspectionRoiRect;
+            // ROI 必须夹在画面内，否则用户改了参数会直接抛异常中断采集循环
+            var clamped = OpenCvSharp.Rect.Intersect(r,
+                new OpenCvSharp.Rect(0, 0, frame.Width, frame.Height));
+            roi = clamped.Width > 0 && clamped.Height > 0 ? clamped : null;
+        }
+
+        foreach (var d in _detectionBuffer)
+        {
+            if (roi.HasValue)
+            {
+                // 用包围盒与 ROI 的相交面积占比判定是否"在区内"，
+                // 而不是只看中心点：工件压着边界时中心会跑出区外。
+                var inter = OpenCvSharp.Rect.Intersect(d.Bounds, roi.Value);
+                if (inter.Width <= 0 || inter.Height <= 0) continue;
+                double frac = (double)(inter.Width * inter.Height) /
+                              Math.Max(1, d.Bounds.Width * d.Bounds.Height);
+                if (frac < 0.6) continue;
+            }
+
+            dets.Add(new Industrial.ProductionLineService.Detection(
+                d.CenterX, d.CenterY, _colorNameForTracking, d.Area / 4000.0));
+        }
+
+        _productionLine.ProcessFrame(dets, DateTime.Now);
+        _productionLine.ExpireIdle(DateTime.Now);
+    }
+
+    private void CameraPanelCtrl_ConnectRequested(object? sender, EventArgs e)
         {
             int srcIndex = CameraPanelCtrl.SourceTypeComboBoxEl.SelectedIndex;
 
@@ -941,6 +1096,10 @@ namespace VirtualPathVision
             };
             UpdatePickColorHint();
             AppLogger.Instance.Info($"目标颜色切换为: {ProcessingPanelCtrl.ColorComboBoxEl.SelectedItem}");
+
+            // 编排层用颜色名作为目标签名：签名不同必然是不同目标，
+            // 跟踪时不会把红箱与绿球并成一件。
+            _colorNameForTracking = _colorDetectionComponent.Target.ToString();
         }
 
         private void ProcessingPanelCtrl_LoadTemplateRequested(object? sender, EventArgs e)
@@ -1783,8 +1942,19 @@ namespace VirtualPathVision
                     return qrDisplay;
 
                 case Components.ProcessingMode.ColorDetection:
-                    Mat colorResult = _colorDetectionComponent.Detect(originalFrame, out count);
-                    return colorResult;
+                    // 产线编排启用时收集每个目标的位置，交给编排层跟踪同一件工件；
+                    // 未启用时传 null，保持原有的零额外开销。
+                    if (_productionLine != null && IndustrialPanelCtrl.LineCard.IsLineEnabled)
+                    {
+                        _detectionBuffer.Clear();
+                        Mat colorResult = _colorDetectionComponent.Detect(
+                            originalFrame, _detectionBuffer, out count);
+                        FeedProductionLine(originalFrame, count);
+                        return colorResult;
+                    }
+
+                    Mat colorOnly = _colorDetectionComponent.Detect(originalFrame, out count);
+                    return colorOnly;
 
                 case Components.ProcessingMode.TemplateMatch:
                     // 匹配阈值此前没有任何写入方（恒为 0.6），AI 面板里的
@@ -2090,8 +2260,15 @@ namespace VirtualPathVision
         /// <summary>捕获停止事件处理：清空画面、重置状态</summary>
         private void OnCaptureStoppedHandler(string? reason)
         {
+            // 采集停止后必须清空编排层的跟踪状态：否则残留的 trackKey 会让
+            // 重新连接后的第一件被误判为"已判定过"而漏检。
+            _productionLine?.Reset();
+
             Dispatcher.Invoke(() =>
             {
+                IndustrialPanelCtrl.LineCard.ResetCounters();
+                IndustrialPanelCtrl.LineCard.ShowEvent("");
+
                 if (_recordingComponent.IsRecording)
                 {
                     _recordingComponent.StopRecording();

@@ -84,7 +84,35 @@ namespace VirtualPathVision.Components
         /// <returns>检测结果图像（掩码 + 绿色包围框）</returns>
         public Mat Detect(Mat frame, out int objectCount)
         {
+            return Detect(frame, null, out objectCount);
+        }
+
+        /// <summary>
+        /// 单个颜色检出结果。
+        /// </summary>
+        /// <param name="CenterX">目标包围框中心 X（像素）</param>
+        /// <param name="CenterY">目标包围框中心 Y（像素）</param>
+        /// <param name="Area">轮廓面积（像素）</param>
+        /// <param name="Bounds">包围盒，供绘制与 ROI 相交判断</param>
+        public readonly record struct Detection(
+            float CenterX, float CenterY, double Area, OpenCvSharp.Rect Bounds);
+
+        /// <summary>
+        /// 执行颜色检测，并可选地收集每个目标的中心位置。
+        /// </summary>
+        /// <param name="frame">输入 BGR 帧</param>
+        /// <param name="detections">
+        /// 输出：每个目标的中心与面积。产线编排层需要位置来跟踪同一件工件，
+        /// 而旧的 Detect 只给出总数，无法区分"同一件的连续帧"与"新的一件"。
+        /// 传 null 表示不需要位置，保持原有调用点的开销。
+        /// </param>
+        /// <param name="objectCount">输出：检测到的目标数量</param>
+        /// <returns>检测结果图像（掩码 + 绿色包围框）</returns>
+        public Mat Detect(Mat frame, List<Detection>? detections, out int objectCount)
+        {
             objectCount = 0;
+            detections?.Clear();
+
             if (frame == null || frame.Empty())
                 return new Mat();
 
@@ -112,10 +140,18 @@ namespace VirtualPathVision.Components
             int count = 0;
             foreach (var contour in contours)
             {
-                if (Cv2.ContourArea(contour) < MinArea) continue;
+                double area = Cv2.ContourArea(contour);
+                if (area < MinArea) continue;
+
                 OpenCvSharp.Rect rect = Cv2.BoundingRect(contour);
                 Cv2.Rectangle(result, rect, new Scalar(0, 255, 0), 2);
                 count++;
+
+                detections?.Add(new Detection(
+                    rect.X + rect.Width / 2f,
+                    rect.Y + rect.Height / 2f,
+                    area,
+                    rect));
             }
 
             objectCount = count;
