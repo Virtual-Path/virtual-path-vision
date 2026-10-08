@@ -691,12 +691,22 @@ namespace VirtualPathVision
 
         // ==================== 信号源 & 连接 ====================
 
-        /// <summary>根据 IP 和端口构建网络流 URL，并同步信号源类型</summary>
+        /// <summary>根据 IP、端口和路径构建网络流 URL，并同步信号源类型</summary>
         private void BuildNetworkUrl()
         {
             string ip = CameraPanelCtrl.IPTextBoxEl.Text.Trim();
             string port = CameraPanelCtrl.PortTextBoxEl.Text.Trim();
-            _videoCaptureComponent.NetworkUrl = $"http://{ip}:{port}/video";
+            string path = CameraPanelCtrl.PathTextBoxEl.Text.Trim();
+
+            // 路径必须补前导斜杠：用户填 "cam1" 与 "/cam1" 语义相同，
+            // 不补会拼出 "http://ip:portcam1" 这种连不上的地址。
+            if (path.Length > 0 && !path.StartsWith('/')) path = "/" + path;
+
+            // 路径为空时退回 /cam1（VirtualPath-Core 的虚拟相机约定），
+            // 而不是退回 /video —— 引擎只服务 /cam1。
+            if (path.Length == 0) path = "/cam1";
+
+            _videoCaptureComponent.NetworkUrl = $"http://{ip}:{port}{path}";
             _videoCaptureComponent.SourceType = Components.VideoSourceType.NetworkStream;
             _networkConfigured = !string.IsNullOrWhiteSpace(ip) && !string.IsNullOrWhiteSpace(port);
         }
@@ -782,17 +792,28 @@ namespace VirtualPathVision
 
         Industrial.MesClient? mes = null;
         string url = card.MesUrl;
+        string token = card.MesToken;
         if (!string.IsNullOrWhiteSpace(url))
         {
             try
             {
-                mes = new Industrial.MesClient(url);
+                mes = new Industrial.MesClient(url, token);
             }
             catch (Exception ex)
             {
                 // 网关地址非法不应阻断采集：编排层降级为"只统计不上报"
                 AppLogger.Instance.Warn($"MES 客户端创建失败，仅本地统计: {ex.Message}");
                 Dispatcher.Invoke(() => card.SetMesState("Invalid", isError: true));
+            }
+
+            if (mes != null && !mes.HasToken)
+            {
+                // 网关 JwtAuthGlobalFilter 的白名单只有 /api/auth/login、
+                // /api/auth/register、/actuator/**，quality 路径需要 Bearer token。
+                // 不提示的话，用户会看到本地计数正常但上报全部 401。
+                AppLogger.Instance.Warn(
+                    "MES 未提供令牌：网关对 quality 路径强制鉴权，上报将全部返回 401");
+                Dispatcher.Invoke(() => card.SetMesState("No token", isError: true));
             }
         }
 

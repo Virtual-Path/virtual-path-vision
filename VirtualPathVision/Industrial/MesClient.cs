@@ -10,25 +10,34 @@ namespace VirtualPathVision.Industrial
     /// <summary>
     /// 单件产品的检测结论，用于上报 MES。
     /// </summary>
-    /// <param name="TraceId">产线追踪码，通常来自扫码枪或工件二维码</param>
-    /// <param name="Passed">是否合格</param>
-    /// <param name="DefectCode">缺陷代码，合格时为空</param>
-    /// <param name="Confidence">判定置信度 0..1</param>
-    /// <param name="WorkpieceId">目标标识，缺省等于 TraceId</param>
-    /// <param name="TimestampUtc">判定时刻</param>
+    /// <remarks>
+    /// 字段与网关侧 <c>com.mes.quality.dto.CreateQualityRecordDTO</c> 一一对应。
+    /// 该 DTO 未配置 Jackson 命名策略，因此用<b>camelCase</b> 而非 snake_case。
+    /// </remarks>
+    /// <param name="Sn">产品序列号（DTO 的 <c>sn</c>，最长 100）</param>
+    /// <param name="Passed">是否合格，映射为 <c>checkResult</c></param>
+    /// <param name="DefectType">缺陷分类（DTO 的 <c>defectType</c>，最长 50）</param>
+    /// <param name="DefectDesc">缺陷描述（DTO 的 <c>defectDesc</c>，最长 500）</param>
+    /// <param name="Remark">备注（DTO 的 <c>remark</c>，最长 500）</param>
+    /// <param name="WorkOrderNo">工单号（DTO 的 <c>workOrderNo</c>，最长 50）</param>
+    /// <param name="CheckType">
+    /// 检测类型，<b>必填</b>。DTO 用 <c>@Pattern</c> 限定为
+    /// <c>IPQC | FQC | OQC | 巡检 | 首检 | 终检</c>，填错会被 <c>@Valid</c> 拒为 400。
+    /// </param>
+    /// <param name="DeviceId">设备 ID，DTO 为 <c>Long</c></param>
+    /// <param name="WorkstationId">工位 ID，DTO 为 <c>Long</c></param>
+    /// <param name="OperatorId">操作员 ID，DTO 为 <c>Long</c></param>
     public sealed record QualityRecord(
-        string TraceId,
+        string Sn,
         bool Passed,
-        string? DefectCode,
-        double Confidence,
-        string? WorkpieceId = null,
-        DateTime? TimestampUtc = null)
-    {
-        public string EffectiveWorkpieceId
-            => string.IsNullOrWhiteSpace(WorkpieceId) ? TraceId : WorkpieceId!;
-
-        public DateTime EffectiveTimestamp => TimestampUtc ?? DateTime.UtcNow;
-    }
+        string? DefectType = null,
+        string? DefectDesc = null,
+        string? Remark = null,
+        string? WorkOrderNo = null,
+        string CheckType = MesClient.DefaultCheckType,
+        long? DeviceId = null,
+        long? WorkstationId = null,
+        long? OperatorId = null);
 
     /// <summary>
     /// 上报结果。
@@ -55,11 +64,17 @@ namespace VirtualPathVision.Industrial
     /// <param name="StatusCode">HTTP 状态码，未发出请求时为 0</param>
     /// <param name="ResponseBody">网关返回体，截断到 512 字符用于日志</param>
     /// <param name="Attempt">这是第几次尝试（1 起）</param>
+    /// <param name="RecordId">
+    /// 网关分配的质量记录主键，由 <c>POST /record</c> 的响应 <c>data</c> 字段带回。
+    /// 放行/剔除接口是 <c>/record/{id}/pass</c> 与 <c>/record/{id}/fail</c>，
+    /// 必须先拿到这个 id 才能调用。
+    /// </param>
     public sealed record MesReportResult(
         MesReportState State,
         int StatusCode,
         string? ResponseBody,
-        int Attempt)
+        int Attempt,
+        long? RecordId = null)
     {
         public bool Success => State == MesReportState.Accepted;
     }
@@ -67,26 +82,45 @@ namespace VirtualPathVision.Industrial
     /// <summary>
     /// MES 网关客户端。
     ///
-    /// <para><b>协议约定</b>（与网关 <c>mes-gateway:9090</c> 对接）：
+    /// <para><b>协议来源</b>：网关 <c>virtual-path-mes/mes-gateway</c>（端口 9090）把
+    /// <c>/api/quality/**</c> 以 <c>StripPrefix=1</c> 转发到 <c>mes-quality:8084</c>，
+    /// 因此对外路径是 <c>/api/quality/...</c>，后端实际收到 <c>/quality/...</c>。
+    /// 端点定义在 <c>QualityController</c>：
     /// <list type="bullet">
-    /// <item><c>POST /api/quality/record</c> —— 上报单件检测结论</item>
-    /// <item><c>POST /api/quality/pass</c> —— 合格件放行指令</item>
-    /// <item><c>POST /api/quality/fail</c> —— 不合格件剔除指令</item>
-    /// </list>
-    /// 请求体为 JSON，<c>Accept: application/json</c>。</para>
+    /// <item><c>POST /api/quality/record</c> —— 建记录，返回 <c>Result&lt;Long&gt;</c>（新记录 id）</item>
+    /// <item><c>POST /api/quality/record/{id}/pass</c> —— 放行，无请求体</item>
+    /// <item><c>POST /api/quality/record/{id}/fail?reason=...</c> —— 剔除，
+    ///       <c>reason</c> 是<b>必填</b>的查询参数</item>
+    /// </list></para>
+    ///
+    /// <para><b>鉴权</b>：网关的 <c>JwtAuthGlobalFilter</c> 白名单只有
+    /// <c>/api/auth/login</c>、<c>/api/auth/register</c>、<c>/actuator/**</c>。
+    /// quality 路径<b>不在白名单</b>，缺少 <c>Authorization: Bearer &lt;token&gt;</c>
+    /// 会直接 401。</para>
     ///
     /// <para><b>失败处理</b>：网络异常与非 2xx 都视为失败并进入指数退避重试。
     /// 产线不能因为网关暂时不可用就停机，因此客户端<b>不阻塞</b>采集线程——
     /// 所有方法都是 <c>Task</c>，由调用方决定是否等待。重试在后台队列中进行。</para>
-    ///
-    /// <para><b>线程模型</b>：内部持有单个 <see cref="HttpClient"/>（可复用连接池）。
-    /// 所有公开方法线程安全。重试队列由一个后台任务串行消费。</para>
     /// </summary>
     public sealed class MesClient : IDisposable
     {
+        /// <summary>
+        /// 默认检测类型。视觉工位属于工序内检验，故取 <c>IPQC</c>。
+        /// </summary>
+        public const string DefaultCheckType = "IPQC";
+
+        /// <summary>
+        /// <c>CreateQualityRecordDTO.checkType</c> 的 <c>@Pattern</c> 允许值。
+        /// 不在此列表内的输入会退回 <see cref="DefaultCheckType"/>，
+        /// 否则整条记录会被 <c>@Valid</c> 拒为 400。
+        /// </summary>
+        private static readonly string[] AllowedCheckTypes =
+            { "IPQC", "FQC", "OQC", "巡检", "首检", "终检" };
+
         private readonly HttpClient _http;
         private readonly bool _ownsHttp;
         private readonly string _baseUrl;
+        private readonly string? _token;
         private readonly int _maxAttempts;
         private readonly TimeSpan _initialBackoff;
 
@@ -101,7 +135,10 @@ namespace VirtualPathVision.Industrial
         /// <summary>
         /// 创建 MES 客户端。
         /// </summary>
-        /// <param name="baseUrl">网关基地址，如 <c>http://mes-gateway:9090</c>（尾部斜杠会被去掉）</param>
+        /// <param name="baseUrl">网关基地址，如 <c>http://localhost:9090</c>（尾部斜杠会被去掉）</param>
+        /// <param name="token">
+        /// JWT。quality 路径受全局鉴权过滤器保护，为空将导致所有上报 401。
+        /// </param>
         /// <param name="maxAttempts">含首次请求的最大尝试次数</param>
         /// <param name="initialBackoff">首次重试前的等待时长，之后按 2 倍递增</param>
         /// <param name="httpClient">
@@ -110,6 +147,7 @@ namespace VirtualPathVision.Industrial
         /// </param>
         public MesClient(
             string baseUrl,
+            string? token = null,
             int maxAttempts = 3,
             TimeSpan? initialBackoff = null,
             HttpClient? httpClient = null)
@@ -118,6 +156,7 @@ namespace VirtualPathVision.Industrial
                 throw new ArgumentException("baseUrl 不能为空", nameof(baseUrl));
 
             _baseUrl = baseUrl.TrimEnd('/');
+            _token = string.IsNullOrWhiteSpace(token) ? null : token.Trim();
             _maxAttempts = Math.Max(1, maxAttempts);
             _initialBackoff = initialBackoff ?? TimeSpan.FromMilliseconds(500);
 
@@ -143,6 +182,9 @@ namespace VirtualPathVision.Industrial
         /// <summary>网关基地址。</summary>
         public string BaseUrl => _baseUrl;
 
+        /// <summary>是否携带了鉴权令牌。未携带时上报必然 401。</summary>
+        public bool HasToken => _token != null;
+
         /// <summary>待重试队列长度，可用于监控积压。</summary>
         public int PendingRetryCount
         {
@@ -152,37 +194,54 @@ namespace VirtualPathVision.Industrial
         /// <summary>
         /// 上报单件检测结论到 <c>/api/quality/record</c>。
         /// </summary>
+        /// <remarks>
+        /// 成功时 <see cref="MesReportResult.RecordId"/> 携带网关分配的记录 id，
+        /// 后续 <see cref="PassAsync"/> / <see cref="FailAsync"/> 依赖它。
+        /// </remarks>
         public Task<MesReportResult> ReportQualityAsync(
             QualityRecord record, CancellationToken ct = default)
-            => PostAsync("/api/quality/record", record, ct);
+            => PostRecordAsync(record, ct);
 
         /// <summary>
-        /// 请求合格件放行。上报结论之后再调用，避免放行早于记录。
+        /// 请求合格件放行。<paramref name="recordId"/> 取自
+        /// <see cref="ReportQualityAsync"/> 的返回值。端点无请求体。
         /// </summary>
         public Task<MesReportResult> PassAsync(
-            QualityRecord record, CancellationToken ct = default)
-            => PostAsync("/api/quality/pass", record, ct);
+            long recordId, CancellationToken ct = default)
+            => PostVoidAsync($"/api/quality/record/{recordId}/pass", null, ct);
 
         /// <summary>
         /// 请求不合格件剔除。
         /// </summary>
+        /// <param name="recordId">取自 <see cref="ReportQualityAsync"/> 的返回值</param>
+        /// <param name="reason">
+        /// 剔除原因。端点声明为 <c>@RequestParam String reason</c>，
+        /// <b>必填</b>——留空会被 Spring 拒为 400。
+        /// </param>
         public Task<MesReportResult> FailAsync(
-            QualityRecord record, CancellationToken ct = default)
-            => PostAsync("/api/quality/fail", record, ct);
+            long recordId, string reason, CancellationToken ct = default)
+        {
+            // 查询参数必须 URL 编码：缺陷描述里可能有空格、斜杠、中文
+            string urlEncoded = Uri.EscapeDataString(
+                string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim());
 
-        private async Task<MesReportResult> PostAsync(
-            string path, QualityRecord record, CancellationToken ct)
+            return PostVoidAsync(
+                $"/api/quality/record/{recordId}/fail?reason={urlEncoded}", null, ct);
+        }
+
+        private async Task<MesReportResult> PostRecordAsync(
+            QualityRecord record, CancellationToken ct)
         {
             var payload = BuildPayload(record);
 
             for (int attempt = 1; attempt <= _maxAttempts; attempt++)
             {
-                var result = await TryOnceAsync(path, payload, ct).ConfigureAwait(false);
+                var result = await TryOnceAsync("/api/quality/record", payload, ct)
+                    .ConfigureAwait(false);
 
                 if (result.State != MesReportState.Failed || attempt == _maxAttempts)
                     return result with { Attempt = attempt };
 
-                // 进重试队列，由后台串行消费，避免阻塞采集线程
                 Enqueue(new PendingItem(record, attempt + 1));
 
                 var backoff = TimeSpan.FromMilliseconds(
@@ -193,18 +252,46 @@ namespace VirtualPathVision.Industrial
             return new MesReportResult(MesReportState.Failed, 0, "exhausted retries", _maxAttempts);
         }
 
+        private async Task<MesReportResult> PostVoidAsync(
+            string path, string? json, CancellationToken ct)
+        {
+            for (int attempt = 1; attempt <= _maxAttempts; attempt++)
+            {
+                var result = await TryOnceAsync(path, json, ct).ConfigureAwait(false);
+
+                if (result.State != MesReportState.Failed || attempt == _maxAttempts)
+                    return result with { Attempt = attempt };
+
+                var backoff = TimeSpan.FromMilliseconds(
+                    _initialBackoff.TotalMilliseconds * Math.Pow(2, attempt - 1));
+                await Task.Delay(backoff, ct).ConfigureAwait(false);
+            }
+
+            return new MesReportResult(MesReportState.Failed, 0, "exhausted retries", _maxAttempts);
+        }
+
         private async Task<MesReportResult> TryOnceAsync(
-            string path, string json, CancellationToken ct)
+            string path, string? json, CancellationToken ct)
         {
             try
             {
-                using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                using var request = new HttpRequestMessage(HttpMethod.Post, _baseUrl + path)
+                using var request = new HttpRequestMessage(HttpMethod.Post, _baseUrl + path);
+
+                if (json != null)
                 {
-                    Content = content,
-                };
+                    request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+                }
+
                 request.Headers.Accept.Add(
                     new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+                if (_token != null)
+                {
+                    // 网关 JwtAuthGlobalFilter 只认 "Bearer " 前缀，
+                    // 缺这个头会直接 401，且不会被路由到后端。
+                    request.Headers.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _token);
+                }
 
                 using var response = await _http
                     .SendAsync(request, HttpCompletionOption.ResponseContentRead, ct)
@@ -213,14 +300,28 @@ namespace VirtualPathVision.Industrial
                 string body = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
                 body = Truncate(body, 512);
 
-                if (response.IsSuccessStatusCode)
-                    return new MesReportResult(MesReportState.Accepted, (int)response.StatusCode, body, 1);
+                int status = (int)response.StatusCode;
 
-                // 4xx 通常是请求本身有问题，重试无意义；5xx 才是服务端暂时故障
-                bool retryable = (int)response.StatusCode >= 500;
+                if (!response.IsSuccessStatusCode)
+                {
+                    // 4xx 通常是请求本身有问题，重试无意义；5xx 才是服务端暂时故障
+                    bool retryable = status >= 500;
+                    return new MesReportResult(
+                        retryable ? MesReportState.Failed : MesReportState.Rejected,
+                        status, body, 1);
+                }
+
+                // HTTP 200 不等于业务成功：网关统一返回 {code,message,data,timestamp}，
+                // code != 200 是业务失败，不应重试，也不应被当成"上报成功"。
+                var envelope = ParseEnvelope(body);
+                if (envelope.Code != 0 && envelope.Code != 200)
+                {
+                    return new MesReportResult(
+                        MesReportState.Rejected, status, body, 1, RecordId: null);
+                }
+
                 return new MesReportResult(
-                    retryable ? MesReportState.Failed : MesReportState.Rejected,
-                    (int)response.StatusCode, body, 1);
+                    MesReportState.Accepted, status, body, 1, envelope.DataId);
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
@@ -234,21 +335,89 @@ namespace VirtualPathVision.Industrial
         }
 
         /// <summary>
+        /// 解析 <c>Result</c> 响应封装，取出 <c>code</c> 与 <c>data</c>（记录 id）。
+        /// </summary>
+        /// <remarks>
+        /// 非 JSON 或结构不符时 <c>Code</c> 返回 0，语义上等同"成功但无 id"——
+        /// 因为 HTTP 层已经是 2xx，此时不该把它误判成业务失败。
+        /// </remarks>
+        private static (int Code, long? DataId) ParseEnvelope(string? body)
+        {
+            if (string.IsNullOrWhiteSpace(body)) return (0, null);
+
+            try
+            {
+                using var doc = JsonDocument.Parse(body);
+                var root = doc.RootElement;
+
+                int code = 0;
+                if (root.TryGetProperty("code", out var codeEl)
+                    && codeEl.ValueKind == JsonValueKind.Number
+                    && codeEl.TryGetInt32(out int c))
+                {
+                    code = c;
+                }
+
+                long? id = null;
+                if (root.TryGetProperty("data", out var dataEl)
+                    && dataEl.ValueKind == JsonValueKind.Number
+                    && dataEl.TryGetInt64(out long d))
+                {
+                    id = d;
+                }
+
+                return (code, id);
+            }
+            catch (JsonException)
+            {
+                // 网关前置（如反向代理）可能返回非 JSON 的错误页
+                return (0, null);
+            }
+        }
+
+        /// <summary>
         /// 组装上报报文。
         ///
-        /// 字段名用 snake_case，与网关约定一致；这里显式手写而非依赖
-        /// 序列化策略，避免将来改动 <see cref="JsonSerializerOptions"/> 时
-        /// 悄悄改变线上报文的字段名。
+        /// <para>字段名与 <c>CreateQualityRecordDTO</c> 完全一致（camelCase）。
+        /// 这里显式手写而非依赖序列化策略，避免将来改动
+        /// <see cref="JsonSerializerOptions"/> 时悄悄改变线上报文的字段名。</para>
+        ///
+        /// <para>字符串长度按 DTO 的 <c>@Size</c> 截断：超长会让 <c>@Valid</c> 失败并返回 400，
+        /// 而截断是静默的——宁可少几个字符，也不要整条记录被拒。</para>
         /// </summary>
-        public static string BuildPayload(QualityRecord r) => JsonSerializer.Serialize(new
+        public static string BuildPayload(QualityRecord r)
         {
-            trace_id = r.TraceId,
-            workpiece_id = r.EffectiveWorkpieceId,
-            passed = r.Passed,
-            defect_code = r.DefectCode,
-            confidence = Math.Round(r.Confidence, 4),
-            timestamp_utc = r.EffectiveTimestamp.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-        });
+            if (r == null) throw new ArgumentNullException(nameof(r));
+
+            if (string.IsNullOrWhiteSpace(r.Sn))
+                throw new ArgumentException("Sn 不能为空：网关按 sn 建立产品追溯", nameof(r));
+
+            // checkType 是 @NotBlank + @Pattern，只接受白名单值。
+            string checkType = Array.IndexOf(AllowedCheckTypes, r.CheckType) >= 0
+                ? r.CheckType
+                : DefaultCheckType;
+
+            // DTO 的 @Pattern 同时接受 PASSED/FAILED/REWORK 与 PASS/FAIL，
+            // 但统一用 PASSED/FAILED 以与实体枚举保持一致。
+            string checkResult = r.Passed ? "PASSED" : "FAILED";
+
+            return JsonSerializer.Serialize(new
+            {
+                sn = Clip(r.Sn, 100),
+                workOrderNo = r.WorkOrderNo is null ? null : Clip(r.WorkOrderNo, 50),
+                checkType,
+                checkResult,
+                defectType = r.DefectType is null ? null : Clip(r.DefectType, 50),
+                defectDesc = r.DefectDesc is null ? null : Clip(r.DefectDesc, 500),
+                remark = r.Remark is null ? null : Clip(r.Remark, 500),
+                deviceId = r.DeviceId,
+                workstationId = r.WorkstationId,
+                operatorId = r.OperatorId,
+            });
+        }
+
+        private static string Clip(string s, int max)
+            => string.IsNullOrEmpty(s) ? s : (s.Length <= max ? s : s[..max]);
 
         private static string Truncate(string s, int max)
             => string.IsNullOrEmpty(s) || s.Length <= max ? s : s[..max] + "...";
@@ -263,10 +432,12 @@ namespace VirtualPathVision.Industrial
         /// 后台重试循环：串行消费队列，失败则放回队尾。
         /// 不抛异常——采集线程不应因为网关问题而中断。
         /// </summary>
+        /// <remarks>
+        /// 只重试<b>建记录</b>。放行/剔除依赖建记录返回的 id，
+        /// 建记录没成功就没有 id，动作请求无法构造，因此不入队。
+        /// </remarks>
         private async Task RetryLoopAsync(CancellationToken ct)
         {
-            var payloadCache = new Dictionary<string, string>();
-
             while (!ct.IsCancellationRequested)
             {
                 PendingItem item;
@@ -275,7 +446,6 @@ namespace VirtualPathVision.Industrial
                     if (_retryQueue.Count == 0)
                     {
                         item = default;
-                        payloadCache.Clear();
                     }
                     else
                     {
@@ -283,32 +453,24 @@ namespace VirtualPathVision.Industrial
                     }
                 }
 
-                if (payloadCache.Count == 0 && item.Record is null)
+                if (item.Record is null)
                 {
                     try { await _retrySignal.WaitAsync(ct).ConfigureAwait(false); }
                     catch (OperationCanceledException) { break; }
                     continue;
                 }
 
-                string path = item.Record!.Passed ? "/api/quality/pass" : "/api/quality/fail";
-                if (!payloadCache.TryGetValue(item.Record.TraceId, out string? json))
-                {
-                    json = BuildPayload(item.Record);
-                    payloadCache[item.Record.TraceId] = json;
-                }
-
-                var result = await TryOnceAsync(path, json, ct).ConfigureAwait(false);
+                string payload = BuildPayload(item.Record);
+                var result = await TryOnceAsync("/api/quality/record", payload, ct)
+                    .ConfigureAwait(false);
 
                 if (result.State == MesReportState.Failed && item.Attempt < _maxAttempts)
                 {
                     Enqueue(item with { Attempt = item.Attempt + 1 });
                 }
 
-                // Accepted / Rejected / 超过次数上限：都算处理完毕，丢弃
-                if (result.State != MesReportState.Failed)
-                    payloadCache.Remove(item.Record.TraceId);
-
-                await Task.Delay(_initialBackoff, ct).ConfigureAwait(false);
+                try { await Task.Delay(_initialBackoff, ct).ConfigureAwait(false); }
+                catch (OperationCanceledException) { break; }
             }
         }
 

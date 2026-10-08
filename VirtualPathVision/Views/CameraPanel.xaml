@@ -242,6 +242,21 @@
                                  Style="{StaticResource GlassTextBox}"
                                  Width="90"
                                  VerticalContentAlignment="Center" />
+
+                        <!-- 路径段：不同虚拟相机暴露的路径不同
+                             （VirtualPath-Core 用 /cam1，部分 IP 相机用 /video 或 /stream）。
+                             此前硬编码 /video，接引擎时 404 并被反复重连。 -->
+                        <TextBlock x:Name="CameraPathLabel" Text="/"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   VerticalAlignment="Center"
+                                   Margin="8,0,0,0" />
+                        <TextBox x:Name="PathTextBox"
+                                 Text="/cam1"
+                                 Style="{StaticResource GlassTextBox}"
+                                 Width="120"
+                                 VerticalContentAlignment="Center"
+                                 ToolTip="Stream path on the server, e.g. /cam1" />
                     </StackPanel>
                 </Border>
             </StackPanel>

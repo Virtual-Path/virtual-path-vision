@@ -32,6 +32,7 @@ namespace VirtualPathVision.Views
 
             StableFramesTextBox.TextChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
             MesUrlTextBox.TextChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
+            MesTokenBox.PasswordChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
 
             UpdateCounters(0, 0, 0);
             RefreshTexts();
@@ -59,6 +60,12 @@ namespace VirtualPathVision.Views
 
         /// <summary>MES 网关地址，空字符串表示不上报。</summary>
         public string MesUrl => MesUrlTextBox.Text.Trim();
+
+        /// <summary>
+        /// MES 网关 JWT。网关的 <c>JwtAuthGlobalFilter</c> 白名单不含 quality 路径，
+        /// 为空时所有上报都会被 401 拒掉。
+        /// </summary>
+        public string MesToken => MesTokenBox.Password.Trim();
 
         /// <summary>刷新计数与良率显示。</summary>
         public void UpdateCounters(int passed, int failed, double yieldRate)
@@ -119,6 +126,7 @@ namespace VirtualPathVision.Views
                 ? "连续 N 帧结论一致才判定，避免单帧抖动误报"
                 : "Require N consecutive frames with the same verdict";
             MesLabelText.Text = zh ? "MES 网关" : "MES gateway";
+            MesTokenLabelText.Text = zh ? "网关令牌" : "MES token";
         }
     }
 }

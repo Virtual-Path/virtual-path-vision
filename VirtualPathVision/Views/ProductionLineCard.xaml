@@ -160,6 +160,23 @@
                 </Border>
             </Grid>
 
+            <!-- 网关 JWT：quality 路径不在白名单，缺这个头一律 401 -->
+            <Grid Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="MesTokenLabelText" Grid.Column="0" Text="MES token"
+                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                           VerticalAlignment="Center" Margin="0,0,10,0" />
+
+                <PasswordBox x:Name="MesTokenBox" Grid.Column="1"
+                             Style="{StaticResource GlassTextBox}"
+                             VerticalContentAlignment="Center"
+                             ToolTip="JWT for the MES gateway" />
+            </Grid>
+
             <TextBlock x:Name="LastEventText"
                        Margin="0,12,0,0"
                        Text=""

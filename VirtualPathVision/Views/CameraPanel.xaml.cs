@@ -22,6 +22,7 @@ public partial class CameraPanel : UserControl
     public Border NetworkConfigPanelEl => NetworkConfigPanel;
     public TextBox IPTextBoxEl => IPTextBox;
     public TextBox PortTextBoxEl => PortTextBox;
+        public TextBox PathTextBoxEl => PathTextBox;
 
     // ── Replay config ────────────────────────────────────────────────
     public Border ReplayConfigPanelEl => ReplayConfigPanel;

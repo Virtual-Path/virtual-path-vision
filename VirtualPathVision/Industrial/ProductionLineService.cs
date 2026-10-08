@@ -281,12 +281,14 @@ namespace VirtualPathVision.Industrial
         {
             if (_mes == null) return;
 
+            // 网关 DTO 的必填项是 sn 与 checkType；Confidence 没有对应字段，
+            // 放不进去，只能留在本地日志里。
             var record = new QualityRecord(
-                TraceId: piece.WorkpieceId,
+                Sn: piece.WorkpieceId,
                 Passed: piece.Passed,
-                DefectCode: piece.Passed ? null : piece.WorkpieceId,
-                Confidence: piece.Confidence,
-                WorkpieceId: piece.WorkpieceId);
+                DefectType: piece.Passed ? null : "visual-nc",
+                DefectDesc: piece.Passed ? null
+                    : $"vision verdict ng (confidence {piece.Confidence:F3})");
 
             // 采集线程不等待网关：先记结论，再异步上报
             _ = ReportAsync(piece, record);
@@ -296,24 +298,34 @@ namespace VirtualPathVision.Industrial
         {
             try
             {
-                var result = piece.Passed
-                    ? await _mes!.ReportQualityAsync(record).ConfigureAwait(false)
-                    : await _mes!.ReportQualityAsync(record).ConfigureAwait(false);
+                var result = await _mes!.ReportQualityAsync(record).ConfigureAwait(false);
 
-                if (result.Success)
+                if (!result.Success)
                 {
-                    // 结论记录成功后再请求执行动作，顺序不能反
-                    var action = piece.Passed
-                        ? await _mes!.PassAsync(record).ConfigureAwait(false)
-                        : await _mes!.FailAsync(record).ConfigureAwait(false);
-
-                    if (!action.Success)
-                        OnMesReportFailed?.Invoke(piece.WorkpieceId, action);
-
+                    OnMesReportFailed?.Invoke(piece.WorkpieceId, result);
                     return;
                 }
 
-                OnMesReportFailed?.Invoke(piece.WorkpieceId, result);
+                // 放行/剔除端点是 /record/{id}/pass|fail，依赖建记录返回的 id。
+                // 拿不到 id 就不能猜一个——那等于对随机记录执行动作。
+                if (result.RecordId is not long recordId)
+                {
+                    OnMesReportFailed?.Invoke(piece.WorkpieceId,
+                        new MesReportResult(MesReportState.Rejected, result.StatusCode,
+                            "gateway accepted the record but returned no id; " +
+                            "cannot address /record/{id}/pass|fail",
+                            result.Attempt));
+                    return;
+                }
+
+                // 结论记录成功后再请求执行动作，顺序不能反
+                var action = piece.Passed
+                    ? await _mes!.PassAsync(recordId).ConfigureAwait(false)
+                    : await _mes!.FailAsync(recordId, record.DefectDesc ?? "unspecified")
+                        .ConfigureAwait(false);
+
+                if (!action.Success)
+                    OnMesReportFailed?.Invoke(piece.WorkpieceId, action);
             }
             catch (Exception ex)
             {
