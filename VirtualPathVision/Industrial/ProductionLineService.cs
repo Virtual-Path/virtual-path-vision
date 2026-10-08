@@ -88,22 +88,34 @@ namespace VirtualPathVision.Industrial
         /// </summary>
         /// <param name="stability">稳定判定器，为 null 时按默认 3 帧 / 1.0s 创建</param>
         /// <param name="mes">MES 客户端，为 null 表示不上报（仅本地统计）</param>
-        /// <param name="positionBucketSize">位置分桶粒度（像素）</param>
+        /// <param name="positionBucketSize">位置分桶粒度（像素），保留给不需要跟踪的调用方</param>
+        /// <param name="matchRadius">
+        /// 同一目标在相邻帧之间允许的最大横向位移（像素）。取值应略大于
+        /// 「速度 x 帧间隔」：默认 60px 对应 30fps 下约 2px/帧 的位移，
+        /// 留了很大余量，同时远小于工件间距。
+        /// </param>
         public ProductionLineService(
             StabilityFilter? stability = null,
             MesClient? mes = null,
-            float positionBucketSize = 24f)
+            float positionBucketSize = 24f,
+            float matchRadius = 60f)
         {
             if (positionBucketSize <= 0)
                 throw new ArgumentOutOfRangeException(nameof(positionBucketSize));
+            if (matchRadius <= 0)
+                throw new ArgumentOutOfRangeException(nameof(matchRadius));
 
             _stability = stability ?? new StabilityFilter();
             _mes = mes;
             PositionBucketSize = positionBucketSize;
+            MatchRadius = matchRadius;
         }
 
         /// <summary>位置分桶粒度（像素）。</summary>
         public float PositionBucketSize { get; }
+
+        /// <summary>同一目标允许的帧间最大位移（像素）。</summary>
+        public float MatchRadius { get; }
 
         /// <summary>累计合格数。</summary>
         public int PassedCount { get { lock (_gate) return _passedCount; } }
@@ -149,7 +161,7 @@ namespace VirtualPathVision.Industrial
 
             foreach (var d in detections)
             {
-                string key = MakeTrackKey(d.CenterX, d.CenterY);
+                string key = ResolveTrack(d);
 
                 // 已判定过：不再重复处理，等它离开检测区后由 Expire 清理
                 lock (_gate)
@@ -312,10 +324,67 @@ namespace VirtualPathVision.Industrial
 
         /// <summary>
         /// 由像素坐标派生目标标识。
-        /// 用分桶而非精确坐标，使目标在帧间小幅移动时仍归为一组。
+        ///
+        /// <para><b>为什么不能只按位置分桶</b>：传送带上的工件在连续帧之间会移动，
+        /// 分桶粒度小于单帧位移时，同一件每帧都落进新的桶而被判为新件。
+        /// 粒度放大到能覆盖整段行程，又会把相邻两件并为一组。</para>
         /// </summary>
         private string MakeTrackKey(float x, float y)
-            => $"cx={MathF.Round(x / PositionBucketSize)},cy={MathF.Round(y / PositionBucketSize)}";
+            => $"@{MathF.Round(x)},{MathF.Round(y)}";
+
+        /// <summary>
+        /// 把一次检出归入某个已有目标：签名相同且横向中心距在
+        /// <see cref="MatchRadius"/> 内视为同一目标；否则视为新目标。
+        ///
+        /// <para>签名不同必然是不同类型的目标（红箱 vs 绿球），不会误并；
+        /// 签名相同但距离超过半径，则是同类型的前后两件，也不误并。
+        /// 这解决了纯位置分桶在匀速移动下"每帧一个新 key"的问题。</para>
+        /// </summary>
+        private string ResolveTrack(in Detection d)
+        {
+            string prefix = d.Signature + "@";
+
+            lock (_gate)
+            {
+                string? best = null;
+                float bestDist = MatchRadius;
+
+                // 已判定的目标优先匹配，避免重新生成 key
+                foreach (string key in _settled)
+                {
+                    if (!key.StartsWith(prefix, StringComparison.Ordinal)) continue;
+                    if (!TryParseKey(key, out float kx, out _)) continue;
+
+                    float dist = MathF.Abs(kx - d.CenterX);
+                    if (dist < bestDist) { bestDist = dist; best = key; }
+                }
+                if (best != null) return best;
+
+                // 未判定的目标也要匹配，否则同一件在尚未稳定时每帧生成新 key
+                foreach (var kv in _firstSeen)
+                {
+                    if (!kv.Key.StartsWith(prefix, StringComparison.Ordinal)) continue;
+                    if (!TryParseKey(kv.Key, out float kx, out _)) continue;
+
+                    float dist = MathF.Abs(kx - d.CenterX);
+                    if (dist < bestDist) { bestDist = dist; best = kv.Key; }
+                }
+
+                return best ?? (d.Signature + MakeTrackKey(d.CenterX, d.CenterY));
+            }
+        }
+
+        private static bool TryParseKey(string key, out float x, out float y)
+        {
+            x = 0; y = 0;
+            int at = key.LastIndexOf('@');
+            if (at < 0) return false;
+
+            string[] parts = key[(at + 1)..].Split(',');
+            if (parts.Length != 2) return false;
+
+            return float.TryParse(parts[0], out x) && float.TryParse(parts[1], out y);
+        }
 
         /// <summary>
         /// 把 DateTime 转成单调递增的秒数。
