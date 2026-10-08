@@ -86,9 +86,9 @@ All screenshots below are produced by the app itself using the bundled test scen
 
 ## How It Works
 
-1. **Select Source** – Choose "Local Camera" or "Network Stream"
-2. **Configure** – For network, enter the IP address and port
-3. **Connect** – Establish the video stream connection
+1. **Select Source** – Choose "Local Camera", "Network Stream", or "File Replay"
+2. **Configure** – For network, enter the IP address and port; for replay, pick a file with "Browse..."
+3. **Connect** – Establish the video stream connection or start replaying
 4. **Choose Mode** – Pick one of 11 processing algorithms
 5. **Process** – Real-time processing and face detection, with FPS and timing stats
 6. **Adjust** – Fine-tune Canny thresholds and re-apply (Canny / Contour modes)
@@ -111,6 +111,23 @@ All processing runs asynchronously on a background thread, keeping the UI respon
    - Click **Connect**
 
 The app automatically constructs the MJPEG URL and starts streaming.
+
+---
+
+## Tuning with Replayed Footage
+
+Line defects are often hard to reproduce on demand; replaying a recording is the fastest way to pin down thresholds.
+
+1. Select **"File Replay"** as the source
+2. Click **"Browse..."** and pick a recording (mp4 / avi / mkv / mov / wmv / m4v, or an image-sequence directory)
+3. Optionally adjust:
+   - **FPS** – replay pacing. Left empty, the recording's own frame rate is used. 0 means no throttling (plays as fast as possible; rarely what you want)
+   - **Loop** – tick to restart from the beginning at the end of the file
+4. Click **Connect**. The panel shows `current / total` frames plus a progress bar
+
+Replay feeds the exact same processing pipeline as live capture, so detection modes, thresholds, recording, and screenshots behave identically.
+
+> Replay needs no external service. To reproduce the "3D engine as virtual camera" setup instead, use "Network Stream" with host `127.0.0.1` and the engine's port (e.g. 8080).
 
 ---
 
