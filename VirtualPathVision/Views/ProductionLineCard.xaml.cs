@@ -1,4 +1,5 @@
 using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using VirtualPathVision.Industrial;
@@ -31,6 +32,10 @@ namespace VirtualPathVision.Views
             RoiCheckBox.Unchecked += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
 
             StableFramesTextBox.TextChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
+            RoiXTextBox.TextChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
+RoiYTextBox.TextChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
+RoiWTextBox.TextChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
+RoiHTextBox.TextChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
             MesUrlTextBox.TextChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
             MesTokenBox.PasswordChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
 
@@ -57,6 +62,33 @@ namespace VirtualPathVision.Views
 
         /// <summary>是否把检测限制在检测区内。</summary>
         public bool UseRoi => RoiCheckBox.IsChecked == true;
+        /// <summary>
+        /// 检测区（像素）。默认对准 VirtualPath-Core 虚拟相机在 1280x720 下的
+        /// 检测工位；换分辨率或换相机必须重新标定。
+        /// </summary>
+        /// <remarks>
+        /// 非法输入一律回退到默认值：ROI 填错会让真实工件被判为区外而漏检，
+        /// 而那种错误在产线上是静默的——宁可退回已知可用的值。
+        /// </remarks>
+        public OpenCvSharp.Rect RoiRect => new(
+            ReadNonNegative(RoiXTextBox, DefaultRoiX),
+            ReadNonNegative(RoiYTextBox, DefaultRoiY),
+            Math.Max(1, ReadNonNegative(RoiWTextBox, DefaultRoiW)),
+            Math.Max(1, ReadNonNegative(RoiHTextBox, DefaultRoiH)));
+
+        /// <summary>默认 ROI（1280x720 画幅下的传送带检测工位）。</summary>
+        public const int DefaultRoiX = 360;
+        public const int DefaultRoiY = 180;
+        public const int DefaultRoiW = 560;
+        public const int DefaultRoiH = 280;
+
+        private static int ReadNonNegative(TextBox box, int fallback)
+            => int.TryParse(box.Text.Trim(), out int v) && v >= 0 ? v : fallback;
+
+        private void RoiCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            RoiValuesPanel.Visibility = UseRoi ? Visibility.Visible : Visibility.Collapsed;
+        }
 
         /// <summary>MES 网关地址，空字符串表示不上报。</summary>
         public string MesUrl => MesUrlTextBox.Text.Trim();

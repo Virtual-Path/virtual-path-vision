@@ -85,12 +85,33 @@ namespace VirtualPathVision
         }
 
         /// <summary>
+        /// 非阻塞投递一次 UI 更新，<b>不去重</b>。
+        /// </summary>
+        /// <remarks>
+        /// 给一次性事件用（采集停止、连接状态变化等）：这些更新丢了就再也
+        /// 不会补上——面板会停在脏状态。不能用 <see cref="InvokeUi"/>，
+        /// 它为每帧刷新设计的在途去重会把它们挤掉。
+        /// </remarks>
+        private void PostUi(Action action)
+        {
+            if (_shuttingDown) return;
+            _ = Dispatcher.BeginInvoke(action, DispatcherPriority.Normal);
+        }
+
+        /// <summary>
         /// 检测区 ROI。
         ///
         /// 默认对准传送带中部的检测工位（画面中部偏下）。
         /// 真实产线需要按相机标定结果调整，这里先给一个可用值并允许用户后续改。
         /// </summary>
-        private OpenCvSharp.Rect InspectionRoiRect => new(360, 180, 560, 280);
+        /// <summary>
+        /// 检测区 ROI。
+        ///
+        /// <para>取自产线卡片上的输入框，而不是写死在此处：ROI 依赖具体的
+        /// 分辨率与相机标定，写死会在换分辨率时静默漏检——而漏检在产线上
+        /// 是不会报警的。默认值见 <c>ProductionLineCard.DefaultRoi*</c>。</para>
+        /// </summary>
+        private OpenCvSharp.Rect InspectionRoiRect => IndustrialPanelCtrl.LineCard.RoiRect;
         private Components.FaceDetectionComponent _faceDetectionComponent;
         private Components.ImageProcessingComponent _imageProcessingComponent;
         private Components.RecordingComponent _recordingComponent;
@@ -2365,11 +2386,20 @@ namespace VirtualPathVision
         /// <summary>捕获停止事件处理：清空画面、重置状态</summary>
         private void OnCaptureStoppedHandler(string? reason)
         {
+            // 关窗期不再碰 UI，也不再碰编排层：
+            // 本处理器可能在采集线程上被调用，而 UI 线程此时正阻塞在
+            // MainWindow_Closed 里。阻塞式 Dispatcher.Invoke 会把采集线程
+            // 一起拖住；直接改控件则会在窗口拆除过程中触碰已释放的对象。
+            if (_shuttingDown) return;
+
             // 采集停止后必须清空编排层的跟踪状态：否则残留的 trackKey 会让
             // 重新连接后的第一件被误判为"已判定过"而漏检。
             _productionLine?.Reset();
 
-            Dispatcher.Invoke(() =>
+            // 一次性事件：用 PostUi 而不是 InvokeUi。InvokeUi 的在途去重是
+            // 为每帧刷新设计的，会把"采集停止"这种状态迁移挤掉，
+            // 面板就停在脏状态（图像不清、按钮仍禁用）。
+            PostUi(() =>
             {
                 IndustrialPanelCtrl.LineCard.ResetCounters();
                 IndustrialPanelCtrl.LineCard.ShowEvent("");
@@ -2404,7 +2434,17 @@ namespace VirtualPathVision
         private void OnCaptureErrorHandler(string? error)
         {
             string msg = error ?? TranslationService.GetStringStatic("UnknownError");
-            Dispatcher.Invoke(() =>
+
+            // 关窗期只写日志：ShowError 要动 UI 元素，而此时 UI 线程正卡在
+            // MainWindow_Closed 里。错误信息不能因为要退出就整个丢掉。
+            if (_shuttingDown)
+            {
+                AppLogger.Instance.Error(msg + "（关窗期，未弹提示）");
+                return;
+            }
+
+            // 一次性事件：不去重，否则可能被在途的每帧刷新挤掉
+            PostUi(() =>
             {
                 ShowError(msg);
                 AppLogger.Instance.Error(msg);

@@ -108,10 +108,51 @@
                            VerticalAlignment="Center" Margin="0,0,10,0" />
 
                 <CheckBox x:Name="RoiCheckBox" Grid.Column="1"
-                          IsChecked="True" VerticalAlignment="Center">
+                          IsChecked="True" VerticalAlignment="Center"
+                          Checked="RoiCheckBox_Changed"
+                          Unchecked="RoiCheckBox_Changed">
                     <TextBlock x:Name="RoiHintText" FontSize="11"
                                Foreground="{DynamicResource TextMutedBrush}" />
                 </CheckBox>
+            </Grid>
+
+            <!-- ROI 数值：默认对准 VirtualPath-Core 虚拟相机的检测工位
+                 （1280x720 下的传送带中部）。不同分辨率/相机必须重新标定，
+                 所以这里做成可改，而不是写死在代码里。 -->
+            <Grid x:Name="RoiValuesPanel" Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="RoiValuesLabelText" Grid.Column="0" Text="ROI"
+                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                           VerticalAlignment="Center" Margin="0,0,10,0" />
+
+                <TextBox x:Name="RoiXTextBox" Grid.Column="1" Text="360" Width="52"
+                         Style="{StaticResource GlassTextBox}"
+                         VerticalContentAlignment="Center" Margin="0,0,6,0"
+                         ToolTip="Left" />
+                <TextBox x:Name="RoiYTextBox" Grid.Column="2" Text="180" Width="52"
+                         Style="{StaticResource GlassTextBox}"
+                         VerticalContentAlignment="Center" Margin="0,0,6,0"
+                         ToolTip="Top" />
+                <TextBox x:Name="RoiWTextBox" Grid.Column="3" Text="560" Width="52"
+                         Style="{StaticResource GlassTextBox}"
+                         VerticalContentAlignment="Center" Margin="0,0,6,0"
+                         ToolTip="Width" />
+                <TextBox x:Name="RoiHTextBox" Grid.Column="4" Text="280" Width="52"
+                         Style="{StaticResource GlassTextBox}"
+                         VerticalContentAlignment="Center" Margin="0,0,10,0"
+                         ToolTip="Height" />
+
+                <TextBlock x:Name="RoiValuesHintText" Grid.Column="5" FontSize="11"
+                           Foreground="{DynamicResource TextMutedBrush}"
+                           VerticalAlignment="Center" TextWrapping="Wrap" />
             </Grid>
 
             <Grid Margin="0,0,0,12">
