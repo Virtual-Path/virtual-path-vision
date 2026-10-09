@@ -25,7 +25,6 @@
 
 <p align="center">
   <img src="docs/images/01_ui.png" alt="Dark theme" width="432"/>
-  <img src="docs/images/01_ui_light.png" alt="Light theme" width="432"/>
 </p>
 
 ---
@@ -211,6 +210,14 @@ In this app: source **"Network Stream"**, host `127.0.0.1`, port `8080`, path **
 
 The engine logs `[serve] client connected: <addr>` and `[serve] streaming... frame N`. If you see
 `[serve] rejected /xxx (only /cam1 is served)` repeating, the path is wrong.
+
+<p align="center">
+  <img src="docs/images/12_engine_virtual_camera.png" alt="3D engine as a virtual camera" width="820"/>
+  <br/>
+  <sub>VirtualPath-Core streaming into this app. The status bar reads
+  <code>Connected · 12.9 FPS · 39 ms · 25.0 FPS · 1280x720</code>; the axis gizmo bottom-left is the
+  engine's own overlay, which is what tells you this is a rendered 3D scene rather than a real lens.</sub>
+</p>
 
 ---
 

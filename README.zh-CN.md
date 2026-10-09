@@ -25,7 +25,6 @@
 
 <p align="center">
   <img src="docs/images/01_ui.png" alt="深色主题" width="432"/>
-  <img src="docs/images/01_ui_light.png" alt="浅色主题" width="432"/>
 </p>
 
 ---
@@ -211,6 +210,14 @@ dotnet run --project VirtualPathCore.CameraBridge -- --serve --port 8080
 引擎侧日志会显示 `[serve] client connected: <地址>` 与
 `[serve] streaming... frame N`。若看到 `[serve] rejected /xxx (only /cam1 is served)`
 刷屏，说明路径填错了。
+
+<p align="center">
+  <img src="docs/images/12_engine_virtual_camera.png" alt="3D 引擎当虚拟相机" width="820"/>
+  <br/>
+  <sub>VirtualPath-Core 推流进本应用。状态栏显示
+  <code>Connected · 12.9 FPS · 39 ms · 25.0 FPS · 1280x720</code>；左下角的坐标轴是引擎自己画的
+  叠加层 —— 正是它表明画面是渲染出来的三维场景，而不是真实镜头。</sub>
+</p>
 
 ---
 
