@@ -42,6 +42,23 @@ dotnet run --project VirtualPathVision/VirtualPathVision.csproj
 
 Or open `VirtualPathVision.sln` in Visual Studio 2022 and press **F5**.
 
+### Running the tests
+
+There is a headless regression suite (no UI process required):
+
+```bash
+dotnet run --project VirtualPathVision.Tests/VirtualPathVision.Tests.csproj
+```
+
+It prints one line per assertion and exits non-zero on failure. Coverage is described in
+[Known Limitations](README.md#known-limitations) and in the source files themselves.
+
+> **Building is not enough.** XAML compiles happily while being wrong at runtime — a
+> `Style` whose `TargetType` does not match the element is not a compile error, and the
+> failure only appears when the window loads. **Launch the app after touching XAML.**
+
+---
+
 ---
 
 ## Project Conventions
@@ -54,6 +71,22 @@ Or open `VirtualPathVision.sln` in Visual Studio 2022 and press **F5**.
 - **Formatting** – follow [`.editorconfig`](.editorconfig) (4-space indent, CRLF).
 - **Native code** – the `AI/` and `Components/` OpenCV `Scalar`/HSV values are functional (detection),
   not UI colours — do not remap them.
+- **XAML styles do not cross `TargetType`.** `GlassTextBox` (`TargetType="TextBox"`) applied to a
+  `<PasswordBox>` compiles without error and throws at load time, taking the whole window with it.
+  When a control needs a restyled look, add a style for its own type to **both** themes.
+  Note also that a `ControlTemplate` trigger must name a property of that control type —
+  `<Trigger Property="Text" ...>` does not transfer to `PasswordBox`, which uses `Password`.
+- **Threading on the capture path.** Capture runs on a background thread, so **UI updates there must
+  be non-blocking**. Use `InvokeUi` for per-frame refreshes (it de-duplicates, keeping the newest
+  frame) and `PostUi` for one-shot events (dropping one is unrecoverable — a dropped
+  "capture stopped" leaves the panel stale). A blocking `Dispatcher.Invoke` makes the capture
+  thread wait for the UI thread; while closing, the UI thread waits for the capture loop. That
+  mutual wait hung the app permanently until `VideoCaptureComponent.StopCapture` was changed to
+  take everything it needs *before* waiting and to never touch `_lock` afterwards.
+- **Do not release native handles while the loop may still be using them.** `capture.Release()`
+  and `Mat.Dispose()` must happen after the capture loop has exited, not after a fixed timeout.
+
+---
 
 ---
 
@@ -61,8 +94,13 @@ Or open `VirtualPathVision.sln` in Visual Studio 2022 and press **F5**.
 
 - [ ] The solution builds with **0 errors** (`dotnet build`).
 - [ ] No new warnings were introduced.
+- [ ] Tests pass: `dotnet run --project VirtualPathVision.Tests/VirtualPathVision.Tests.csproj`.
+- [ ] **The app launches** (`dotnet run --project VirtualPathVision/VirtualPathVision.csproj`) —
+  XAML mistakes are not compile errors.
 - [ ] UI changes work in **both** light and dark themes.
 - [ ] New UI strings are localized (zh-CN + en-US).
+- [ ] Any new assertion was checked by **injecting the bug it is meant to catch** and confirming
+  it goes red — an assertion that passes either way proves nothing.
 - [ ] The PR description explains *what* changed and *why*; link related issues.
 - [ ] Screenshots are attached for visible UI changes.
 

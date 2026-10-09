@@ -253,14 +253,25 @@ The engine logs `[serve] client connected: <addr>` and `[serve] streaming... fra
 │   │   ├── AIPanel.xaml / .cs       # YOLO detection, tracking, digital twin
 │   │   ├── CloudPanel.xaml / .cs    # AWS S3 / IoT Core / Lambda
 │   │   ├── IndustrialPanel.xaml / .cs   # Modbus / OPC UA / scanners / work report
+│   │   ├── ProductionLineCard.xaml / .cs # Production-line card (counts / yield / MES)
 │   │   └── LogPanel.xaml / .cs      # Application log
 │   ├── AI/                          # Active perception, Kalman tracking, digital twin, defect rules
 │   ├── Cloud/                       # S3Service, IoTService, LambdaClient
-│   ├── Industrial/                  # Modbus, OPC UA, serial/TCP scanners, work-report store
+│   ├── Industrial/                  # Device drivers + line orchestration
+│   │   ├── ModbusTcpDriver.cs       # Modbus TCP
+│   │   ├── OpcUaDriver.cs           # OPC UA
+│   │   ├── SerialScanDriver.cs      # Serial barcode scanner
+│   │   ├── TcpScanDriver.cs         # TCP barcode scanner
+│   │   ├── StabilityFilter.cs       # N-consecutive-frame stability (deliberately no majority vote)
+│   │   ├── ProductionLineService.cs # Orchestration: detect → stabilise → count → report
+│   │   └── MesClient.cs             # MES gateway client (see the contract above)
 │   ├── Components/                  # Capture + image-processing components
 │   ├── Converters/                  # Value converters (log level → colour, …)
 │   ├── face_detection_yunet_2023mar.onnx
 │   └── haarcascade_frontalface_default.xml
+├── VirtualPathVision.Tests/         # Headless regression tests (83 assertions)
+│   ├── ProductionLineTests.cs       # Stability, target tracking, MES protocol and payloads
+│   └── ShutdownDeadlockTests.cs     # Shutdown deadlock, Dispose idempotency
 ├── TestImages/                      # Sample test images (scene, templates, face photo)
 └── docs/images/                     # Screenshots used by this README
 ```
@@ -272,12 +283,12 @@ The engine logs `[serve] client connected: <addr>` and `[serve] streaming... fra
 
 | Component | Responsibility |
 |-----------|----------------|
-| `VideoCaptureComponent` | `VideoSourceType.LocalCamera` / `.NetworkStream`, auto-fallback APIs (DSHOW → MSMF → ANY), connection state machine |
+| `VideoCaptureComponent` | Three sources: `LocalCamera` / `NetworkStream` / `FileReplay`; network streams auto-fallback across APIs (ANY → DSHOW → MSMF); replay supports pacing and looping. Native handles are released only *after* the capture loop has actually exited |
 | `ImageDisplayComponent` | Batched `Dispatcher.Invoke` for dual-image update |
 | `ImageProcessingComponent` | 5 classic modes: Canny, Sobel, Laplacian, Binary Threshold, Contour Detection |
 | `FaceDetectionComponent` | OpenCV 5 `FaceDetectorYN` (YuNet ONNX) — bounding box + 5 landmarks + confidence; degrades gracefully to "unavailable" if the model is missing |
 | `BarcodeDetectionComponent` | ZXing.Net decoding of QR/DataMatrix/EAN/UPC/Code128/Code39, frame-throttled with result caching |
-| `ColorDetectionComponent` | HSV `InRange` masks + morphology + contour counting for 9 preset colors, plus click-to-pick custom sampling |
+| `ColorDetectionComponent` | HSV `InRange` masks + morphology + contours for 9 preset colors, plus click-to-pick custom sampling. Can optionally emit each target's centre and bounding box — the orchestration layer needs positions to tell "another frame of the same part" from "a new part" |
 | `TemplateMatchComponent` | `MatchTemplate` (CCoeffNormed) with threshold gating and score overlay |
 | `ShapeDetectionComponent` | Canny + contour polygon approximation + circularity analysis, classifies circles/rects/triangles/pentagons/polygons; shares the Canny threshold sliders |
 | `FeatureMatchComponent` | ORB keypoints + BFMatcher ratio test + RANSAC homography, draws perspective detection box |
@@ -285,7 +296,17 @@ The engine logs `[serve] client connected: <addr>` and `[serve] streaming... fra
 | `RecordingComponent` | `VideoWriter`-based AVI recording with MJPG codec |
 | `ThresholdParameterComponent` | Validates input and fires `OnThresholdsChanged` |
 | `TranslationService` | `INotifyPropertyChanged` singleton, `ResourceManager`-backed, fires full refresh on culture switch |
+| `StabilityFilter` | Issues a verdict only after N consecutive frames agree; a flip resets the run, and a timeout invalidates it. **Deliberately not a majority vote** — see above |
+| `ProductionLineService` | Orchestration: detect → stabilise → count → report. Target tracking uses signature + nearest-neighbour distance rather than position bucketing, which does not hold for moving parts |
+| `MesClient` | MES gateway client; reporting never blocks the capture thread and distinguishes 4xx (no retry) from 5xx (exponential backoff) |
 | `AppLogger` | Singleton with INFO/WARN/ERROR levels; capped at 2000 entries and marshalled onto the UI thread so it is safe to call from the capture thread |
+
+> **Threading convention:** capture runs on a background thread, so **UI updates on the
+> real-time path are always non-blocking** — per-frame refreshes go through `InvokeUi`
+> (in-flight de-duplication, latest frame wins), one-shot events through `PostUi`
+> (no de-duplication; dropping one is unrecoverable). A blocking `Dispatcher.Invoke` makes
+> the capture thread wait for the UI thread, and while closing, the UI thread may be
+> waiting on the capture thread — which is exactly how this project used to hang forever.
 
 ---
 

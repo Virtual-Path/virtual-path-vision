@@ -251,14 +251,25 @@ dotnet run --project VirtualPathCore.CameraBridge -- --serve --port 8080
 │   │   ├── AIPanel.xaml / .cs       # YOLO 检测、跟踪、数字孪生
 │   │   ├── CloudPanel.xaml / .cs    # AWS S3 / IoT Core / Lambda
 │   │   ├── IndustrialPanel.xaml / .cs   # Modbus / OPC UA / 条码枪 / 报工
+│   │   ├── ProductionLineCard.xaml / .cs # 产线统计卡片（计数 / 良率 / MES）
 │   │   └── LogPanel.xaml / .cs      # 应用日志
 │   ├── AI/                          # 主动感知、卡尔曼跟踪、数字孪生、缺陷判定
 │   ├── Cloud/                       # S3Service、IoTService、LambdaClient
-│   ├── Industrial/                  # Modbus、OPC UA、串口/TCP 条码枪、报工存储
+│   ├── Industrial/                  # 设备驱动 + 产线编排
+│   │   ├── ModbusTcpDriver.cs       # Modbus TCP
+│   │   ├── OpcUaDriver.cs           # OPC UA
+│   │   ├── SerialScanDriver.cs      # 串口条码枪
+│   │   ├── TcpScanDriver.cs         # TCP 条码枪
+│   │   ├── StabilityFilter.cs       # 连续 N 帧稳定判定（刻意不做多数投票）
+│   │   ├── ProductionLineService.cs # 检出 → 稳定 → 计数 → 上报 的编排层
+│   │   └── MesClient.cs             # MES 网关客户端（见上文协议）
 │   ├── Components/                  # 采集 + 图像处理组件
 │   ├── Converters/                  # 值转换器（日志级别 → 颜色 等）
 │   ├── face_detection_yunet_2023mar.onnx
 │   └── haarcascade_frontalface_default.xml
+├── VirtualPathVision.Tests/         # 无界面回归测试（83 条断言）
+│   ├── ProductionLineTests.cs       # 稳定判定、目标跟踪、MES 协议与报文
+│   └── ShutdownDeadlockTests.cs     # 关窗死锁、Dispose 幂等
 ├── TestImages/                      # 测试图片（场景、模板、人脸照片）
 └── docs/images/                     # README 使用的截图
 ```
@@ -270,12 +281,12 @@ dotnet run --project VirtualPathCore.CameraBridge -- --serve --port 8080
 
 | 组件 | 职责 |
 |------|------|
-| `VideoCaptureComponent` | `LocalCamera` / `NetworkStream` 双信号源，自动降级尝试 API（DSHOW → MSMF → ANY），连接状态机 |
+| `VideoCaptureComponent` | `LocalCamera` / `NetworkStream` / `FileReplay` 三种信号源；网络流自动降级尝试 API（ANY → DSHOW → MSMF）；录像回放支持节流与循环。原生句柄的释放被推迟到采集循环真正退出之后 |
 | `ImageDisplayComponent` | 批量 `Dispatcher.Invoke` 双图更新 |
 | `ImageProcessingComponent` | 5 种经典模式：Canny、Sobel、Laplacian、二值化、轮廓检测 |
 | `FaceDetectionComponent` | OpenCV 5 `FaceDetectorYN`（YuNet ONNX）——检测框 + 5 个关键点 + 置信度；模型缺失时优雅降级为"不可用" |
 | `BarcodeDetectionComponent` | ZXing.Net 解码 QR/DataMatrix/EAN/UPC/Code128/Code39，帧节流 + 结果缓存（单调时钟计时） |
-| `ColorDetectionComponent` | HSV `InRange` 掩码 + 形态学 + 轮廓计数，9 种预设色 + 点击取色（支持跨色环接缝） |
+| `ColorDetectionComponent` | HSV `InRange` 掩码 + 形态学 + 轮廓，9 种预设色 + 点击取色（支持跨色环接缝）。可选输出每个目标的中心与包围盒——产线编排层需要位置来区分"同一件的连续帧"与"新的一件" |
 | `TemplateMatchComponent` | `MatchTemplate`（CCoeffNormed）+ 阈值过滤 + 分数叠加，模板读写加锁 |
 | `ShapeDetectionComponent` | Canny + 多边形逼近 + 圆形度分析，分类圆形/矩形/三角形/五边形/多边形；共用主界面的 Canny 阈值滑块 |
 | `FeatureMatchComponent` | ORB 特征点 + BFMatcher 比率测试 + RANSAC 单应矩阵，绘制透视定位框 |
@@ -283,7 +294,16 @@ dotnet run --project VirtualPathCore.CameraBridge -- --serve --port 8080
 | `RecordingComponent` | `VideoWriter` AVI 录制（MJPG 编码，帧率取自信号源实际值） |
 | `ThresholdParameterComponent` | 范围/大小关系校验并触发 `OnThresholdsChanged` |
 | `TranslationService` | `INotifyPropertyChanged` 单例，基于 `ResourceManager`，同时设置 `DefaultThreadCurrent*` 以覆盖后台线程 |
+| `StabilityFilter` | 连续 N 帧同结论才判定；结论跳变即清零，超时作废。**刻意不做多数投票**——见上文 |
+| `ProductionLineService` | 编排层：检出 → 稳定判定 → 计数 → 上报。目标跟踪用「签名 + 邻近距离」而非位置分桶（分桶在移动工件上不成立） |
+| `MesClient` | MES 网关客户端；上报全程不阻塞采集线程，失败按 4xx 不重试 / 5xx 指数退避区分 |
 | `AppLogger` | 单例日志，INFO/WARN/ERROR 三级，上限 2000 条，自动封送到 UI 线程 |
+
+> **线程约定**：采集在后台线程上跑，因此
+> **实时路径上的 UI 更新一律非阻塞**——每帧刷新用 `InvokeUi`（带在途去重，
+> 只保留最新帧），一次性事件用 `PostUi`（不去重，丢了就补不回来）。
+> 阻塞式 `Dispatcher.Invoke` 会让采集线程等 UI 线程，而关窗时 UI 线程可能
+> 正等采集线程——这正是本项目曾经永久卡死的原因。
 
 ---
 

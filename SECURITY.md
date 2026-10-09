@@ -33,3 +33,23 @@ keys, tokens, or endpoints from logs and screenshots.
 
 Runtime data such as `user_settings.json` (language / theme / window state) is
 stored next to the executable and contains no secrets.
+
+### MES gateway token
+
+The production-line card accepts a JWT for the MES gateway (see the
+[protocol notes](README.md#mes-gateway-contract)). How it is handled:
+
+- Entered through a password box — not a plain text box
+- **Never** written to disk, `user_settings.json`, or the application log
+- Held as plaintext in the process for the lifetime of the orchestration layer
+
+The plaintext-in-memory part is a known limitation, not an oversight: the token
+is supplied at runtime and there is no OS credential store integration. Do not
+paste a production token into a bug report.
+
+### Network stream source
+
+A "Network Stream" source accepts an arbitrary host, port, and path and fetches
+it with OpenCV. Treat the URL as untrusted input — there is no allow-list, and
+the path segment previously had to be typed correctly by hand (a wrong path
+produces a 404 that surfaces only as "cannot connect").

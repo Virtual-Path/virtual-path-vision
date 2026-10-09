@@ -35,7 +35,25 @@ What actually happened. Include screenshots or a short screen recording if it he
 | Display scaling | e.g. 125 % (2K) |
 | Theme | Light / Dark / Follow system |
 | Language | English / 中文 |
-| Camera / source | Local USB / Network (RTSP/MJPEG) |
+| Camera / source | Local USB / Network (RTSP/MJPEG) / File replay |
+| Stream path (network only) | e.g. `/cam1` — a wrong path gives a 404 that only shows as "cannot connect" |
+| Stream resolution | e.g. 1280x720 |
+| Processing mode | e.g. Canny / Color detection / … |
+| Production-line card | Disabled / Enabled, and whether an ROI or MES gateway is configured |
+
+## Does it hang?
+
+If the app freezes rather than erroring, please say which:
+
+- [ ] Window stops responding, but the process is alive
+- [ ] Window disappears, the process stays in Task Manager
+- [ ] A modal error dialog appears
+- [ ] A crash dialog with a stack trace appears
+
+Roughly how long did you wait? Also: does it happen **every** time or only sometimes?
+
+> A freeze that is sometimes fine and sometimes not is usually a race between threads.
+> Whether it reproduces reliably is the single most useful thing you can tell us.
 
 ## Logs
 
