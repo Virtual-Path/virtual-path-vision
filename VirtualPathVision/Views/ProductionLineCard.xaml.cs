@@ -28,8 +28,21 @@ namespace VirtualPathVision.Views
             // exposed on this target framework's ToggleButton.
             EnabledToggle.Checked += (_, _) => EnabledChanged?.Invoke(this, EventArgs.Empty);
             EnabledToggle.Unchecked += (_, _) => EnabledChanged?.Invoke(this, EventArgs.Empty);
-            RoiCheckBox.Checked += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
-            RoiCheckBox.Unchecked += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
+            // 订阅放在 InitializeComponent 之后，而不是写进 XAML 的 Checked= 属性。
+// CheckBox 的 IsChecked="True" 会在 InitializeComponent 期间就触发 Checked，
+// 此时排在后面的 RoiValuesPanel 还没被创建——处理器访问它就是
+// NullReferenceException，整个窗口加载失败。
+// （XAML 编译期不报错，只有真正加载窗口才炸。）
+RoiCheckBox.Checked += (_, _) =>
+            {
+                SettingsChanged?.Invoke(this, EventArgs.Empty);
+                UpdateRoiValuesVisibility();
+            };
+            RoiCheckBox.Unchecked += (_, _) =>
+            {
+                SettingsChanged?.Invoke(this, EventArgs.Empty);
+                UpdateRoiValuesVisibility();
+            };
 
             StableFramesTextBox.TextChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
             RoiXTextBox.TextChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
@@ -41,7 +54,14 @@ RoiHTextBox.TextChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Emp
 
             UpdateCounters(0, 0, 0);
             RefreshTexts();
+
+            // 初始可见性：订阅时 IsChecked 已定值，Checked 不会再触发一次
+            UpdateRoiValuesVisibility();
         }
+
+        /// <summary>按 ROI 开关显示/隐藏数值输入区。</summary>
+        private void UpdateRoiValuesVisibility()
+            => RoiValuesPanel.Visibility = UseRoi ? Visibility.Visible : Visibility.Collapsed;
 
         // ── Exposed Elements ───────────────────────────────────────────────
         public ToggleButton EnabledToggleEl => EnabledToggle;
@@ -84,11 +104,6 @@ RoiHTextBox.TextChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Emp
 
         private static int ReadNonNegative(TextBox box, int fallback)
             => int.TryParse(box.Text.Trim(), out int v) && v >= 0 ? v : fallback;
-
-        private void RoiCheckBox_Changed(object sender, RoutedEventArgs e)
-        {
-            RoiValuesPanel.Visibility = UseRoi ? Visibility.Visible : Visibility.Collapsed;
-        }
 
         /// <summary>MES 网关地址，空字符串表示不上报。</summary>
         public string MesUrl => MesUrlTextBox.Text.Trim();

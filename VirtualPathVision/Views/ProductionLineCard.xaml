@@ -108,9 +108,7 @@
                            VerticalAlignment="Center" Margin="0,0,10,0" />
 
                 <CheckBox x:Name="RoiCheckBox" Grid.Column="1"
-                          IsChecked="True" VerticalAlignment="Center"
-                          Checked="RoiCheckBox_Changed"
-                          Unchecked="RoiCheckBox_Changed">
+                          IsChecked="True" VerticalAlignment="Center">
                     <TextBlock x:Name="RoiHintText" FontSize="11"
                                Foreground="{DynamicResource TextMutedBrush}" />
                 </CheckBox>
