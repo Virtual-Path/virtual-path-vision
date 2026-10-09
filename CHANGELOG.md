@@ -7,7 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Production-line card** (`Industrial` panel): pass/fail counters, yield figure and bar, plus
+  controls for the orchestration layer — enable switch, stable-frame count, inspection ROI,
+  MES gateway URL and JWT. The card is **off by default**: it counts and reports to MES, both of
+  which have external side effects.
+- **Calibratable inspection ROI.** X/Y/W/H moved from a hardcoded pixel rect into the card.
+  The default `(360,180,560,280)` matches a 1280×720 frame; invalid input falls back to the
+  default rather than erroring, because a typo puts real workpieces outside the zone and missed
+  detections are silent.
+- **MES client aligned with the real gateway.** The previous implementation was written against a
+  guess. It is now matched to `virtual-path-mes`: `Authorization: Bearer <JWT>` is mandatory
+  (the gateway's `JwtAuthGlobalFilter` whitelist excludes `/api/quality/**`), the body uses the
+  DTO's camelCase field names, `checkType` is required and pattern-checked, strings are clipped to
+  the DTO's `@Size` limits, and pass/reject address the record by the id returned from
+  `POST /record` rather than by posting the payload again.
+- **Stream path field** on the camera panel. `BuildNetworkUrl()` hardcoded `/video` while
+  VirtualPath-Core serves `/cam1`, so every connection 404'd, OpenCV reopened, and the engine
+  logged `client disconnected` in an endless loop. The path is now an input (default `/cam1`) and a
+  missing leading slash is added — `cam1` and `/cam1` mean the same thing.
+- **Regression tests for shutdown** (`VirtualPathVision.Tests`): a deterministic check that
+  `StopCapture` does not re-acquire the component lock after its wait, plus a Dispose-idempotency
+  check. 83 assertions total.
+
 ### Fixed
+- **Closing the app with a camera open could hang forever.** `VideoCaptureComponent.StopCapture()`
+  re-acquired `_lock` after waiting for the capture loop, while the loop's `finally` held `_lock`
+  across a `Dispatcher.Invoke` — each waiting on the other, and the dispatcher can only be pumped
+  by the very UI thread that was blocked. Whichever side won the lock decided whether closing
+  worked, which is why it was intermittent. `StopCapture` now takes everything it needs before the
+  wait and never touches the lock afterwards; native handles are no longer released under a live
+  capture thread (that was undefined behaviour, and the worst case on MSMF); `IsStopping` is set
+  before the wait so frame callbacks stop reaching for the UI thread; and `ProcessFrame`'s
+  blocking `Dispatcher.Invoke` calls became non-blocking dispatches. Measured end to end
+  (real `MainWindow`, MJPEG source): 0 hangs in 8 runs, previously 1–3 in 5.
+- **`GlassTextBox` applied to a `PasswordBox` crashed the app on startup.** WPF styles do not
+  cross `TargetType`, so `MainWindow.InitializeComponent` threw and the application never opened.
+  XAML compilation does not catch this. Both themes now carry a `GlassPasswordBox`.
+- **One-shot events could be dropped by the per-frame dispatcher de-duplication.** "Capture
+  stopped" is a state transition, not a repeating update: losing it leaves the panel stale (image
+  not cleared, buttons still disabled). UI dispatch is now split — `InvokeUi` de-duplicates for
+  per-frame refreshes, `PostUi` does not, and the capture-stopped/capture-error handlers use the
+  latter.
+- **Capture-stopped and capture-error handlers no longer block the capture thread during
+  shutdown**, and no longer touch UI elements while the window is being torn down. Error text is
+  still logged, just not shown.
+- The engine's `MjpegServer` now logs the rejected path on a 404
+  (`rejected /video (only /cam1 is served)`) instead of an uninformative `client disconnected`
+  for every connection, and no longer prints that message for connections that never became
+  clients. Its `finally` block also no longer clears `_stream`/`HasClient` unconditionally, which
+  could wipe a newer client's state.
 - **The dual-view toggle is now translated.** Its label was hardcoded Chinese (`双视图`), so it stayed
   in Chinese on English builds. The tooltip was hardcoded bilingual (`第二视图 / Dual View`) and is now
   localized too (`DualView`, `DualViewHint`).

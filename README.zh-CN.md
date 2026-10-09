@@ -108,9 +108,13 @@
 4. 在本应用中：
    - 信号源选择 **"网络视频流"**
    - 输入 IP 和端口
+   - **路径**填 URL 里最后那一段（上例是 `/video`；VirtualPath-Core 的虚拟相机是 `/cam1`）
    - 点击 **连接**
 
 应用会自动拼接 MJPEG URL 并开始拉流。
+
+> 路径不能留空。不同设备的路径段不同（`/video`、`/cam1`、`/stream`…），
+> 填错会收到 404，表现是"连不上"而不是任何明确报错。
 
 ---
 
@@ -129,6 +133,95 @@
 
 > 回放模式不需要任何外部服务。若要复现"3D 引擎当虚拟相机"的场景，
 > 改用"网络视频流"，地址填 `127.0.0.1`、端口填引擎服务的端口（如 8080）。
+
+---
+
+## 产线统计与 MES 上报
+
+左侧导航 **"工业"** → 顶部是产线统计卡片。
+
+**默认不启用**。编排层会引入计数与 MES 上报这类有外部副作用的行为，
+必须由用户显式打开。
+
+| 控件 | 含义 |
+|---|---|
+| **启用** | 打开才参与采集链 |
+| **稳定帧数** | 连续 N 帧结论一致才判定（默认 3） |
+| **检测区域 ROI** | 勾选后只统计区内目标。**建议保持勾选** |
+| **ROI X/Y/W/H** | 检测区像素坐标，需按相机标定 |
+| **MES 网关** | 网关地址。留空 = 只本地统计，不联网 |
+| **网关令牌** | JWT，见下 |
+
+### 为什么稳定判定不做多数投票
+
+连续 N 帧一致才出结论，而不是对窗口内的结论做多数投票。产线的**时序本身
+携带信息**：结论跳变意味着遮挡、失焦或运动模糊，此时多数票反而会把
+瞬时的错误结论固化下来。
+
+### 为什么 ROI 重要
+
+不勾选时，背景墙上与工件同色的诱饵色块、地面的网格线都会满足 HSV 阈值
+被当成工件。端到端实测 150 帧虚报 76 件，而场景里只有 4 件在循环；
+勾选后降到 18 件。
+
+**漏检同样是静默的** —— ROI 填错不会有任何提示，只是良率悄悄变了。
+
+ROI 的几何基准是引擎场景的 `DemoScene.InspectionX` / `InspectionHalfWidth`
+（检测工位位于世界坐标 X=0、半宽 0.75）。默认的 `(360,180,560,280)` 对应
+**1280×720** 画幅；换分辨率或换相机必须重新标定。输入非法时会回退到
+默认值而不是报错：填错会让真实工件被判为区外，同样是静默漏检。
+
+### MES 网关协议
+
+对接 [virtual-path-mes](https://github.com/Virtual-Path/virtual-path-mes)
+的 `mes-gateway`（默认端口 **9090**）。要点：
+
+- 路径 `/api/quality/**` 由网关以 `StripPrefix=1` 转发到 `mes-quality`
+- **必须带 `Authorization: Bearer <JWT>`**。网关 `JwtAuthGlobalFilter` 的
+  白名单只有 `/api/auth/login`、`/api/auth/register`、`/actuator/**`，
+  quality 路径不在其中，缺令牌一律 401
+- 上报体字段与 `CreateQualityRecordDTO` 一致（**camelCase**）：
+  `sn` / `checkType` / `checkResult` / `defectType` / `defectDesc` …
+  - `checkType` **必填**且限定 `IPQC|FQC|OQC|巡检|首检|终检`
+  - `checkResult` 取 `PASSED` / `FAILED`
+  - 字符串按 DTO 的 `@Size` 截断（`sn` 100、`workOrderNo`/`defectType` 50、
+    `defectDesc`/`remark` 500）——超长会让 `@Valid` 失败返回 400
+- 建记录 `POST /api/quality/record` 返回 `Result<Long>`；
+  放行 / 剔除是 `POST /api/quality/record/{id}/pass` 与
+  `POST /api/quality/record/{id}/fail?reason=...`
+- **业务失败仍返回 HTTP 200**，只靠响应体的 `code` 区分。本应用解析
+  `{code, message, data, timestamp}`：`code != 200` 判为 Rejected 且不重试，
+  只有 5xx 与网络异常才进重试队列
+
+上报全程不阻塞采集线程——网关不可达时实测 150 帧耗时 346ms（2.31ms/帧）。
+
+> **未验证**：真实网关连通性与登录取令牌流程（需要 `mes-auth` 服务运行）。
+> 令牌明文驻留内存：界面上用密码框输入，不落盘、不进日志。
+
+### 配合 3D 引擎当虚拟相机
+
+```bash
+cd D:\Engineering-Project\Virtual-Path-Core\VirtualPath-EngineClient
+dotnet run --project VirtualPathCore.CameraBridge -- --serve --port 8080
+```
+
+在本应用中：信号源选 **"网络视频流"**，IP `127.0.0.1`、端口 `8080`、
+**路径 `/cam1`**，点连接。
+
+引擎侧日志会显示 `[serve] client connected: <地址>` 与
+`[serve] streaming... frame N`。若看到 `[serve] rejected /xxx (only /cam1 is served)`
+刷屏，说明路径填错了。
+
+---
+
+## 已知限制
+
+- **开摄像头时关窗最多约 1 秒**。这是采集循环停止等待的上界——采集线程
+  可能正阻塞在后端的 `Read()` 里，来不及看到停止标志。循环能及时退出时
+  通常几十毫秒。**不会再出现永久卡死**。
+- **物理摄像头（MSMF）未做端到端验证**。以上结论基于录像回放与网络流。
+  MSMF 的 `Read()` 阻塞特性不同，若关窗偶发变慢请优先怀疑它。
+- **产线卡片的计数不做持久化**，重启后从零开始。
 
 ---
 

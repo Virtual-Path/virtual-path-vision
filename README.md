@@ -108,9 +108,13 @@ All processing runs asynchronously on a background thread, keeping the UI respon
 4. In this application:
    - Select **"Network Stream"** as the source
    - Enter the IP and port
+   - Enter the **path** — the last segment of that URL (`/video` above; `/cam1` for the VirtualPath-Core virtual camera)
    - Click **Connect**
 
 The app automatically constructs the MJPEG URL and starts streaming.
+
+> Do not leave the path empty. Devices differ (`/video`, `/cam1`, `/stream`, …), and a wrong
+> path yields a 404 — which surfaces as "can't connect" rather than any explicit error.
 
 ---
 
@@ -128,6 +132,98 @@ Line defects are often hard to reproduce on demand; replaying a recording is the
 Replay feeds the exact same processing pipeline as live capture, so detection modes, thresholds, recording, and screenshots behave identically.
 
 > Replay needs no external service. To reproduce the "3D engine as virtual camera" setup instead, use "Network Stream" with host `127.0.0.1` and the engine's port (e.g. 8080).
+
+---
+
+## Production Line Statistics and MES Reporting
+
+The **Industrial** nav item hosts the production-line card at the top.
+
+It is **disabled by default**. The orchestration layer performs counting and MES reporting —
+both have external side effects, so the user has to switch it on explicitly.
+
+| Control | Meaning |
+|---|---|
+| **Enabled** | Only then does it take part in the capture chain |
+| **Stable frames** | Require N consecutive frames with the same verdict (default 3) |
+| **Inspection ROI** | Count only targets inside the zone. **Keep this ticked** |
+| **ROI X/Y/W/H** | Zone in pixels — calibrate per camera |
+| **MES gateway** | Gateway URL. Empty = local statistics only, no network |
+| **MES token** | JWT, see below |
+
+### Why stability is not a majority vote
+
+A verdict is only issued after N consecutive frames agree, rather than by majority vote over a
+window. On a line the **timing itself carries information**: a flipping verdict means occlusion,
+defocus, or motion blur, and a majority vote would freeze a transient wrong answer into the result.
+
+### Why the ROI matters
+
+Without it, the same-coloured decoy blocks on the back wall and the floor grid lines all satisfy
+the HSV thresholds and get counted as workpieces. Measured end to end: 76 false pieces over 150
+frames while only 4 were circulating; 18 with the ROI enabled.
+
+**Missed detections are equally silent** — a wrong ROI produces no error and no warning, just a
+quietly wrong yield number.
+
+The zone's geometric reference is the engine scene's `DemoScene.InspectionX` /
+`InspectionHalfWidth` (inspection station at world X = 0, half-width 0.75). The default
+`(360,180,560,280)` corresponds to a **1280×720** frame; **recalibrate when the resolution or the
+camera changes**. Invalid input falls back to the default rather than erroring out: a typo would
+put real workpieces outside the zone, which is a silent miss too.
+
+### MES gateway contract
+
+Targets `mes-gateway` from [virtual-path-mes](https://github.com/Virtual-Path/virtual-path-mes)
+(default port **9090**). Key points:
+
+- `/api/quality/**` is forwarded by the gateway to `mes-quality` with `StripPrefix=1`
+- **`Authorization: Bearer <JWT>` is required.** The gateway's `JwtAuthGlobalFilter` whitelist
+  covers only `/api/auth/login`, `/api/auth/register`, `/actuator/**`. The quality path is not on
+  it, so a missing token is a flat 401
+- The body matches `CreateQualityRecordDTO` (**camelCase**):
+  `sn` / `checkType` / `checkResult` / `defectType` / `defectDesc` / …
+  - `checkType` is **required** and restricted to `IPQC|FQC|OQC|巡检|首检|终检`
+  - `checkResult` is `PASSED` / `FAILED`
+  - strings are clipped to the DTO's `@Size` limits (`sn` 100, `workOrderNo`/`defectType` 50,
+    `defectDesc`/`remark` 500) — exceeding them fails `@Valid` with a 400
+- Creating a record is `POST /api/quality/record`, returning `Result<Long>`; pass / reject are
+  `POST /api/quality/record/{id}/pass` and `POST /api/quality/record/{id}/fail?reason=...`
+- **Business failures still return HTTP 200** and differ only in the body's `code`. This app parses
+  `{code, message, data, timestamp}`: `code != 200` is Rejected and is not retried; only 5xx and
+  network failures enter the retry queue
+
+Reporting never blocks the capture thread — with the gateway unreachable, 150 frames took 346 ms
+(2.31 ms/frame).
+
+> **Unverified**: real gateway connectivity and the login/token flow (requires the `mes-auth`
+> service running). The token lives in memory as plaintext: entered through a password box, never
+> written to disk or logged.
+
+### Pairing with the 3D engine as a virtual camera
+
+```bash
+cd D:\Engineering-Project\Virtual-Path-Core\VirtualPath-EngineClient
+dotnet run --project VirtualPathCore.CameraBridge -- --serve --port 8080
+```
+
+In this app: source **"Network Stream"**, host `127.0.0.1`, port `8080`, path **`/cam1`**, Connect.
+
+The engine logs `[serve] client connected: <addr>` and `[serve] streaming... frame N`. If you see
+`[serve] rejected /xxx (only /cam1 is served)` repeating, the path is wrong.
+
+---
+
+## Known Limitations
+
+- **Closing the app with a camera open takes up to ~1 second.** That is the upper bound of the
+  wait for the capture loop to stop — the capture thread may be blocked inside the backend's
+  `Read()` and unable to observe the stop flag. When the loop exits promptly it is usually tens of
+  milliseconds. **A permanent hang no longer occurs.**
+- **Physical cameras (MSMF) have not been verified end to end.** The above is based on file replay
+  and network streams. MSMF's `Read()` blocking behaviour differs; suspect it first if closing
+  becomes slow with a real camera.
+- **Production-line counts are not persisted** — they restart from zero.
 
 ---
 
