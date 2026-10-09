@@ -172,7 +172,7 @@
                            VerticalAlignment="Center" Margin="0,0,10,0" />
 
                 <PasswordBox x:Name="MesTokenBox" Grid.Column="1"
-                             Style="{StaticResource GlassTextBox}"
+                             Style="{StaticResource GlassPasswordBox}"
                              VerticalContentAlignment="Center"
                              ToolTip="JWT for the MES gateway" />
             </Grid>

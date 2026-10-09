@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
@@ -36,6 +36,53 @@ namespace VirtualPathVision
         private readonly List<Components.ColorDetectionComponent.Detection> _detectionBuffer = new();
         private readonly List<Industrial.ProductionLineService.Detection> _lineDetectionBuffer = new();
         private string _colorNameForTracking = "Red";
+
+        // ---- 关窗期协作 ----
+        /// <summary>
+        /// 窗口是否正在关闭。
+        ///
+        /// <para>关闭一开始就要置位：采集线程跑在 <c>ProcessFrame</c> 里，
+        /// 而 <c>ProcessFrame</c> 会向 UI 线程封送更新。若此时 UI 线程已经
+        /// 进入 <c>MainWindow_Closed</c> 并阻塞在 <c>StopCapture</c> 的
+        /// <c>finished.Wait(1000)</c> 上，两者互等，那 1 秒必然超时，
+        /// 随后原生句柄会在采集循环还活着的时候被释放。</para>
+        /// </summary>
+        private volatile bool _shuttingDown;
+
+        /// <summary>是否有一次 UI 更新正在排队/执行。</summary>
+        private int _uiDispatchInFlight;
+
+        /// <summary>
+        /// 把 UI 更新<b>非阻塞地</b>封送到 Dispatcher。
+        ///
+        /// <para><b>为什么不能用 Dispatcher.Invoke</b>：<c>ProcessFrame</c> 跑在采集
+        /// 线程上，一次 <c>Invoke</c> 就等于让采集线程等 UI 线程。UI 线程一旦因为
+        /// 关窗而停止泵消息，采集循环就再也退不出来。实测关窗稳定耗时 1.09 秒，
+        /// 并伴随 <c>capture loop did not stop in time</c> 错误——正是这个互等。</para>
+        ///
+        /// <para><b>为什么要有在途去重</b>：采集可达 30~120 fps，而 UI 未必跟得上。
+        /// 不去重的话 Dispatcher 队列会无限增长，内存涨、界面越来越滞后。
+        /// 丢掉过期帧在语义上也是对的：预览本来就只需要"最新一帧"。</para>
+        ///
+        /// <para>顺序性：同一个采集线程、同优先级投递，Dispatcher 按 FIFO 处理，
+        /// 因此不会乱序。</para>
+        /// </summary>
+        private void InvokeUi(Action action)
+        {
+            if (_shuttingDown) return;
+
+            // 已有一帧在途就丢弃本次更新：只保留最新状态
+            if (Interlocked.CompareExchange(ref _uiDispatchInFlight, 1, 0) != 0)
+                return;
+
+            // 单个委托：更新与"解除在途标记"必须原子地排在同一次投递里。
+            // 拆成两次投递、或者用更高优先级解除，都会插队并破坏 FIFO。
+            _ = Dispatcher.BeginInvoke(new Action(() =>
+            {
+                try { action(); }
+                finally { Interlocked.Exchange(ref _uiDispatchInFlight, 0); }
+            }), DispatcherPriority.Background);
+        }
 
         /// <summary>
         /// 检测区 ROI。
@@ -652,8 +699,35 @@ namespace VirtualPathVision
         /// <summary>
         /// 窗口关闭：释放所有组件资源。
         /// </summary>
+
+        private static readonly string TracePath =
+            System.IO.Path.Combine(System.IO.Path.GetTempPath(), "vpshutdown_trace.txt");
+        private static readonly System.Diagnostics.Stopwatch TraceWatch =
+            System.Diagnostics.Stopwatch.StartNew();
+        private static void ___TRACE_BEGIN(string what)
+        {
+            try
+            {
+                System.IO.File.AppendAllText(TracePath,
+                    $"{TraceWatch.Elapsed.TotalMilliseconds,10:F0}ms  -> {what}{System.Environment.NewLine}");
+            }
+            catch { }
+        }
+        private static void ___TRACE_END(string what)
+        {
+            try
+            {
+                System.IO.File.AppendAllText(TracePath,
+                    $"{TraceWatch.Elapsed.TotalMilliseconds,10:F0}ms  <- {what}{System.Environment.NewLine}");
+            }
+            catch { }
+        }
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
+            // 封送。晚置位就等于采集线程可能在下面任意一个 Dispose 里
+            // 已经开始等 UI 线程，而 UI 线程正等它退出。
+            _shuttingDown = true;
+
             // 退订静态单例上的事件：否则已关闭的窗口（及其全部面板）无法被 GC 回收
             if (_logAddedHandler != null)
                 AppLogger.Instance.OnLogAdded -= _logAddedHandler;
@@ -2014,10 +2088,20 @@ namespace VirtualPathVision
 
         /// <summary>
         /// 每帧处理：执行图像处理（多模式）+ 人脸检测 + 更新显示 + FPS统计。
-        /// 该方法在后台线程调用，UI 更新通过 Dispatcher 封送。
+        /// 该方法在后台（采集）线程调用，UI 更新通过 <see cref="InvokeUi"/> 非阻塞封送。
         /// </summary>
         private void ProcessFrame(Mat originalFrame, Mat grayFrame)
         {
+            // 关闭已经开始：立刻返回。
+            //
+            // 采集循环退出后不会再有帧，但当前这一帧可能已经在路上了。
+            // 此时继续跑会走到 InvokeUi，而 InvokeUi 虽然不阻塞，
+            // 仍会投递一批注定没人看的 UI 更新。更重要的是：
+            // 若不检查，采集线程可能正好在这一帧里等着 UI 线程，
+            // 而 UI 线程正阻塞在 StopCapture 的 finished.Wait 上——互等。
+            if (_shuttingDown || _videoCaptureComponent.IsStopping)
+                return;
+
             try
             {
                 _frameStopwatch.Restart();
@@ -2093,7 +2177,7 @@ namespace VirtualPathVision
                         var perception = _activePerception;
                         var detectionsSnapshot = aiDetections;
                         var tracksSnapshot = aiTracks;
-                        Dispatcher.Invoke(() =>
+                        InvokeUi(() =>
                         {
                             AIPanelCtrl.UpdateDetectionStats(aiDetCount, aiTrackCount,
                                 perception?.AdaptiveInterval ?? 0);
@@ -2133,7 +2217,7 @@ namespace VirtualPathVision
                     _lastFpsUpdate = now;
                 }
 
-                Dispatcher.Invoke(() =>
+                InvokeUi(() =>
                 {
                     bool showThreshold = _currentMode is Components.ProcessingMode.Canny or Components.ProcessingMode.Contour;
                     string thresholdInfo = showThreshold ? $"{_threshold1} ~ {_threshold2}" : "";
@@ -2166,12 +2250,12 @@ namespace VirtualPathVision
                 // 数字孪生更新
                 if (_aiEnabled && _digitalTwin != null)
                 {
-                    Dispatcher.Invoke(UpdateDigitalTwin);
+                    InvokeUi(UpdateDigitalTwin);
                 }
             }
             catch (Exception ex)
             {
-                Dispatcher.Invoke(() =>
+                InvokeUi(() =>
                 {
                     ShowError(TranslationService.GetStringStatic("FrameProcessError") + $": {ex.Message}");
                     AppLogger.Instance.Error($"帧处理异常: {ex.Message}");

@@ -16,6 +16,7 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="ProductionLineTests.cs" />
+    <Compile Include="ShutdownDeadlockTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

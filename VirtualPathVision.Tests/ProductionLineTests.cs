@@ -47,6 +47,10 @@ namespace VirtualPathVision.Tests
             MesClient_Treats4xxAsRejected();
             MesClient_RetriesOn5xx();
 
+            // 关窗死锁：判据是 StopCapture/Dispose 必须在有限时间内返回
+            ShutdownDeadlockTests.StopCapture_DoesNotRetakeLockAfterWait((n, ok) => Check(n, ok));
+            ShutdownDeadlockTests.Dispose_IsIdempotent((n, ok) => Check(n, ok));
+
             Console.WriteLine();
             Console.WriteLine($"  passed {_passed}, failed {_failed}");
 

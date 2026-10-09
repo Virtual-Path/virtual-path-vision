@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.IO;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using OpenCvSharp;
@@ -41,6 +42,23 @@ namespace VirtualPathVision.Components
         private volatile bool _isRunning; // 捕获循环运行标志
         private readonly object _lock = new(); // 多线程锁
         private bool _disposed;           // 是否已释放
+
+        /// <summary>
+        /// 是否正在停止采集。
+        ///
+        /// <para><b>为什么帧回调必须看这个标志</b>：<see cref="StopCapture"/> 在调用线程
+        /// （通常是 UI 线程）上阻塞等待采集循环退出，而采集循环此刻可能正停在帧回调里的
+        /// <c>Dispatcher.Invoke</c> 上等 UI 线程。两者互等，
+        /// <c>finished.Wait(1000)</c> 必然超时，随后 <see cref="CleanupCapture"/>
+        /// 会在采集循环还活着的情况下释放原生 VideoCapture 与 Mat——
+        /// 而网络/摄像头后端的 Read() 可能正阻塞在里面。</para>
+        ///
+        /// <para>停止期间帧回调应尽快返回、不要再向 UI 线程封送，循环才能立刻退出。</para>
+        /// </summary>
+        public volatile bool IsStopping;
+
+        /// <summary>采集循环迟迟不退出时，推迟释放原生句柄的兜底时限。</summary>
+        private const int DeferredReleaseWaitMs = 5000;
         private int _cleanupDone;         // Interlocked 守卫：确保原生资源只释放一次
         private ManualResetEventSlim? _loopFinished;
         private Task? _captureLoop;
@@ -141,6 +159,9 @@ namespace VirtualPathVision.Components
             {
                 if (_disposed) return false;
                 if (_isRunning) return true;
+
+                // 新的采集开始，解除上一轮的停止状态
+                IsStopping = false;
 
                 // 若上一次采集循环仍在收尾，先把它的原生资源释放掉
                 CleanupCapture();
@@ -319,6 +340,7 @@ namespace VirtualPathVision.Components
         {
             Task? loop;
             ManualResetEventSlim? finished;
+            bool wasDisconnected;
 
             lock (_lock)
             {
@@ -327,31 +349,60 @@ namespace VirtualPathVision.Components
                     // 采集循环已自行退出并清理完毕
                     return;
                 }
+                // 必须在等待<b>之前</b>置位：采集线程看到它就不会再进入
+                // 帧回调里的 Dispatcher.Invoke，从而不会与下面的
+                // finished.Wait 互等。晚置位等于没置。
+                IsStopping = true;
                 _isRunning = false;
                 loop = _captureLoop;
                 finished = _loopFinished;
+
+                // 连"是否已断开"也要在<b>等待之前</b>取走。
+                // 见下方说明：等待之后本方法绝不能再碰 _lock。
+                wasDisconnected = State == ConnectionState.Disconnected;
             }
 
-            // 等待采集循环结束（最多 1 秒）。正常情况下循环会在 ~130ms 内退出。
-            // 采集线程在退出时不会再反向等待 UI 线程（finished 先于事件触发），
-            // 因此这里不会死锁。
-            if (loop != null && finished != null && !finished.Wait(1000))
+
+            // ─────────────────────────────────────────────────────────────
+            // 从这里往下，本方法<b>绝不能再获取 _lock</b>。
+            //
+            // 采集线程退出时的 finally 会：
+            //     lock (_lock) { SetState(Disconnected); }
+            // 而 SetState 会同步触发 OnConnectionStateChanged，
+            // MainWindow 的处理器用 Dispatcher.Invoke —— 也就是采集线程
+            // 在<b>持有 _lock 的同时</b>等 UI 线程泵消息。
+            //
+            // 若本方法在等待之后再去抢 _lock，就构成经典互等：
+            //     UI 线程      等 _lock
+            //     采集线程     等 Dispatcher（而 Dispatcher 只有 UI 线程能泵）
+            // 结果是关窗永久挂死。该死锁曾实测复现（5 次里挂 1~3 次），
+            // trace 显示 StopCapture 已返回而 Dispose 永不返回。
+            // ─────────────────────────────────────────────────────────────
+
+            bool waitCompleted = loop != null && finished != null && finished.Wait(1000);
+
+            if (!waitCompleted)
             {
                 OnCaptureError?.Invoke(TranslationService.GetStringStatic("CameraError") +
                     ": capture loop did not stop in time");
             }
-
-            // 循环若已自行清理，这里是空操作；否则强制清理
-            CleanupCapture();
-
-            bool wasDisconnected;
-            lock (_lock)
+            else
             {
-                wasDisconnected = State == ConnectionState.Disconnected;
-                _loopFinished?.Dispose();
-                _loopFinished = null;
-                _captureLoop = null;
             }
+
+            // 循环若已自行清理，这里是空操作；否则强制清理。
+            // 把 finished 传进去，避免它为了读 _loopFinished 而取 _lock。
+            CleanupCapture(finished);
+
+            // 只有确认循环已退出，才能安全释放这个事件句柄：
+            // 循环的 finally 还会对它调 Set()，提前 Dispose 会抛
+            // ObjectDisposedException。超时的情况下宁可让句柄随组件一起回收，
+            // 也不能在循环脚下把它 dispose 掉。
+            if (waitCompleted)
+                finished?.Dispose();
+
+            _loopFinished = null;
+            _captureLoop = null;
 
             if (wasDisconnected)
                 OnCaptureStopped?.Invoke(null);
@@ -361,20 +412,65 @@ namespace VirtualPathVision.Components
         /// 统一释放原生资源。用 Interlocked 守卫保证并发调用下只执行一次，
         /// 且重复调用不会重复触发状态事件。
         /// </summary>
-        private void CleanupCapture()
+        /// <param name="knownLoopFinished">
+        /// 调用方已持有的循环结束信号。<b>传入它就可以避免为读该字段去抢
+        /// <c>_lock</c></b>——那是上面那条死锁链的一环。
+        /// 为 null 时回退到自行加锁读取（仅 StartCapture 路径使用）。
+        /// </param>
+        private void CleanupCapture(ManualResetEventSlim? knownLoopFinished = null)
         {
             if (Interlocked.Exchange(ref _cleanupDone, 1) == 1)
+            {
                 return;
+            }
 
             var capture = _capture;
             _capture = null;
+            _isRunning = false;
+
+            ManualResetEventSlim? pending = knownLoopFinished;
+            if (pending == null)
+            {
+                lock (_lock) { pending = _loopFinished; }
+            }
+
+            bool loopAlive = false;
+            try { loopAlive = pending != null && !pending.IsSet; }
+            catch (ObjectDisposedException) { loopAlive = false; }
+
+
+            if (loopAlive && pending != null)
+            {
+                _ = Task.Run(() =>
+                {
+                    bool exited = false;
+                    try { exited = pending.Wait(DeferredReleaseWaitMs); }
+                    catch (ObjectDisposedException) { exited = true; }
+
+                    if (!exited)
+                    {
+                        Debug.WriteLine("[VideoCaptureComponent] 采集循环未在兜底时限内退出，" +
+                                        "仍强制释放原生句柄；句柄可能泄漏");
+                    }
+
+                    ReleaseNow(capture);
+                });
+                return;
+            }
+
+            ReleaseNow(capture);
+        }
+
+        /// <summary>实际释放原生 VideoCapture 与两个 Mat。</summary>
+        private void ReleaseNow(VideoCapture? capture)
+        {
             _frame?.Dispose();
             _frame = null;
             _grayFrame?.Dispose();
             _grayFrame = null;
-            _isRunning = false;
             try { capture?.Release(); } catch { }
         }
+
 
         /// <summary>更新连接状态并通知订阅者（调用方需持有 _lock）</summary>
         private void SetState(ConnectionState state)
