@@ -7,6 +7,17 @@ using System.Windows.Shapes;
 
 namespace VirtualPathVision.Views;
 
+/// <summary>
+/// AI 面板：YOLO 模型装载/开关、置信度输入，数字孪生预览，以及主动感知与跟踪统计。
+/// </summary>
+/// <remarks>
+/// <para>与其它面板一样是纯视图层——「加载模型」「启停」这类动作只发事件，
+/// 真正的推理由 <c>YoloDetectionComponent</c> 等组件执行。</para>
+/// <para><b>为什么要缓存 <c>_detections</c> / <c>_twinDetections</c> 这些计数</b>：
+/// 统计文本是带单位的本地化字符串（如 "检测: 3"），语言切换时必须按新语言重新格式化。
+/// 只保存渲染后的字符串就无法回译，因此这里保留原始数值，渲染统一走
+/// <see cref="RenderDetectionStats"/> / <see cref="RenderTwinStats"/>。</para>
+/// </remarks>
 public partial class AIPanel : UserControl
 {
     // ── Exposed Elements ─────────────────────────────────────────────
@@ -89,6 +100,7 @@ public partial class AIPanel : UserControl
 
     // ── Public Helpers ───────────────────────────────────────────────
 
+    /// <summary>按当前语言重刷静态文案，并用缓存值恢复动态统计。</summary>
     public void RefreshTexts()
     {
         var t = TranslationService.Instance;
@@ -123,6 +135,7 @@ public partial class AIPanel : UserControl
         RenderTwinStats();
     }
 
+    /// <summary>更新模型装载状态徽标；<paramref name="path"/> 为已加载的权重路径。</summary>
     public void SetModelStatus(bool loaded, string path)
     {
         _modelLoaded = loaded;
@@ -139,6 +152,7 @@ public partial class AIPanel : UserControl
             : (Brush)FindResource("TextMutedBrush");
     }
 
+    /// <summary>记录本帧检测数/跟踪数与自适应采样间隔，并立即按当前语言渲染。</summary>
     public void UpdateDetectionStats(int detections, int tracks, int interval)
     {
         _detections = detections;
@@ -147,6 +161,7 @@ public partial class AIPanel : UserControl
         RenderDetectionStats();
     }
 
+    /// <summary>记录数字孪生侧的检测/缺陷/良率，并立即按当前语言渲染。</summary>
     public void UpdateTwinStats(int detections, int defects, double passRate)
     {
         _twinDetections = detections;
@@ -172,6 +187,7 @@ public partial class AIPanel : UserControl
         TwinPassRateText.Text = string.Format(t.StatPass, _twinPassRate.ToString("F0"));
     }
 
+    /// <summary>主动感知统计（纯数字，不参与本地化，直接写控件）。</summary>
     public void UpdatePerceptionStats(int frameCount, int activeTracks, int lostTracks, int interval, int roiCount)
     {
         AiFrameCountText.Text = frameCount.ToString();
@@ -181,6 +197,13 @@ public partial class AIPanel : UserControl
         AiRoiCountText.Text = roiCount.ToString();
     }
 
+    /// <summary>
+    /// 渲染按类别统计的检测明细；传入空集合时显示「无检测」占位文案。
+    /// </summary>
+    /// <remarks>
+    /// 顺序沿用 <see cref="Dictionary{TKey,TValue}"/> 的枚举顺序（即 YOLO 类别索引升序），
+    /// 额外排序反而会让常用类别在不同帧之间跳位。
+    /// </remarks>
     public void UpdateDetectionBreakdown(Dictionary<string, int> classCounts)
     {
         if (classCounts == null || classCounts.Count == 0)

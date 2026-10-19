@@ -7,6 +7,17 @@ using VirtualPathVision.Components;
 
 namespace VirtualPathVision.Views;
 
+/// <summary>
+/// 摄像头面板：信号源选择、网络/回放配置、连接按钮与双视图预览。
+/// </summary>
+/// <remarks>
+/// <para>本类是纯视图层，不含任何采集逻辑：按钮点击只把意图以事件抛给
+/// <see cref="MainWindow"/>，由它驱动 <see cref="VideoCaptureComponent"/>。
+/// 反过来，采集状态通过 <see cref="SetConnected"/> 与
+/// <see cref="UpdateReplayProgress"/> 推回界面。</para>
+/// <para><b>为什么控件要暴露成属性</b>：XAML 生成的字段是 internal，
+/// 主窗口在另一个文件里访问不到；这些 <c>*El</c> 只读属性是唯一入口。</para>
+/// </remarks>
 public partial class CameraPanel : UserControl
 {
     /// <summary>
@@ -16,13 +27,14 @@ public partial class CameraPanel : UserControl
     private ConnectionState _connectionState = ConnectionState.Disconnected;
 
     // ── Exposed Elements ─────────────────────────────────────────────
+    // 只读转发到 XAML 生成字段，供 MainWindow 读写；不在这里加工数据。
     public Ellipse ConnectionDotEl => ConnectionDot;
     public TextBlock ConnectionStatusTextEl => ConnectionStatusText;
     public ComboBox SourceTypeComboBoxEl => SourceTypeComboBox;
     public Border NetworkConfigPanelEl => NetworkConfigPanel;
     public TextBox IPTextBoxEl => IPTextBox;
     public TextBox PortTextBoxEl => PortTextBox;
-        public TextBox PathTextBoxEl => PathTextBox;
+    public TextBox PathTextBoxEl => PathTextBox;
 
     // ── Replay config ────────────────────────────────────────────────
     public Border ReplayConfigPanelEl => ReplayConfigPanel;
@@ -68,6 +80,14 @@ public partial class CameraPanel : UserControl
     }
 
     // ── Public Helpers ───────────────────────────────────────────────
+
+    /// <summary>
+    /// 按当前语言重刷全部静态文案。语言切换后由 MainWindow 统一调用。
+    /// </summary>
+    /// <remarks>
+    /// 最后一行用 <see cref="_connectionState"/> 而不是硬编码文本重绘状态徽标，
+    /// 否则切换语言会把「已连接」翻回英文的 Disconnected。
+    /// </remarks>
     public void RefreshTexts()
     {
         var t = TranslationService.Instance;

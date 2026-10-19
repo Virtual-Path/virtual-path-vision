@@ -6,9 +6,20 @@ using System.Windows.Shapes;
 
 namespace VirtualPathVision.Views;
 
+/// <summary>
+/// 工业通讯面板：Modbus TCP 与 OPC-UA 的连通性/读写、条码枪来源配置、工单报工。
+/// </summary>
+/// <remarks>
+/// <para>纯视图层：所有按钮点击都只抛事件，由 MainWindow 转给
+/// <c>ModbusTcpDriver</c> / <c>OpcUaDriver</c> / 扫码驱动 / 报工服务。
+/// 驱动侧的状态通过 <c>Set*State</c> 与 <c>Update*Result</c> 回写。</para>
+/// <para>面板在窄窗口下把 2×2 卡片重排成单列，改动 XAML 的 Grid 行/列编号时
+/// 必须同步修改 <see cref="IndustrialPanel_SizeChanged"/>，两处是硬编码耦合的。</para>
+/// </remarks>
 public partial class IndustrialPanel : UserControl
 {
     // ── Exposed Elements ─────────────────────────────────────────────
+    // XAML 生成字段是 internal，主窗口跨文件访问只能走这些只读属性。
 
     // Modbus TCP
     public Ellipse ModbusStatusDotEl => ModbusStatusDot;
@@ -138,6 +149,7 @@ public partial class IndustrialPanel : UserControl
 
     // ── Public Methods ───────────────────────────────────────────────
 
+    /// <summary>按当前语言重刷分节标题、字段标签与按钮文案。</summary>
     public void RefreshTexts()
     {
         var t = TranslationService.Instance;
@@ -180,6 +192,7 @@ public partial class IndustrialPanel : UserControl
         LastBarcodeLabel.Text = t.FieldLastBarcode;
     }
 
+    /// <summary>刷新 Modbus 指示灯、状态文本与连接/断开按钮的可用性。</summary>
     public void SetModbusState(bool connected, string statusText)
     {
         ModbusStatusDot.Fill = connected
@@ -191,6 +204,7 @@ public partial class IndustrialPanel : UserControl
         ModbusDisconnectButton.IsEnabled = connected;
     }
 
+    /// <summary>刷新 OPC-UA 指示灯、状态文本与连接/断开按钮的可用性。</summary>
     public void SetOpcUaState(bool connected, string statusText)
     {
         OpcUaStatusDot.Fill = connected
@@ -202,6 +216,7 @@ public partial class IndustrialPanel : UserControl
         OpcUaDisconnectButton.IsEnabled = connected;
     }
 
+    /// <summary>写回最近一次 Modbus 读/写的结果文本。</summary>
     public void UpdateModbusResult(string text)
     {
         ModbusResultText.Text = text;
@@ -209,6 +224,7 @@ public partial class IndustrialPanel : UserControl
             ModbusResultText.Foreground = (Brush)FindResource("TextSecondaryBrush");
     }
 
+    /// <summary>写回最近一次 OPC-UA 读/写的结果文本。</summary>
     public void UpdateOpcUaResult(string text)
     {
         OpcUaResultText.Text = text;
