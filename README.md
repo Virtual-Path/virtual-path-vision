@@ -57,7 +57,7 @@
 
 ## Processing Modes
 
-All screenshots below are produced by the app itself using the bundled test scene `TestImages/test_scene.png`.
+Every screenshot in the table below was produced by the app itself from the bundled test scene `TestImages/test_scene.png`.
 
 <table>
   <tr>

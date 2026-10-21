@@ -57,7 +57,7 @@
 
 ## 处理模式效果
 
-以下效果图均由应用自身使用内置测试图 `TestImages/test_scene.png` 生成。
+下表中的效果图均由应用自身使用内置测试图 `TestImages/test_scene.png` 生成。
 
 <table>
   <tr>
