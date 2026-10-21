@@ -9,7 +9,7 @@ Deadline: **2026-10-27 14:45 GMT+8** (= 2026-10-26 23:59 PT). Judging 10-27 → 
 | 1 | Uses OpenCV 5 for substantive image analysis | **Done** | `OpenCvSharp5 5.0.0.20260905`; `DefectDetector` (Otsu, scale space, morphology, contours); 800-part benchmark |
 | 2 | A meaningful component runs on AWS | **Code + template done, live run BLOCKED** | `infra/template.yaml` (S3 + Lambda + CloudWatch + SNS), `VirtualPathVision.Competition aws`; needs AWS credentials to produce a live receipt |
 | 3 | Technical report | **Done** | `docs/competition/TECHNICAL_REPORT.md` |
-| 4 | Repository accessible to judges | **Action needed** | confirm the GitHub repo is public (or add judges); private repo = automatic fail |
+| 4 | Repository accessible to judges | **Done** | GitHub repo is public (`gh repo view`: `visibility: PUBLIC`); judges can clone it |
 | 5 | Dependencies pinned | **Done** | exact versions in the `.csproj` files; dataset seed fixed |
 | 6 | Architecture diagram | **Done** | `docs/competition/architecture.svg`, Mermaid in `ARCHITECTURE.md` |
 | 7 | Runnable endpoint or live demo | **Done (app), video pending** | engine MJPEG endpoint `/cam1` + desktop Surface Defect mode verified over MJPEG; evidence PNG written; recording still needed |
@@ -31,7 +31,7 @@ Deadline: **2026-10-27 14:45 GMT+8** (= 2026-10-26 23:59 PT). Judging 10-27 → 
 - [ ] **AWS live run.** Configure credentials, deploy `infra/template.yaml`, run `-- aws`, keep `artifacts/aws-receipt.json` with `"mode": "aws"`, plus the S3 object list, Lambda response and SNS message id. Paste the S3/Lambda section into the Devpost "How we built it" or the report appendix.
 - [x] **Desktop integration verified.** Surface Defect mode ran against a live MJPEG stream: `NG Scratch score=0.56`, annotated evidence written; screenshot `docs/images/14_surface_camera.png`. Known failure `0401` (truth scratch → Spot 0.38) kept in §8.6.
 - [ ] **Record the video** following `VIDEO_SCRIPT.md` (≤ 5:00, English UI, 1080p).
-- [ ] **Check repo visibility** (`gh repo view --json visibility`). If private, make it public or add the judges.
+- [x] **Repo visibility checked** (`gh repo view --json visibility` → `PUBLIC`).
 - [ ] **Fresh-clone test** on another machine or a clean folder:
       `dotnet build VirtualPathVision.sln` → `dotnet run --project VirtualPathVision.Tests` → `dotnet run --project VirtualPathVision.Competition -- all`.
 - [ ] **Re-run the benchmark** after any code change and update the numbers in the report (they are measured, not aspirational).
