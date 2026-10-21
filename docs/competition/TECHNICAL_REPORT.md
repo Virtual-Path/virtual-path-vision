@@ -11,6 +11,7 @@
 VirtualPath Vision is a working industrial vision console (WPF + OpenCvSharp 5). This submission adds a **headless inspection pipeline** that turns the console's frame processing into a measurable, auditable product:
 
 - **A two-scale OpenCV 5 defect detector** for scratches, spots and low-contrast stains, with explicit edge exclusion and image-quality metrics.
+- **The detector in the operator console**: Surface Defect mode with the production-line ROI, a stabilised line verdict and evidence written once per NG transition.
 - **An agentic inspection loop** where the visual result changes the next action: re-acquire, re-inspect with different parameters, quarantine for human review, reject, or pass — every step is written to a JSONL trace.
 - **A reproducible benchmark**: 800 synthetic parts with exact labels and bounding boxes, 120.7 MB, generated from a fixed seed.
 - **An AWS path** (S3 + Lambda + CloudWatch + SNS) that stores evidence and aggregates batch metrics.
@@ -59,9 +60,12 @@ The competition deadline made this a good forcing function: the result is not a 
 | Execution | `ILineActuator` | conveyor, diverter, andon, MES report |
 | Benchmark | `SyntheticDataset.cs` + `EvaluationRunner.cs` | labels, metrics, failure cases |
 | Evidence | `EvidenceRenderer.cs`, `EvidencePackager` | annotated JPEG + JSON per part |
+| Operator UI | `MainWindow.ProcessByMode` + `ProcessingPanel` | Surface Defect mode, ROI reuse, line verdict, on-transition NG evidence |
 | Cloud | `infra/template.yaml` | S3, Lambda, CloudWatch, SNS |
 
-The desktop app remains the operator console. The competition pipeline is a separate console project that references the same detection library, so the measured code is the shipped code.
+The desktop app is no longer only a viewer: **Surface Defect** is the 12th processing mode and calls the same `DefectDetector` as the benchmark. The headless CLI remains for reproducible measurement, but both paths reference `VirtualPathVision.Inspection`, so the measured code is the shipped code.
+
+Desktop path: `VideoCaptureComponent` (USB / file / MJPEG, including the engine's `/cam1`) → `MainWindow.ProcessByMode` (ROI crop, detection, coordinates mapped back to the full frame) → `ProductionLineService` (3-frame stability through an explicit verdict) → optional evidence PNG. The capture thread never reads WPF controls directly; line settings are snapshotted on the UI thread (`_lineEnabled`, `_lineUseRoi`, `_lineRoi`). Reading `LineCard` from the capture thread used to crash the app, and the snapshot is the fix.
 
 ---
 
@@ -104,6 +108,20 @@ The threshold is intentionally **not** tuned per class: the same 0.25 applies to
 - **Exposure** = mean gray inside the part mask.
 
 These are first-class outputs, not logging decoration: the agent uses focus to decide whether the image is usable at all.
+
+### 4.6 The same detector inside the WPF console
+
+**Surface Defect** (processing-mode index 11) is the operator-facing path:
+
+- **ROI from the line card.** Only the configured fixture area is inspected, and finding rectangles are translated back by the ROI origin before display and evidence rendering. Without that translation every box would be offset by the ROI corner in the saved image.
+- **One sensitivity, 0.20–0.95, default 0.60.** No hidden per-class thresholds, so the offline sweep describes the deployed operating point.
+- **Explicit verdict, fixed tracking signature.** The station uses the constant signature `"surface"`; the OK/NG conclusion travels as `Detection.Verdict`. The stability filter requires 3 agreeing frames. The rejected alternative — encoding the verdict into the signature — splits one physical part into two tracks when the verdict flips, and the duplicate-count regression test fails when that variant is injected.
+- **Evidence on transition only.** An annotated PNG is written on `absent|unusable|ok → ng`, not every frame; at 30 fps the naive version wrote 30 files per second. Unusable frames (no part, or focus < 10) are shown but never counted as pass or fail.
+- **Threading.** Detection and evidence rendering run on the capture thread; UI updates are marshalled. Line settings come from an immutable snapshot refreshed on the UI thread.
+
+![Surface inspection over a live MJPEG stream](../images/14_surface_camera.png)
+
+*Desktop path during the end-to-end run: raw MJPEG frame on the left, detector overlay on the right (`NG Scratch score=0.56`). Source configuration in the header is the same one used for the engine's `/cam1`; the local harness runs on port 8099 for repeatability.*
 
 ---
 
@@ -251,6 +269,15 @@ Defects within 17 px of the part boundary are not inspected. This is deliberate:
 
 One part in 800 (P0282) fell below the focus threshold of 10 even after CLAHE and was escalated. The synthetic defocus branch is mild; a real line would need a periodic focus check rather than a per-part one.
 
+### 8.6 Desktop run: a scratch reported as a spot (P0401)
+
+The desktop path was exercised end to end with dataset images over an MJPEG stream at the deployed sensitivity 0.60.
+
+- **P0400 (truth scratch)**: `NG Scratch score=0.56 findings=1`, 8.8 ms, and an annotated evidence PNG was written. This is the intended success case — and note that the agent's second pass at sensitivity 0.85 wrongfully clears this same part (§8.2), while the desktop single-pass verdict at 0.60 rejects it.
+- **P0401 (truth scratch)**: `NG Spot score=0.38 findings=2`. Thresholding split the scratch into two fragments; both have aspect < 3, so the classifier chose *spot*. The part is still rejected, but the reported class is wrong. This is the same mechanism as §8.3, reproduced in the operator UI and kept as evidence rather than retouched.
+
+The MJPEG run re-encodes the source, so scores and focus differ from the PNG evaluation (P0401: 0.38 vs 0.41; the Laplacian focus score also drops after JPEG re-encoding); the verdict and class do not. The full-size evidence image is `docs/images/15_surface_evidence.png`.
+
 ---
 
 ## 9. AWS architecture
@@ -298,7 +325,7 @@ Deployment is one CloudFormation stack (`infra/template.yaml`), with the Lambda 
 # 1) Build
 dotnet build VirtualPathVision.sln
 
-# 2) Tests (83 production-line assertions + inspection regression tests)
+# 2) Tests (87 production-line + 30 inspection assertions, 0 failures)
 dotnet run --project VirtualPathVision.Tests
 
 # 3) Dataset → evaluation → agent loop → dry-run AWS
@@ -336,7 +363,7 @@ A recorded run is committed under [`results/`](results/) — evaluation, sweep, 
 |---|---|
 | Uses OpenCV 5 for substantive analysis | `DefectDetector` (Otsu, Gaussian scale space, morphology, contours) on `OpenCvSharp5 5.0.0.20260905` |
 | Meaningful AWS component | S3 evidence lake + Lambda aggregation + CloudWatch metrics + SNS review alerts (`infra/template.yaml`) |
-| Working application | WPF console + headless competition CLI; virtual camera via `VirtualPath-Core` MJPEG |
+| Working application | WPF console with Surface Defect mode (12 modes) + headless competition CLI; virtual camera via `VirtualPath-Core` MJPEG |
 | Technical report | this document |
 | Architecture diagram | `architecture.svg` / `ARCHITECTURE.md` |
 | Evaluation with failure cases | §7–§8, `artifacts/evaluation.json`, evidence grid |

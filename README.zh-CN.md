@@ -33,7 +33,8 @@
 
 - **双信号源** – 本地 USB 摄像头或网络 IP 摄像头（RTSP / MJPEG over HTTP）
 - **人脸检测** – OpenCV 5 DNN 检测器（YuNet ONNX），绘制检测框、5 个面部关键点与置信度
-- **11 种处理模式** – Canny、Sobel、Laplacian、二值化、轮廓、QR/条码、颜色检测、模板匹配、形状识别、特征点匹配、图像增强
+- **12 种处理模式** – Canny、Sobel、Laplacian、二值化、轮廓、QR/条码、颜色检测、模板匹配、形状识别、特征点匹配、图像增强、表面缺陷
+- **表面检测** – 在产线 ROI 内运行双尺度 OpenCV 5 划痕/点状/污渍检测，输出 NG 证据图与经过稳定判定的产线结论
 - **QR / 条码** – 实时解码二维码与一维条码（EAN/UPC/Code128/Code39），画面直接显示识别结果
 - **颜色检测** – 基于 HSV 的 9 种预设颜色检测与目标计数，支持点击画面直接取色
 - **模板匹配** – 加载模板图像，在实时画面中定位并显示匹配分数
@@ -88,7 +89,7 @@
 1. **选择信号源** – 选择"本地摄像头"、"网络视频流"或"录像回放"
 2. **配置** – 网络模式输入 IP 地址和端口；回放模式点"浏览…"选择录像文件
 3. **连接** – 建立视频流连接或开始回放
-4. **选择模式** – 从 11 种处理算法中选择一种
+4. **选择模式** – 从 12 种处理算法中选择一种
 5. **处理** – 实时处理 + 人脸检测，实时显示 FPS 和处理耗时
 6. **调整** – 微调 Canny 阈值并应用（Canny / 轮廓模式）
 7. **扫描 / 检测 / 匹配** – 将摄像头对准二维码、彩色物体、形状或已加载的模板
@@ -219,6 +220,35 @@ dotnet run --project VirtualPathCore.CameraBridge -- --serve --port 8080
   叠加层 —— 正是它表明画面是渲染出来的三维场景，而不是真实镜头。</sub>
 </p>
 
+### 桌面端的表面检测
+
+竞赛用的检测器不是独立演示：它以第 12 种处理模式 **"表面缺陷 / Surface Defect"**（索引 11）进入桌面应用，评测跑的代码就是产线上跑的代码。
+
+- 支持任意信号源，包括 3D 引擎的 `/cam1` MJPEG 流。
+- 复用产线卡的 ROI，只检查工位区域，避免把墙面、传送带背景当成工件。
+- 灵敏度 0.20–0.95（默认 0.60）。结果卡显示 `NG Scratch score=0.56 findings=1 focus=118 8.8 ms`。
+- 产线计数使用固定跟踪签名 `"surface"`，结论通过显式 `PieceVerdict` 传入；连续 3 帧一致才计数，因此 OK→NG 翻转不会重复计为新工件。
+- **保存 NG 证据**只在工件跃迁到 NG 时写一张标注图，不是每帧都写。默认目录 `%LOCALAPPDATA%\VirtualPathVision\surface-evidence`，可用 `VPV_EVIDENCE_DIR` 覆盖。
+- 未找到工件或失焦的帧只显示提示，既不计合格也不计不合格。
+
+<p align="center">
+  <img src="docs/images/14_surface_camera.png" alt="实时 MJPEG 流上的表面检测" width="820"/>
+  <br/>
+  <sub>实测 <code>127.0.0.1:8099/video</code>：左为原始帧，右为检测叠加（<code>NG Scratch score=0.56</code>）。
+  同一套配置可直接填引擎的 <code>/cam1</code>；这里用本地 MJPEG 测试源是为了不启动引擎也能复现。</sub>
+</p>
+
+<table>
+  <tr>
+    <td align="center"><b>模式、灵敏度与结果卡</b><br/><img src="docs/images/13_surface_inspection.png" width="400"/></td>
+    <td align="center"><b>落盘的 NG 证据图</b><br/><img src="docs/images/15_surface_evidence.png" width="400"/></td>
+  </tr>
+</table>
+
+> **故意保留的失败案例：** 数据集样本 `0401`（真值为 *scratch*）被分成两个碎片并判成
+> **Spot**，score 0.38。这正是技术报告 §8.3 记录的类别混淆，现在同样出现在操作员界面上，
+> 没有被 API 层藏起来。
+
 ---
 
 ## 竞赛流水线（OpenCV AI Competition 2026）
@@ -282,7 +312,7 @@ F1 90.41 %、p95 8.79 ms（128 FPS）**；**26.4 %** 的工件在最终动作前
 │   │   └── DarkTheme.xaml           # Apple 风格深色配色 + 控件样式
 │   ├── Views/                       # 每页一个 UserControl
 │   │   ├── CameraPanel.xaml / .cs   # 首页：采集、预览、截图/录像
-│   │   ├── ProcessingPanel.xaml / .cs   # 11 种处理模式 + 阈值
+│   │   ├── ProcessingPanel.xaml / .cs   # 12 种处理模式 + 阈值
 │   │   ├── AIPanel.xaml / .cs       # YOLO 检测、跟踪、数字孪生
 │   │   ├── CloudPanel.xaml / .cs    # AWS S3 / IoT Core / Lambda
 │   │   ├── IndustrialPanel.xaml / .cs   # Modbus / OPC UA / 条码枪 / 报工
@@ -302,7 +332,7 @@ F1 90.41 %、p95 8.79 ms（128 FPS）**；**26.4 %** 的工件在最终动作前
 │   ├── Converters/                  # 值转换器（日志级别 → 颜色 等）
 │   ├── face_detection_yunet_2023mar.onnx
 │   └── haarcascade_frontalface_default.xml
-├── VirtualPathVision.Tests/         # 无界面回归测试（83 条断言）
+├── VirtualPathVision.Tests/         # 无界面回归测试（117 条断言）
 │   ├── ProductionLineTests.cs       # 稳定判定、目标跟踪、MES 协议与报文
 │   ├── ShutdownDeadlockTests.cs     # 关窗死锁、Dispose 幂等
 │   └── InspectionTests.cs           # 检测召回/误报、边缘掩膜、代理升级与复检

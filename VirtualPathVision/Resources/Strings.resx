@@ -316,6 +316,30 @@
   <data name="ModeEnhancement" xml:space="preserve">
     <value>图像增强</value>
   </data>
+  <data name="ModeSurfaceInspection" xml:space="preserve">
+    <value>表面缺陷</value>
+  </data>
+  <data name="SectionSurfaceInspection" xml:space="preserve">
+    <value>表面检测</value>
+  </data>
+  <data name="SurfaceSensitivity" xml:space="preserve">
+    <value>灵敏度</value>
+  </data>
+  <data name="SurfaceSaveEvidence" xml:space="preserve">
+    <value>保存 NG 证据</value>
+  </data>
+  <data name="SurfaceHint" xml:space="preserve">
+    <value>在检测区内识别划痕、点状缺陷与污渍；NG 帧会保存为证据。</value>
+  </data>
+  <data name="SurfaceNoPart" xml:space="preserve">
+    <value>检测区内无工件</value>
+  </data>
+  <data name="SurfaceLowFocus" xml:space="preserve">
+    <value>图像失焦，请重新采集</value>
+  </data>
+  <data name="SurfaceDefects" xml:space="preserve">
+    <value>缺陷数</value>
+  </data>
   <data name="ShapeCircle" xml:space="preserve">
     <value>圆形</value>
   </data>

@@ -1,6 +1,6 @@
 # Video script (≤ 5:00)
 
-Target length **4:45**. English narration, English UI, 1920×1080, 30 fps. Record with OBS; use a clean desktop (no unrelated windows, no personal notifications). Mouse out of the frame before each capture.
+Target length **4:55**. English narration, English UI, 1920×1080, 30 fps. Record with OBS; use a clean desktop (no unrelated windows, no personal notifications). Mouse out of the frame before each capture.
 
 The goal is not to show every feature. It is to make three things undeniable:
 
@@ -17,7 +17,7 @@ The goal is not to show every feature. It is to make three things undeniable:
 **Narration:**
 > "A production line does not need another detector demo. It needs a system that can say how good it is, what to do when the image is bad, and why a part was rejected. VirtualPath Vision is an industrial vision console built on OpenCV 5. This submission closes that loop."
 
-## 0:25–1:10 · Acquisition, including the virtual camera
+## 0:25–1:05 · Acquisition, including the virtual camera
 
 **Screen:** camera panel; then the engine console window with the MJPEG server log; then the vision app connected to `http://127.0.0.1:8081/cam1`.
 
@@ -26,7 +26,7 @@ The goal is not to show every feature. It is to make three things undeniable:
 
 **Shot tip:** show the engine window title and the `/cam1` request in the log for two seconds.
 
-## 1:10–2:05 · Detection and evidence
+## 1:05–2:00 · Detection and evidence
 
 **Screen:** run `dotnet run --project VirtualPathVision.Competition -- probe --index 401`; show the printed finding and open `artifacts/probe-0401.jpg`.
 
@@ -35,7 +35,7 @@ The goal is not to show every feature. It is to make three things undeniable:
 
 **Shot tip:** zoom into the header band (verdict + score) and the bounding box for three seconds.
 
-## 2:05–3:00 · The agentic step
+## 2:00–2:55 · The agentic step
 
 **Screen:** open `artifacts/agent-trace.jsonl`, filter to `P0401`, show the two `inspect` calls side by side.
 
@@ -44,14 +44,23 @@ The goal is not to show every feature. It is to make three things undeniable:
 
 **Shot tip:** highlight `sensitivity: 0.6 → 0.85` and `class: Spot → Stain`.
 
-## 3:00–3:50 · Benchmark and failure cases
+## 2:55–3:40 · Benchmark and failure cases
 
 **Screen:** `artifacts/evaluation.md`, then `docs/competition/evidence-grid.png`, then `artifacts/sweep.md`.
 
 **Narration:**
 > "Eight hundred synthetic parts with exact labels: 400 clean, 152 scratches, 152 spots, 96 stains. At the default operating point: one hundred percent precision, zero false alarms, 82.5 percent recall, F1 90.4, p95 under nine milliseconds at 128 frames per second. The sweep shows the trade-off instead of hiding it: at sensitivity 0.75 recall rises to 85.8 percent for 1.4 points of precision. And these are the failures — a low-contrast stain missed entirely, and a faint scratch cleared by re-inspection. They are in the report, not edited out."
 
-## 3:50–4:30 · AWS evidence
+## 3:40–4:00 · The same detector in the operator console
+
+**Screen:** Surface Defect mode running on the live MJPEG source; result card `NG Scratch score=0.56 findings=1`; then the Camera panel in dual view.
+
+**Narration:**
+> "The same detector is not trapped in a benchmark. It ships as the console's Surface Defect mode: the production-line ROI limits the search, a three-frame stability filter gates the OK/NG verdict, and an annotated evidence image is written only when a part turns NG. Here the live stream reports a scratch at 0.56, and the counter treats it as one part — not one per frame. The failure case is kept too: a scratch split into two fragments is reported as a spot, which is exactly what the report documents."
+
+**Shot tip:** show the result card and dual view for three seconds, then open the evidence PNG in Explorer.
+
+## 4:00–4:40 · AWS evidence
 
 **Screen:** AWS console S3 bucket with the run prefix; Lambda test returning the aggregate; CloudWatch metric `ItemsRequiringReview`; `artifacts/aws-receipt.json`.
 
@@ -60,7 +69,7 @@ The goal is not to show every feature. It is to make three things undeniable:
 
 > If AWS is not configured on the recording machine, say so and show the dry-run receipt: *"This is the dry-run receipt; the live path is one command away and documented in infra/README."*
 
-## 4:30–4:45 · Close
+## 4:40–4:55 · Close
 
 **Screen:** the console with the production line running; then the repo README.
 

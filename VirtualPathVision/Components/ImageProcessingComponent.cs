@@ -15,7 +15,8 @@ namespace VirtualPathVision.Components
         TemplateMatch,  // 模板匹配
         ShapeDetection, // 形状识别
         FeatureMatch,   // 特征点匹配
-        Enhancement     // 图像增强
+        Enhancement,    // 图像增强
+        SurfaceInspection // 表面缺陷检测（OpenCV 5 双尺度）
     }
 
     /// <summary>

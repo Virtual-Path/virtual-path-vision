@@ -67,10 +67,18 @@ namespace VirtualPathVision.Industrial
         /// <summary>一帧内检出的单个目标。</summary>
         /// <param name="CenterX">目标中心 X（像素）</param>
         /// <param name="CenterY">目标中心 Y（像素）</param>
-        /// <param name="Signature">特征签名，如 "Red"、"circle"、"barcode:ABC"</param>
+        /// <param name="Signature">
+        /// 目标跟踪签名，如 "Red"、"circle"、"surface"。同一件工件在跟踪期间必须保持不变。
+        /// </param>
         /// <param name="Confidence">该次检出的置信度</param>
+        /// <param name="Verdict">
+        /// 可选的显式合格判定。为 null 时按 <paramref name="Signature"/> 的前缀推断。
+        /// 表面检测用它把"跟踪身份"（签名固定）与"本帧结论"（可变化）分开：
+        /// 否则同一件工件从 OK 变 NG 时会因签名变化被当成新目标，重复计数。
+        /// </param>
         public readonly record struct Detection(
-            float CenterX, float CenterY, string Signature, double Confidence);
+            float CenterX, float CenterY, string Signature, double Confidence,
+            PieceVerdict? Verdict = null);
 
         private readonly StabilityFilter _stability;
         private readonly MesClient? _mes;
@@ -175,12 +183,16 @@ namespace VirtualPathVision.Industrial
                     first = timestamp;
                 }
 
-                var verdict = _stability.Observe(key, d.Signature, NowSeconds(timestamp));
+                // 显式判定与签名推断走同一条稳定判定路径。结论变化时签名随之变化，
+                // StabilityFilter 会重新累计连续帧，不会把"OK 3 帧后突然 NG"当成已稳定。
+                PieceVerdict frameVerdict = d.Verdict ?? Classify(d.Signature);
+                var verdict = _stability.Observe(
+                    key, $"{d.Signature}|{frameVerdict}", NowSeconds(timestamp));
                 if (verdict != StabilityVerdict.Stable) continue;
 
                 var piece = new PieceResult(
                     key,
-                    Classify(d.Signature),
+                    frameVerdict,
                     _stability.RequiredFrames,
                     d.Confidence,
                     first,

@@ -32,6 +32,8 @@ namespace VirtualPathVision.Tests
             ProductionLine_CountsOncePerPiece();
             ProductionLine_DoesNotDoubleCountAfterOcclusion();
             ProductionLine_ClassifiesDefectSignatures();
+            ProductionLine_ExplicitVerdictOverridesSignature();
+            ProductionLine_VerdictFlipDoesNotDoubleCount();
             ProductionLine_ExpiredPieceCanBeDetectedAgain();
             MesClient_PayloadMatchesGatewayDto();
             MesClient_ClipsFieldsAtDtoSizeLimits();
@@ -267,6 +269,70 @@ namespace VirtualPathVision.Tests
                 $"passed={line.PassedCount}, failed={line.FailedCount}");
             Check("classify: yield is 50%",
                 Math.Abs(line.YieldRate - 0.5) < 1e-9, $"yield={line.YieldRate}");
+        }
+
+        private static void ProductionLine_ExplicitVerdictOverridesSignature()
+        {
+            // 表面检测的跟踪签名固定为 "surface"（同一件工件从 OK 变 NG 不能拆成两件），
+            // 结论由 Detection.Verdict 显式传入。若实现退回成只看签名前缀，
+            // 这件会被当成合格品——正是这条断言要抓的错误。
+            var line = new ProductionLineService();
+            var t0 = new DateTime(2026, 1, 1, 0, 0, 0);
+
+            for (int i = 0; i < 4; i++)
+            {
+                line.ProcessFrame(
+                    new List<ProductionLineService.Detection>
+                    {
+                        new(600f, 268f, "surface", 0.9, PieceVerdict.Failed)
+                    },
+                    t0.AddSeconds(i * 0.04));
+            }
+
+            Check("explicit verdict: ng despite neutral signature",
+                line.FailedCount == 1 && line.PassedCount == 0,
+                $"passed={line.PassedCount}, failed={line.FailedCount}");
+        }
+
+        private static void ProductionLine_VerdictFlipDoesNotDoubleCount()
+        {
+            // 同一件工件在判定后结论翻转：跟踪签名不变，因此 _settled 仍能命中，
+            // 不能因为 NG 而生成新 track 再计一件。
+            var line = new ProductionLineService();
+            var t0 = new DateTime(2026, 1, 1, 0, 0, 0);
+
+            List<ProductionLineService.Detection> Det(PieceVerdict verdict) => new()
+            {
+                new ProductionLineService.Detection(600f, 268f, "surface", 0.9, verdict)
+            };
+
+            for (int i = 0; i < 4; i++)
+                line.ProcessFrame(Det(PieceVerdict.Passed), t0.AddSeconds(i * 0.04));
+
+            for (int i = 4; i < 8; i++)
+                line.ProcessFrame(Det(PieceVerdict.Failed), t0.AddSeconds(i * 0.04));
+
+            Check("verdict flip: same piece is not counted twice",
+                line.PassedCount == 1 && line.FailedCount == 0 && line.TotalCount == 1,
+                $"passed={line.PassedCount}, failed={line.FailedCount}, total={line.TotalCount}");
+
+            // 结论翻转发生在稳定之前时，必须重新累计连续帧：
+            // 前 2 帧 OK + 第 1 帧 NG 不足以判定。
+            var early = new ProductionLineService();
+            early.ProcessFrame(Det(PieceVerdict.Passed), t0);
+            early.ProcessFrame(Det(PieceVerdict.Passed), t0.AddSeconds(0.04));
+            early.ProcessFrame(Det(PieceVerdict.Failed), t0.AddSeconds(0.08));
+
+            Check("verdict flip before settle: counter stays at zero",
+                early.TotalCount == 0,
+                $"total={early.TotalCount}");
+
+            early.ProcessFrame(Det(PieceVerdict.Failed), t0.AddSeconds(0.12));
+            early.ProcessFrame(Det(PieceVerdict.Failed), t0.AddSeconds(0.16));
+
+            Check("verdict flip before settle: 3 consistent NG frames decide",
+                early.FailedCount == 1 && early.PassedCount == 0,
+                $"passed={early.PassedCount}, failed={early.FailedCount}");
         }
 
         private static void ProductionLine_ExpiredPieceCanBeDetectedAgain()

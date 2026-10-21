@@ -18,6 +18,11 @@ public partial class ProcessingPanel : UserControl
     public Border ColorPanelEl => ColorPanel;
     public ComboBox ColorComboBoxEl => ColorComboBox;
     public TextBlock PickColorHintTextEl => PickColorHintText;
+    public Border SurfacePanelEl => SurfacePanel;
+    public Slider SurfaceSensitivitySliderEl => SurfaceSensitivitySlider;
+    public TextBlock SurfaceSensitivityValueEl => SurfaceSensitivityValue;
+    public CheckBox SurfaceSaveEvidenceCheckBoxEl => SurfaceSaveEvidenceCheckBox;
+    public TextBlock ThresholdInfoLabelEl => ThresholdInfoLabel;
     public Border TemplatePanelEl => TemplatePanel;
     public Button LoadTemplateButtonEl => LoadTemplateButton;
     public TextBlock TemplateStatusTextEl => TemplateStatusText;
@@ -33,6 +38,7 @@ public partial class ProcessingPanel : UserControl
     public event EventHandler? LoadTemplateRequested;
     public event Action<int>? ModeChanged;
     public event Action<int>? ColorChanged;
+    public event Action<double>? SurfaceSensitivityChanged;
 
     private bool _suppressEvents;
 
@@ -62,11 +68,38 @@ public partial class ProcessingPanel : UserControl
         ColorDetectionLabel.Text = t.ModeColorDetection;
         FacesLabel.Text = t.Faces;
         ObjectsLabel.Text = t.Objects;
+        SurfaceTitle.Text = t.SectionSurfaceInspection;
+        SurfaceSensitivityLabel.Text = t.SurfaceSensitivity;
+        SurfaceSaveEvidenceCheckBox.Content = t.SurfaceSaveEvidence;
+        SurfaceHintText.Text = t.SurfaceHint;
     }
 
     public void SetResultTitle(string title)
     {
         ResultTitleText.Text = title;
+    }
+
+    /// <summary>结果卡里第三个指标的名称：默认 "Objects"，表面检测时改为 "Defects"。</summary>
+    public void SetObjectsLabel(string text)
+    {
+        ObjectsLabel.Text = text;
+    }
+
+    /// <summary>
+    /// 表面检测没有人脸概念，隐藏左侧计数卡并让缺陷计数占满整行；
+    /// 切回其他模式时恢复两栏布局。
+    /// </summary>
+    public void SetFaceCounterVisible(bool visible)
+    {
+        FacesCounterBorder.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+        Grid.SetColumn(ObjectsCounterBorder, visible ? 2 : 0);
+        Grid.SetColumnSpan(ObjectsCounterBorder, visible ? 1 : 3);
+    }
+
+    /// <summary>阈值信息行的标签：默认 "Threshold:"，表面检测时改为 "Sensitivity:"。</summary>
+    public void SetInfoLabel(string text)
+    {
+        ThresholdInfoLabel.Text = text;
     }
 
     public void SetTemplateStatus(string status)
@@ -116,7 +149,7 @@ public partial class ProcessingPanel : UserControl
     /// </summary>
     private void ProcessingModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_suppressEvents || ThresholdPanel == null || ColorPanel == null || TemplatePanel == null || ModeLabelText == null) return;
+        if (_suppressEvents || ThresholdPanel == null || ColorPanel == null || SurfacePanel == null || TemplatePanel == null || ModeLabelText == null) return;
 
         int index = ProcessingModeComboBox.SelectedIndex;
         if (index < 0 || index >= ProcessingModeComboBox.Items.Count) return;
@@ -134,6 +167,7 @@ public partial class ProcessingPanel : UserControl
             8 => Components.ProcessingMode.ShapeDetection,
             9 => Components.ProcessingMode.FeatureMatch,
             10 => Components.ProcessingMode.Enhancement,
+            11 => Components.ProcessingMode.SurfaceInspection,
             _ => Components.ProcessingMode.Canny
         };
 
@@ -146,6 +180,9 @@ public partial class ProcessingPanel : UserControl
         bool isColorMode = mode == Components.ProcessingMode.ColorDetection;
         ColorPanel.Visibility = isColorMode ? Visibility.Visible : Visibility.Collapsed;
         PickColorHintText.Visibility = isColorMode ? Visibility.Visible : Visibility.Collapsed;
+
+        SurfacePanel.Visibility = mode == Components.ProcessingMode.SurfaceInspection
+            ? Visibility.Visible : Visibility.Collapsed;
 
         TemplatePanel.Visibility = mode is Components.ProcessingMode.TemplateMatch
             or Components.ProcessingMode.FeatureMatch
@@ -162,6 +199,20 @@ public partial class ProcessingPanel : UserControl
         if (_suppressEvents) return;
 
         ColorChanged?.Invoke(ColorComboBox.SelectedIndex);
+    }
+
+    private void SurfaceSensitivitySlider_ValueChanged(
+        object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        // 滑块在 InitializeComponent 期间就会因 Value="0.6" 触发一次；
+        // 此时后面的元素可能尚未创建，先判空，数值文本用 XAML 里的初值。
+        if (SurfaceSensitivityValue == null) return;
+
+        SurfaceSensitivityValue.Text =
+            e.NewValue.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+
+        if (_suppressEvents) return;
+        SurfaceSensitivityChanged?.Invoke(e.NewValue);
     }
 
     private void LoadTemplateButton_Click(object sender, RoutedEventArgs e)

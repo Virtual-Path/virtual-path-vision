@@ -12,7 +12,7 @@ Deadline: **2026-10-27 14:45 GMT+8** (= 2026-10-26 23:59 PT). Judging 10-27 → 
 | 4 | Repository accessible to judges | **Action needed** | confirm the GitHub repo is public (or add judges); private repo = automatic fail |
 | 5 | Dependencies pinned | **Done** | exact versions in the `.csproj` files; dataset seed fixed |
 | 6 | Architecture diagram | **Done** | `docs/competition/architecture.svg`, Mermaid in `ARCHITECTURE.md` |
-| 7 | Runnable endpoint or live demo | **Partial** | engine MJPEG endpoint `/cam1` + desktop app; video demo pending |
+| 7 | Runnable endpoint or live demo | **Done (app), video pending** | engine MJPEG endpoint `/cam1` + desktop Surface Defect mode verified over MJPEG; evidence PNG written; recording still needed |
 | 8 | Video ≤ 5 minutes | **Script done, recording pending** | `docs/competition/VIDEO_SCRIPT.md` |
 | 9 | Evaluation evidence incl. failure cases | **Done** | §7–§8 of the report, `artifacts/evaluation.json`, `docs/competition/evidence-grid.png` |
 | 10 | Devpost submission | **Pending** | needs the user's Devpost account |
@@ -29,6 +29,7 @@ Deadline: **2026-10-27 14:45 GMT+8** (= 2026-10-26 23:59 PT). Judging 10-27 → 
 ## Before submitting
 
 - [ ] **AWS live run.** Configure credentials, deploy `infra/template.yaml`, run `-- aws`, keep `artifacts/aws-receipt.json` with `"mode": "aws"`, plus the S3 object list, Lambda response and SNS message id. Paste the S3/Lambda section into the Devpost "How we built it" or the report appendix.
+- [x] **Desktop integration verified.** Surface Defect mode ran against a live MJPEG stream: `NG Scratch score=0.56`, annotated evidence written; screenshot `docs/images/14_surface_camera.png`. Known failure `0401` (truth scratch → Spot 0.38) kept in §8.6.
 - [ ] **Record the video** following `VIDEO_SCRIPT.md` (≤ 5:00, English UI, 1080p).
 - [ ] **Check repo visibility** (`gh repo view --json visibility`). If private, make it public or add the judges.
 - [ ] **Fresh-clone test** on another machine or a clean folder:
@@ -47,7 +48,8 @@ Deadline: **2026-10-27 14:45 GMT+8** (= 2026-10-26 23:59 PT). Judging 10-27 → 
 ## What is already proven locally
 
 - `dotnet build VirtualPathVision.sln`: 0 warnings, 0 errors.
-- `VirtualPathVision.Tests`: 83 production-line assertions + inspection regression tests, all passing.
+- `VirtualPathVision.Tests`: 117 assertions (87 production-line + 30 inspection), 0 failures.
 - 800-part evaluation: precision 100.00 %, recall 82.50 %, F1 90.41 %, p95 8.79 ms.
 - Agent loop: 514 pass / 240 reject / 45 quarantine / 1 escalate; 211 vision-driven re-inspections.
+- Desktop Surface Defect mode, live MJPEG: 0400 (scratch) → `NG Scratch 0.56` + evidence PNG; 0401 (scratch) → `NG Spot 0.38` (documented class confusion).
 - Deterministic artifacts in `artifacts/` (evaluation, sweep, trace, summary, actuator log, 12 evidence images, AWS dry-run receipt).

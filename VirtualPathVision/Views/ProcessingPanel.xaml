@@ -68,6 +68,7 @@
                             <ComboBoxItem Content="Shape Detection" Style="{StaticResource GlassComboBoxItem}" />
                             <ComboBoxItem Content="Feature Match" Style="{StaticResource GlassComboBoxItem}" />
                             <ComboBoxItem Content="Image Enhancement" Style="{StaticResource GlassComboBoxItem}" />
+                            <ComboBoxItem Content="Surface Defect" Style="{StaticResource GlassComboBoxItem}" />
                         </ComboBox>
                     </Grid>
                 </StackPanel>
@@ -191,6 +192,61 @@
                 </StackPanel>
             </Border>
 
+            <!-- ═══ Card 3b — Surface Inspection ═══ -->
+            <Border x:Name="SurfacePanel"
+                    Style="{StaticResource GlassCard}"
+                    Padding="20"
+                    Margin="0,0,0,16"
+                    Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock x:Name="SurfaceTitle"
+                               Text="Surface Inspection"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               Margin="0,0,0,14" />
+
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="SurfaceSensitivityLabel"
+                                   Grid.Column="0"
+                                   Text="Sensitivity"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   VerticalAlignment="Center" />
+                        <TextBlock x:Name="SurfaceSensitivityValue"
+                                   Grid.Column="1"
+                                   Text="0.60"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AccentBrush}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Slider x:Name="SurfaceSensitivitySlider"
+                            Style="{StaticResource GlassSlider}"
+                            Minimum="0.2" Maximum="0.95" Value="0.6"
+                            IsSnapToTickEnabled="True" TickFrequency="0.05"
+                            Margin="0,0,0,12"
+                            ValueChanged="SurfaceSensitivitySlider_ValueChanged" />
+
+                    <CheckBox x:Name="SurfaceSaveEvidenceCheckBox"
+                              Style="{StaticResource GlassCheckBox}"
+                              IsChecked="True"
+                              Content="Save NG evidence"
+                              Margin="0,0,0,8" />
+
+                    <TextBlock x:Name="SurfaceHintText"
+                               Text="Scratch, spot and stain detection inside the inspection ROI."
+                               FontSize="11"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
             <!-- ═══ Card 4 — Template / Feature ═══ -->
             <Border x:Name="TemplatePanel"
                     Style="{StaticResource GlassCard}"
@@ -276,7 +332,8 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <Border Grid.Column="0"
+                        <Border x:Name="FacesCounterBorder"
+                                Grid.Column="0"
                                 Background="{DynamicResource InsetBrush}"
                                 CornerRadius="{StaticResource CornerMd}"
                                 Padding="14,10"
@@ -297,7 +354,8 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Column="2"
+                        <Border x:Name="ObjectsCounterBorder"
+                                Grid.Column="2"
                                 Background="{DynamicResource InsetBrush}"
                                 CornerRadius="{StaticResource CornerMd}"
                                 Padding="14,10"
@@ -325,7 +383,8 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Threshold:"
+                        <TextBlock x:Name="ThresholdInfoLabel"
+                                   Grid.Column="0" Text="Threshold:"
                                    FontSize="13"
                                    Foreground="{DynamicResource TextMutedBrush}"
                                    VerticalAlignment="Center"

@@ -33,7 +33,8 @@
 
 - **Dual Source** – Local USB camera or network IP camera (RTSP / MJPEG over HTTP)
 - **Face Detection** – OpenCV 5 DNN detector (YuNet ONNX) drawing bounding boxes plus 5 facial landmarks and a confidence score
-- **11 Processing Modes** – Canny, Sobel, Laplacian, Binary, Contour, QR/Barcode, Color Detection, Template Matching, Shape Detection, Feature Matching, Enhancement
+- **12 Processing Modes** – Canny, Sobel, Laplacian, Binary, Contour, QR/Barcode, Color Detection, Template Matching, Shape Detection, Feature Matching, Enhancement, Surface Defect
+- **Surface Inspection** – two-scale OpenCV 5 scratch / spot / stain detection inside the production-line ROI, with an NG evidence image and a stabilised line verdict
 - **QR / Barcode** – Real-time decoding of QR codes and 1D barcodes (EAN/UPC/Code128/Code39) with on-screen result display
 - **Color Detection** – HSV-based detection with 9 preset colors, object counting, and click-to-pick sampling directly from the live image
 - **Template Matching** – Locate a template image in the live feed with a match score
@@ -88,7 +89,7 @@ All screenshots below are produced by the app itself using the bundled test scen
 1. **Select Source** – Choose "Local Camera", "Network Stream", or "File Replay"
 2. **Configure** – For network, enter the IP address and port; for replay, pick a file with "Browse..."
 3. **Connect** – Establish the video stream connection or start replaying
-4. **Choose Mode** – Pick one of 11 processing algorithms
+4. **Choose Mode** – Pick one of 12 processing algorithms
 5. **Process** – Real-time processing and face detection, with FPS and timing stats
 6. **Adjust** – Fine-tune Canny thresholds and re-apply (Canny / Contour modes)
 7. **Scan / Detect / Match** – Point the camera at a QR code, colored object, shape, or a loaded template
@@ -219,6 +220,36 @@ The engine logs `[serve] client connected: <addr>` and `[serve] streaming... fra
   engine's own overlay, which is what tells you this is a rendered 3D scene rather than a real lens.</sub>
 </p>
 
+### Surface inspection in the operator console
+
+The competition detector is not a side demo: it ships as the 12th processing mode, **Surface Defect** (index 11), so the measured code is the code running on the line.
+
+- Accepts any source, including the 3D engine's `/cam1` MJPEG stream.
+- Reuses the production-line card's ROI, so inspection runs on the fixture area rather than walls or conveyor background.
+- Sensitivity 0.20–0.95 (default 0.60). The result card reports `NG Scratch score=0.56 findings=1 focus=118 8.8 ms`.
+- The line counter receives a fixed `"surface"` tracking signature plus an explicit part verdict; a 3-frame stability filter gates the count, so an OK→NG flip is not counted as a new part.
+- **Save NG evidence** writes an annotated PNG only when a part transitions to NG (not on every frame). Default `%LOCALAPPDATA%\VirtualPathVision\surface-evidence`; override with `VPV_EVIDENCE_DIR`.
+- Frames with no part or low focus are displayed but never counted as pass or fail.
+
+<p align="center">
+  <img src="docs/images/14_surface_camera.png" alt="Surface inspection over a live MJPEG stream" width="820"/>
+  <br/>
+  <sub>Live <code>127.0.0.1:8099/video</code> run: raw frame on the left, detector overlay on the right
+  (<code>NG Scratch score=0.56</code>). The same source configuration works with the engine's <code>/cam1</code>;
+  the local MJPEG harness is used here so the result is reproducible without the engine running.</sub>
+</p>
+
+<table>
+  <tr>
+    <td align="center"><b>Mode, sensitivity and result card</b><br/><img src="docs/images/13_surface_inspection.png" width="400"/></td>
+    <td align="center"><b>NG evidence written to disk</b><br/><img src="docs/images/15_surface_evidence.png" width="400"/></td>
+  </tr>
+</table>
+
+> **Failure case kept on purpose:** dataset sample `0401` (ground truth *scratch*) is classified as
+> **Spot**, score 0.38, with the scratch split into two fragments. It is the same class confusion the
+> benchmark reports in §8.3, now visible in the operator UI rather than hidden by the API.
+
 ---
 
 ## Competition pipeline (OpenCV AI Competition 2026)
@@ -286,7 +317,7 @@ Read: [technical report](docs/competition/TECHNICAL_REPORT.md) ·
 │   │   └── DarkTheme.xaml           # Apple-style dark palette + control styles
 │   ├── Views/                       # One UserControl per page
 │   │   ├── CameraPanel.xaml / .cs   # Home: capture, preview, screenshot / record
-│   │   ├── ProcessingPanel.xaml / .cs   # 11 processing modes + thresholds
+│   │   ├── ProcessingPanel.xaml / .cs   # 12 processing modes + thresholds
 │   │   ├── AIPanel.xaml / .cs       # YOLO detection, tracking, digital twin
 │   │   ├── CloudPanel.xaml / .cs    # AWS S3 / IoT Core / Lambda
 │   │   ├── IndustrialPanel.xaml / .cs   # Modbus / OPC UA / scanners / work report
@@ -306,7 +337,7 @@ Read: [technical report](docs/competition/TECHNICAL_REPORT.md) ·
 │   ├── Converters/                  # Value converters (log level → colour, …)
 │   ├── face_detection_yunet_2023mar.onnx
 │   └── haarcascade_frontalface_default.xml
-├── VirtualPathVision.Tests/         # Headless regression tests (83 assertions)
+├── VirtualPathVision.Tests/         # Headless regression tests (117 assertions)
 │   ├── ProductionLineTests.cs       # Stability, target tracking, MES protocol and payloads
 │   ├── ShutdownDeadlockTests.cs     # Shutdown deadlock, Dispose idempotency
 │   └── InspectionTests.cs           # Detector recall/FP, edge margin, agent escalation and re-plan
@@ -335,6 +366,7 @@ Read: [technical report](docs/competition/TECHNICAL_REPORT.md) ·
 | `ShapeDetectionComponent` | Canny + contour polygon approximation + circularity analysis, classifies circles/rects/triangles/pentagons/polygons; shares the Canny threshold sliders |
 | `FeatureMatchComponent` | ORB keypoints + BFMatcher ratio test + RANSAC homography, draws perspective detection box |
 | `EnhancementComponent` | CLAHE histogram equalization + unsharp masking |
+| `SurfaceInspection` (desktop) | Runs the shared `DefectDetector` inside `MainWindow` on the ROI snapshot; fixed track signature + explicit verdict feed the line counter; NG evidence is written once per OK→NG transition |
 | `RecordingComponent` | `VideoWriter`-based AVI recording with MJPG codec |
 | `ThresholdParameterComponent` | Validates input and fires `OnThresholdsChanged` |
 | `TranslationService` | `INotifyPropertyChanged` singleton, `ResourceManager`-backed, fires full refresh on culture switch |

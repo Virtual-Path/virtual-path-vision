@@ -10,6 +10,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using VirtualPathVision.AI;
 using VirtualPathVision.Cloud;
+using VirtualPathVision.Inspection;
 using VirtualPathVision.Industrial;
 using VirtualPathVision.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +37,36 @@ namespace VirtualPathVision
         private readonly List<Components.ColorDetectionComponent.Detection> _detectionBuffer = new();
         private readonly List<Industrial.ProductionLineService.Detection> _lineDetectionBuffer = new();
         private string _colorNameForTracking = "Red";
+
+        /// <summary>ROI 的不可变快照：采集线程不能直接读 WPF 控件。</summary>
+        private sealed record RoiSnapshot(int X, int Y, int Width, int Height);
+
+        // 产线卡片的设置由 UI 线程写入、采集线程读取。只读快照，
+        // 避免 "The calling thread cannot access this object"（已实测复现）。
+        private volatile bool _lineEnabled;
+        private volatile bool _lineUseRoi = true;
+        private volatile RoiSnapshot _lineRoi = new(
+            Views.ProductionLineCard.DefaultRoiX, Views.ProductionLineCard.DefaultRoiY,
+            Views.ProductionLineCard.DefaultRoiW, Views.ProductionLineCard.DefaultRoiH);
+
+        // ---- 表面缺陷检测（OpenCV 5 双尺度） ----
+        private readonly Inspection.DefectDetector _surfaceDetector = new();
+        private double _surfaceSensitivity = 0.6;
+
+        /// <summary>
+        /// 当前表面检测状态：absent / unusable / ok / ng。
+        /// 只在状态跃迁到 NG 时落一张证据图，避免同一件工件 30fps 写爆磁盘。
+        /// </summary>
+        private string _surfaceFrameState = "absent";
+
+        /// <summary>失焦阈值：与 Competition 端 InspectionAgent 的 MinFocus 保持一致。</summary>
+        private const double SurfaceMinFocus = 10.0;
+
+        /// <summary>
+        /// 是否落盘 NG 证据。采集线程不能直接读 WPF 控件（线程亲和性），
+        /// 因此由 UI 线程的勾选事件维护这个快照。
+        /// </summary>
+        private volatile bool _surfaceSaveEvidence = true;
 
         // ---- 关窗期协作 ----
         /// <summary>
@@ -104,14 +135,6 @@ namespace VirtualPathVision
         /// 默认对准传送带中部的检测工位（画面中部偏下）。
         /// 真实产线需要按相机标定结果调整，这里先给一个可用值并允许用户后续改。
         /// </summary>
-        /// <summary>
-        /// 检测区 ROI。
-        ///
-        /// <para>取自产线卡片上的输入框，而不是写死在此处：ROI 依赖具体的
-        /// 分辨率与相机标定，写死会在换分辨率时静默漏检——而漏检在产线上
-        /// 是不会报警的。默认值见 <c>ProductionLineCard.DefaultRoi*</c>。</para>
-        /// </summary>
-        private OpenCvSharp.Rect InspectionRoiRect => IndustrialPanelCtrl.LineCard.RoiRect;
         private Components.FaceDetectionComponent _faceDetectionComponent;
         private Components.ImageProcessingComponent _imageProcessingComponent;
         private Components.RecordingComponent _recordingComponent;
@@ -172,6 +195,7 @@ namespace VirtualPathVision
         public MainWindow()
         {
             InitializeComponent();
+            UpdateProductionLineUiSnapshot(IndustrialPanelCtrl.LineCard);
             InitErrorTimer();
             StateChanged += (_, _) => UpdateMaximizeIcon();
 
@@ -247,6 +271,12 @@ namespace VirtualPathVision
             ProcessingPanelCtrl.ThresholdsChanged += ProcessingPanelCtrl_ThresholdsChanged;
             ProcessingPanelCtrl.ModeChanged += ProcessingPanelCtrl_ModeChanged;
             ProcessingPanelCtrl.ColorChanged += ProcessingPanelCtrl_ColorChanged;
+            ProcessingPanelCtrl.SurfaceSensitivityChanged += value =>
+                _surfaceSensitivity = Math.Clamp(value, 0.2, 0.95);
+            ProcessingPanelCtrl.SurfaceSaveEvidenceCheckBoxEl.Checked +=
+                (_, _) => _surfaceSaveEvidence = true;
+            ProcessingPanelCtrl.SurfaceSaveEvidenceCheckBoxEl.Unchecked +=
+                (_, _) => _surfaceSaveEvidence = false;
             ProcessingPanelCtrl.LoadTemplateRequested += ProcessingPanelCtrl_LoadTemplateRequested;
 
             AIPanelCtrl.LoadModelRequested += AIPanelCtrl_LoadModelRequested;
@@ -551,6 +581,7 @@ namespace VirtualPathVision
 
             CameraPanelCtrl.RefreshTexts();
             ProcessingPanelCtrl.RefreshTexts();
+            UpdateModeSpecificLabels();
             AIPanelCtrl.RefreshTexts();
             CloudPanelCtrl.RefreshTexts();
             IndustrialPanelCtrl.RefreshTexts();
@@ -596,7 +627,8 @@ namespace VirtualPathVision
                     TranslationService.Instance.ModeTemplateMatch,
                     TranslationService.Instance.ModeShapeDetection,
                     TranslationService.Instance.ModeFeatureMatch,
-                    TranslationService.Instance.ModeEnhancement
+                    TranslationService.Instance.ModeEnhancement,
+                    TranslationService.Instance.ModeSurfaceInspection
                 };
                 ProcessingPanelCtrl.ProcessingModeComboBoxEl.SelectedIndex = modeIndex < 0 ? 0 : modeIndex;
 
@@ -639,8 +671,22 @@ namespace VirtualPathVision
                 Components.ProcessingMode.ShapeDetection => TranslationService.Instance.ModeShapeDetection,
                 Components.ProcessingMode.FeatureMatch => TranslationService.Instance.ModeFeatureMatch,
                 Components.ProcessingMode.Enhancement => TranslationService.Instance.ModeEnhancement,
+                Components.ProcessingMode.SurfaceInspection => TranslationService.Instance.ModeSurfaceInspection,
                 _ => TranslationService.Instance.ModeCanny
             };
+        }
+
+        /// <summary>
+        /// 结果卡里随模式变化的两个标签：
+        /// 表面检测关注缺陷数与灵敏度，其余模式沿用对象数与阈值。
+        /// </summary>
+        private void UpdateModeSpecificLabels()
+        {
+            bool surface = _currentMode == Components.ProcessingMode.SurfaceInspection;
+            ProcessingPanelCtrl.SetObjectsLabel(
+                surface ? TranslationService.Instance.SurfaceDefects : TranslationService.Instance.Objects);
+            ProcessingPanelCtrl.SetInfoLabel(surface ? TranslationService.Instance.SurfaceSensitivity : "Threshold:");
+            ProcessingPanelCtrl.SetFaceCounterVisible(!surface);
         }
 
         /// <summary>获取结果面板标题</summary>
@@ -654,6 +700,7 @@ namespace VirtualPathVision
                 Components.ProcessingMode.ShapeDetection => TranslationService.Instance.ModeShapeDetection,
                 Components.ProcessingMode.FeatureMatch => TranslationService.Instance.ModeFeatureMatch,
                 Components.ProcessingMode.Enhancement => TranslationService.Instance.ModeEnhancement,
+                Components.ProcessingMode.SurfaceInspection => TranslationService.Instance.ModeSurfaceInspection,
                 _ => TranslationService.Instance.ResultView
             };
         }
@@ -862,9 +909,23 @@ namespace VirtualPathVision
     /// 编排层带外部副作用（计数、MES 上报），因此任何参数变化都整体重建而非就地修改，
     /// 避免旧实例残留未完成的判定状态。
     /// </summary>
+    /// <summary>
+    /// 在 UI 线程把产线卡片的设置抄成只读快照。
+    /// 采集线程只读这些字段；直接读 CheckBox/TextBox 会抛跨线程访问异常
+    /// （表面检测模式实测：Frame processing error: The calling thread cannot access this object）。
+    /// </summary>
+    private void UpdateProductionLineUiSnapshot(Views.ProductionLineCard card)
+    {
+        _lineEnabled = card.IsLineEnabled;
+        _lineUseRoi = card.UseRoi;
+        var r = card.RoiRect;
+        _lineRoi = new RoiSnapshot(r.X, r.Y, r.Width, r.Height);
+    }
+
     private void ApplyProductionLineSettings()
     {
         var card = IndustrialPanelCtrl.LineCard;
+        UpdateProductionLineUiSnapshot(card);
 
         _productionLine?.Dispose();
         _productionLine = null;
@@ -957,14 +1018,14 @@ namespace VirtualPathVision
     {
         if (_productionLine == null) return;
 
-        var card = IndustrialPanelCtrl.LineCard;
         var dets = _lineDetectionBuffer;
         dets.Clear();
 
         OpenCvSharp.Rect? roi = null;
-        if (card.UseRoi)
+        if (_lineUseRoi)
         {
-            var r = InspectionRoiRect;
+            var s = _lineRoi;
+            var r = new OpenCvSharp.Rect(s.X, s.Y, s.Width, s.Height);
             // ROI 必须夹在画面内，否则用户改了参数会直接抛异常中断采集循环
             var clamped = OpenCvSharp.Rect.Intersect(r,
                 new OpenCvSharp.Rect(0, 0, frame.Width, frame.Height));
@@ -992,7 +1053,133 @@ namespace VirtualPathVision
         _productionLine.ExpireIdle(DateTime.Now);
     }
 
-    private void CameraPanelCtrl_ConnectRequested(object? sender, EventArgs e)
+        /// <summary>
+        /// 把表面检测结果格式化成结果卡文本。
+        /// 分工件未找到、失焦、NG、OK 四种情况，避免把不可用画面显示成 OK。
+        /// </summary>
+        private string FormatSurfaceResult(InspectionResult result)
+        {
+            var t = TranslationService.Instance;
+
+            if (!result.Quality.PartFound)
+                return $"{t.SurfaceNoPart}  focus={result.Quality.Focus:F0}";
+
+            if (result.Quality.Focus < SurfaceMinFocus)
+            {
+                return $"{t.SurfaceLowFocus}  focus={result.Quality.Focus:F0} " +
+                       $"< {SurfaceMinFocus:F0}  {result.ElapsedMs:F1} ms";
+            }
+
+            if (result.IsNg)
+            {
+                return $"NG  {result.Defect}  score={result.Score:F2}  " +
+                       $"findings={result.Findings.Count}  focus={result.Quality.Focus:F0}  " +
+                       $"{result.ElapsedMs:F1} ms";
+            }
+
+            return $"OK  score={result.Score:F2}  findings=0  " +
+                   $"focus={result.Quality.Focus:F0}  {result.ElapsedMs:F1} ms";
+        }
+
+        /// <summary>
+        /// 表面检测结果的下游动作：产线计数 + NG 证据落盘。
+        /// </summary>
+        /// <remarks>
+        /// 失焦或未找到工件的画面不参与计数：这类帧既不能证明合格，也不能证明不合格，
+        /// 计入任何一边都会污染良率。它仍会显示在结果卡里，提示操作员重新采集。
+        /// </remarks>
+        private void HandleSurfaceOutcome(
+            InspectionResult result, OpenCvSharp.Rect roi, Mat evidence, string partId)
+        {
+            bool usable = result.Quality.PartFound && result.Quality.Focus >= SurfaceMinFocus;
+            string state = !result.Quality.PartFound ? "absent"
+                : !usable ? "unusable"
+                : result.IsNg ? "ng" : "ok";
+
+            if (_productionLine != null && _lineEnabled)
+            {
+                // 工位固定：用 ROI 中心作为跟踪点，签名 "surface" 保持不变，
+                // 结论通过显式 Verdict 传给编排层（见 Detection.Verdict 的注释）。
+                if (usable)
+                {
+                    var det = new Industrial.ProductionLineService.Detection(
+                        roi.X + roi.Width / 2f,
+                        roi.Y + roi.Height / 2f,
+                        "surface",
+                        Math.Clamp(0.5 + result.Score * 0.5, 0, 1),
+                        result.IsNg ? PieceVerdict.Failed : PieceVerdict.Passed);
+
+                    _lineDetectionBuffer.Clear();
+                    _lineDetectionBuffer.Add(det);
+                    _productionLine.ProcessFrame(_lineDetectionBuffer, DateTime.Now);
+                }
+
+                // 没有工件时也要推进超时，否则上一件的 track 会一直留着；
+                // 1.5s 后下一件进工位时会被当成"已判定"而漏计。
+                _productionLine.ExpireIdle(DateTime.Now);
+            }
+
+            // 只在 OK/无工件 → NG 的跃迁时保存，同一件 NG 不会每帧写一张图。
+            if (state == "ng" && _surfaceFrameState != "ng" && _surfaceSaveEvidence)
+                SaveSurfaceEvidence(evidence, partId, result);
+
+            _surfaceFrameState = state;
+        }
+
+        /// <summary>NG 证据图异步落盘；克隆后再交给后台线程，UI 帧可以立即释放。</summary>
+        private void SaveSurfaceEvidence(Mat evidence, string partId, InspectionResult result)
+        {
+            try
+            {
+                Mat snapshot = evidence.Clone();
+                string directory = SurfaceEvidenceDirectory;
+                string path = Path.Combine(
+                    directory, $"ng_{partId}_{result.Defect}.png");
+
+                _ = Task.Run(() =>
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(directory);
+                        if (Cv2.ImWrite(path, snapshot))
+                            AppLogger.Instance.Info($"表面缺陷证据已保存: {path}");
+                        else
+                            AppLogger.Instance.Warn($"表面缺陷证据保存失败: {path}");
+                    }
+                    catch (Exception ex)
+                    {
+                        AppLogger.Instance.Warn($"表面缺陷证据保存异常: {ex.Message}");
+                    }
+                    finally
+                    {
+                        snapshot.Dispose();
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Instance.Warn($"表面缺陷证据准备失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 证据目录：默认 %LOCALAPPDATA%\VirtualPathVision\surface-evidence，
+        /// 可用环境变量 VPV_EVIDENCE_DIR 覆盖（演示/产线可指定到受管目录）。
+        /// </summary>
+        private static string SurfaceEvidenceDirectory
+        {
+            get
+            {
+                string? custom = Environment.GetEnvironmentVariable("VPV_EVIDENCE_DIR");
+                if (!string.IsNullOrWhiteSpace(custom)) return custom;
+
+                return Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "VirtualPathVision", "surface-evidence");
+            }
+        }
+
+        private void CameraPanelCtrl_ConnectRequested(object? sender, EventArgs e)
         {
             int srcIndex = CameraPanelCtrl.SourceTypeComboBoxEl.SelectedIndex;
 
@@ -1167,6 +1354,7 @@ namespace VirtualPathVision
                 8 => Components.ProcessingMode.ShapeDetection,
                 9 => Components.ProcessingMode.FeatureMatch,
                 10 => Components.ProcessingMode.Enhancement,
+                11 => Components.ProcessingMode.SurfaceInspection,
                 _ => Components.ProcessingMode.Canny
             };
 
@@ -1181,10 +1369,14 @@ namespace VirtualPathVision
                 ? Visibility.Visible : Visibility.Collapsed;
             bool showTemplatePanel = _currentMode is Components.ProcessingMode.TemplateMatch or Components.ProcessingMode.FeatureMatch;
             ProcessingPanelCtrl.TemplatePanelEl.Visibility = showTemplatePanel ? Visibility.Visible : Visibility.Collapsed;
+            ProcessingPanelCtrl.SurfacePanelEl.Visibility =
+                _currentMode == Components.ProcessingMode.SurfaceInspection
+                    ? Visibility.Visible : Visibility.Collapsed;
 
             CameraPanelCtrl.OriginalImageEl.Cursor = _currentMode == Components.ProcessingMode.ColorDetection
                 ? System.Windows.Input.Cursors.Cross : System.Windows.Input.Cursors.Arrow;
             UpdatePickColorHint();
+            UpdateModeSpecificLabels();
 
             ProcessingPanelCtrl.SetResultTitle(GetResultTitle(_currentMode));
 
@@ -2060,7 +2252,7 @@ namespace VirtualPathVision
                 case Components.ProcessingMode.ColorDetection:
                     // 产线编排启用时收集每个目标的位置，交给编排层跟踪同一件工件；
                     // 未启用时传 null，保持原有的零额外开销。
-                    if (_productionLine != null && IndustrialPanelCtrl.LineCard.IsLineEnabled)
+                    if (_productionLine != null && _lineEnabled)
                     {
                         _detectionBuffer.Clear();
                         Mat colorResult = _colorDetectionComponent.Detect(
@@ -2071,6 +2263,53 @@ namespace VirtualPathVision
 
                     Mat colorOnly = _colorDetectionComponent.Detect(originalFrame, out count);
                     return colorOnly;
+
+                case Components.ProcessingMode.SurfaceInspection:
+                {
+                    // 检测限制在 ROI 内：Otsu 会挑画面里最大的亮块，
+                    // 不裁剪时背景墙/地面网格可能被当成工件，缺陷框会落在画面边缘。
+                    // ROI 来自 UI 线程快照，不能在这里读卡片控件。
+                    var fullRect = new OpenCvSharp.Rect(0, 0, originalFrame.Width, originalFrame.Height);
+                    var roi = fullRect;
+                    if (_lineUseRoi)
+                    {
+                        var s = _lineRoi;
+                        var clamped = OpenCvSharp.Rect.Intersect(
+                            new OpenCvSharp.Rect(s.X, s.Y, s.Width, s.Height), fullRect);
+                        if (clamped.Width > 0 && clamped.Height > 0) roi = clamped;
+                    }
+
+                    // 仅创建 ROI 头，不拷贝像素；检测器只读输入。
+                    using Mat view = new(originalFrame, roi);
+                    var options = new DetectorOptions { Sensitivity = _surfaceSensitivity };
+                    var result = _surfaceDetector.Detect(view, options);
+
+                    // 检测是在 ROI 局部坐标里做的；证据图要画回整帧，
+                    // 否则缺陷框会整体偏移一个 ROI 原点。
+                    var display = result;
+                    if (roi.X != 0 || roi.Y != 0)
+                    {
+                        var findings = new List<DefectFinding>(result.Findings.Count);
+                        foreach (var f in result.Findings)
+                        {
+                            findings.Add(f with
+                            {
+                                Bounds = new OpenCvSharp.Rect(
+                                    f.Bounds.X + roi.X, f.Bounds.Y + roi.Y,
+                                    f.Bounds.Width, f.Bounds.Height)
+                            });
+                        }
+                        display = result with { Findings = findings };
+                    }
+
+                    count = result.Findings.Count;
+                    modeResult = FormatSurfaceResult(result);
+
+                    string partId = $"surface-{DateTime.Now:yyyyMMdd-HHmmss-fff}";
+                    Mat evidence = EvidenceRenderer.Render(partId, originalFrame, display);
+                    HandleSurfaceOutcome(result, roi, evidence, partId);
+                    return evidence;
+                }
 
                 case Components.ProcessingMode.TemplateMatch:
                     // 匹配阈值此前没有任何写入方（恒为 0.6），AI 面板里的
@@ -2241,7 +2480,11 @@ namespace VirtualPathVision
                 InvokeUi(() =>
                 {
                     bool showThreshold = _currentMode is Components.ProcessingMode.Canny or Components.ProcessingMode.Contour;
-                    string thresholdInfo = showThreshold ? $"{_threshold1} ~ {_threshold2}" : "";
+                    string thresholdInfo = showThreshold
+                        ? $"{_threshold1} ~ {_threshold2}"
+                        : _currentMode == Components.ProcessingMode.SurfaceInspection
+                            ? _surfaceSensitivity.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)
+                            : "";
                     ProcessingPanelCtrl.UpdateResults(faceCount, contourCount, thresholdInfo, modeResult);
 
                     FpsTextBlock.Text = $"{_currentFps:F1} FPS";
@@ -2350,7 +2593,11 @@ namespace VirtualPathVision
                     _imageDisplayComponent.UpdateImages(image, edges, _threshold1, _threshold2);
 
                     bool showThreshold = _currentMode is Components.ProcessingMode.Canny or Components.ProcessingMode.Contour;
-                    string thresholdInfo = showThreshold ? $"{_threshold1} ~ {_threshold2}" : "";
+                    string thresholdInfo = showThreshold
+                        ? $"{_threshold1} ~ {_threshold2}"
+                        : _currentMode == Components.ProcessingMode.SurfaceInspection
+                            ? _surfaceSensitivity.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)
+                            : "";
                     ProcessingPanelCtrl.UpdateResults(faceCount, contourCount, thresholdInfo, modeResult);
 
                     CameraPanelCtrl.EmptyOverlayLeftEl.Visibility = Visibility.Collapsed;

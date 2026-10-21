@@ -115,6 +115,14 @@ namespace VirtualPathVision
         public string ModeShapeDetection => GetString("ModeShapeDetection");
         public string ModeFeatureMatch => GetString("ModeFeatureMatch");
         public string ModeEnhancement => GetString("ModeEnhancement");
+        public string ModeSurfaceInspection => GetString("ModeSurfaceInspection");
+        public string SectionSurfaceInspection => GetString("SectionSurfaceInspection");
+        public string SurfaceSensitivity => GetString("SurfaceSensitivity");
+        public string SurfaceSaveEvidence => GetString("SurfaceSaveEvidence");
+        public string SurfaceHint => GetString("SurfaceHint");
+        public string SurfaceNoPart => GetString("SurfaceNoPart");
+        public string SurfaceLowFocus => GetString("SurfaceLowFocus");
+        public string SurfaceDefects => GetString("SurfaceDefects");
         public string ResultView => GetString("ResultView");
         public string TargetColor => GetString("TargetColor");
         public string LoadTemplate => GetString("LoadTemplate");

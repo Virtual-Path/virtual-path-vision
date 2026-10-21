@@ -316,6 +316,30 @@
   <data name="ModeEnhancement" xml:space="preserve">
     <value>Enhancement</value>
   </data>
+  <data name="ModeSurfaceInspection" xml:space="preserve">
+    <value>Surface Defect</value>
+  </data>
+  <data name="SectionSurfaceInspection" xml:space="preserve">
+    <value>Surface Inspection</value>
+  </data>
+  <data name="SurfaceSensitivity" xml:space="preserve">
+    <value>Sensitivity</value>
+  </data>
+  <data name="SurfaceSaveEvidence" xml:space="preserve">
+    <value>Save NG evidence</value>
+  </data>
+  <data name="SurfaceHint" xml:space="preserve">
+    <value>Scratch, spot and stain detection inside the inspection ROI. NG frames are saved as evidence.</value>
+  </data>
+  <data name="SurfaceNoPart" xml:space="preserve">
+    <value>No part in ROI</value>
+  </data>
+  <data name="SurfaceLowFocus" xml:space="preserve">
+    <value>Low focus - recapture</value>
+  </data>
+  <data name="SurfaceDefects" xml:space="preserve">
+    <value>Defects</value>
+  </data>
   <data name="ShapeCircle" xml:space="preserve">
     <value>Circle</value>
   </data>
