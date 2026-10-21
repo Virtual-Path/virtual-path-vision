@@ -1,0 +1,686 @@
+{
+  "DatasetDir": "D:\\Engineering-Project\\virtual-path-vision\\competition\\dataset",
+  "Total": 800,
+  "TruePositive": 330,
+  "FalsePositive": 0,
+  "TrueNegative": 400,
+  "FalseNegative": 70,
+  "Precision": 1,
+  "Recall": 0.825,
+  "F1": 0.9041095890410958,
+  "Accuracy": 0.9125,
+  "ClassAccuracy": 0.8666666666666667,
+  "MeanIou": 0.6132158702503648,
+  "LatencyMeanMs": 7.79977812499999,
+  "LatencyP50Ms": 7.8849,
+  "LatencyP95Ms": 8.7907,
+  "ThroughputFps": 128.20877516948616,
+  "PerClass": {
+    "good": {
+      "Total": 400,
+      "Detected": 0,
+      "Recall": 0
+    },
+    "scratch": {
+      "Total": 152,
+      "Detected": 122,
+      "Recall": 0.8026315789473685
+    },
+    "spot": {
+      "Total": 152,
+      "Detected": 138,
+      "Recall": 0.9078947368421053
+    },
+    "stain": {
+      "Total": 96,
+      "Detected": 70,
+      "Recall": 0.7291666666666666
+    }
+  },
+  "Failures": [
+    {
+      "File": "images/0401.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.41388888888888886,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.04"
+    },
+    {
+      "File": "images/0402.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0403.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0409.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0413.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0414.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.5347826086956522,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.04"
+    },
+    {
+      "File": "images/0415.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0416.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0423.png",
+      "Truth": "scratch",
+      "Predicted": "scratch",
+      "Score": 0.3488888888888889,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.05"
+    },
+    {
+      "File": "images/0426.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.4388888888888889,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.03"
+    },
+    {
+      "File": "images/0427.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.4244444444444444,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.02"
+    },
+    {
+      "File": "images/0428.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.4395833333333333,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.02"
+    },
+    {
+      "File": "images/0429.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.40555555555555556,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.02"
+    },
+    {
+      "File": "images/0430.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0437.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0438.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0439.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0440.png",
+      "Truth": "scratch",
+      "Predicted": "scratch",
+      "Score": 0.548888888888889,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.10"
+    },
+    {
+      "File": "images/0441.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0445.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0452.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0454.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.6,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.02"
+    },
+    {
+      "File": "images/0455.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.40793650793650793,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.02"
+    },
+    {
+      "File": "images/0456.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.4305555555555555,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.02"
+    },
+    {
+      "File": "images/0459.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.3634920634920634,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.02"
+    },
+    {
+      "File": "images/0465.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.39803921568627454,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.02"
+    },
+    {
+      "File": "images/0466.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0468.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0479.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0480.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0481.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0487.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0488.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0491.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.40555555555555556,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.01"
+    },
+    {
+      "File": "images/0492.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.45111111111111113,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.08"
+    },
+    {
+      "File": "images/0494.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0495.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.3421052631578947,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.02"
+    },
+    {
+      "File": "images/0505.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0506.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0507.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.4567901234567901,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.07"
+    },
+    {
+      "File": "images/0509.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0511.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0518.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.4944444444444444,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.02"
+    },
+    {
+      "File": "images/0520.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0530.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0531.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.5111111111111111,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.02"
+    },
+    {
+      "File": "images/0532.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.4,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.02"
+    },
+    {
+      "File": "images/0543.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.5111111111111112,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.03"
+    },
+    {
+      "File": "images/0544.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0545.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0546.png",
+      "Truth": "scratch",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0549.png",
+      "Truth": "scratch",
+      "Predicted": "spot",
+      "Score": 0.4768115942028986,
+      "Note": "\u5B9A\u4F4D\u504F\u5DEE IoU=0.04"
+    },
+    {
+      "File": "images/0566.png",
+      "Truth": "spot",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0573.png",
+      "Truth": "spot",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0580.png",
+      "Truth": "spot",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0588.png",
+      "Truth": "spot",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0609.png",
+      "Truth": "spot",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0616.png",
+      "Truth": "spot",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0623.png",
+      "Truth": "spot",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0630.png",
+      "Truth": "spot",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0645.png",
+      "Truth": "spot",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0659.png",
+      "Truth": "spot",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0666.png",
+      "Truth": "spot",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0673.png",
+      "Truth": "spot",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0680.png",
+      "Truth": "spot",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0702.png",
+      "Truth": "spot",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0709.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0712.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0713.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0714.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0716.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0725.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0726.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0730.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0731.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0738.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0739.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0740.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0745.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0750.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0752.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0753.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0759.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0765.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0766.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0773.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0779.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0780.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0781.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0788.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0794.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    },
+    {
+      "File": "images/0795.png",
+      "Truth": "stain",
+      "Predicted": "good",
+      "Score": 0,
+      "Note": "\u6F0F\u68C0"
+    }
+  ]
+}

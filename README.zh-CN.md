@@ -221,6 +221,34 @@ dotnet run --project VirtualPathCore.CameraBridge -- --serve --port 8080
 
 ---
 
+## 竞赛流水线（OpenCV AI Competition 2026）
+
+仓库里还带了一条无界面（headless）的评测与代理复检闭环，让检测质量可以被测量，而不是只靠口头保证：
+
+- **`VirtualPathVision.Inspection`** —— 双尺度 OpenCV 5 缺陷检测（划痕、点状、低对比污渍）、图像质量指标、复检代理、证据渲染。
+- **`VirtualPathVision.Competition`** —— 命令行：`dataset`、`eval`、`agent`、`probe`、`aws`、`all`。
+- **`infra/template.yaml`** —— S3 证据湖 + Lambda 聚合 + CloudWatch + SNS。
+
+```powershell
+# 数据集 → 评测 → 代理闭环 → AWS dry-run
+dotnet run --project VirtualPathVision.Competition -- all
+
+# 真实 AWS（先部署 infra/template.yaml）
+dotnet run --project VirtualPathVision.Competition -- aws
+```
+
+在 800 张合成工件上实测（种子 `20261026`）：**精确率 100.00 %、召回率 82.50 %、
+F1 90.41 %、p95 8.79 ms（128 FPS）**；**26.4 %** 的工件在最终动作前触发过一次
+由视觉结果驱动的复检。
+
+延伸阅读：[技术报告](docs/competition/TECHNICAL_REPORT.md) ·
+[架构图](docs/competition/ARCHITECTURE.md) ·
+[提交清单](docs/competition/SUBMISSION_CHECKLIST.md) ·
+[视频脚本](docs/competition/VIDEO_SCRIPT.md) ·
+[AWS 部署](infra/README.md)。
+
+---
+
 ## 已知限制
 
 - **开摄像头时关窗最多约 1 秒**。这是采集循环停止等待的上界——采集线程
@@ -276,7 +304,12 @@ dotnet run --project VirtualPathCore.CameraBridge -- --serve --port 8080
 │   └── haarcascade_frontalface_default.xml
 ├── VirtualPathVision.Tests/         # 无界面回归测试（83 条断言）
 │   ├── ProductionLineTests.cs       # 稳定判定、目标跟踪、MES 协议与报文
-│   └── ShutdownDeadlockTests.cs     # 关窗死锁、Dispose 幂等
+│   ├── ShutdownDeadlockTests.cs     # 关窗死锁、Dispose 幂等
+│   └── InspectionTests.cs           # 检测召回/误报、边缘掩膜、代理升级与复检
+├── VirtualPathVision.Inspection/    # 无界面检测器、代理闭环、数据集与评测
+├── VirtualPathVision.Competition/   # 命令行：dataset / eval / agent / probe / aws / all
+├── infra/                           # CloudFormation 模板 + AWS 部署验证说明
+├── docs/competition/                # 技术报告、架构图、提交清单、视频脚本
 ├── TestImages/                      # 测试图片（场景、模板、人脸照片）
 └── docs/images/                     # README 使用的截图
 ```

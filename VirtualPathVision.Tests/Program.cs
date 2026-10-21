@@ -15,7 +15,7 @@ namespace VirtualPathVision.Tests
         private static int Main()
         {
             Console.WriteLine("=== production line pipeline tests ===");
-            return ProductionLineTests.Run();
+            return ProductionLineTests.Run() | InspectionTests.Run();
         }
     }
 }

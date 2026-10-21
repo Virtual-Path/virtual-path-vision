@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="800" viewBox="0 0 1240 800" font-family="Segoe UI, Inter, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5b6b7c"/>
+    </marker>
+    <style>
+      .bg { fill: #ffffff; }
+      .panel { fill: #f4f7fb; stroke: #d7e0ea; stroke-width: 1.5; rx: 14; }
+      .box { fill: #ffffff; stroke: #b9c7d6; stroke-width: 1.5; rx: 10; }
+      .box-accent { fill: #eef6ff; stroke: #5b9bd5; stroke-width: 1.8; rx: 10; }
+      .box-aws { fill: #fff7ea; stroke: #e0a33e; stroke-width: 1.8; rx: 10; }
+      .title { fill: #1f2d3d; font-size: 20px; font-weight: 600; }
+      .lane { fill: #44576b; font-size: 15px; font-weight: 600; letter-spacing: 1px; }
+      .h { fill: #1f2d3d; font-size: 15px; font-weight: 600; }
+      .t { fill: #44576b; font-size: 12.5px; }
+      .mono { fill: #44576b; font-size: 11.5px; font-family: Consolas, monospace; }
+      .flow { stroke: #5b6b7c; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .flow-dash { stroke: #8a99a8; stroke-width: 1.8; fill: none; stroke-dasharray: 6 5; marker-end: url(#arrow); }
+      .note { fill: #7a8898; font-size: 11.5px; font-style: italic; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1240" height="800"/>
+
+  <text class="title" x="40" y="48">VirtualPath Vision — inspection loop and evidence pipeline</text>
+  <text class="note" x="40" y="70">Edge inference runs on Windows with OpenCV 5; AWS stores evidence, aggregates metrics and notifies reviewers.</text>
+
+  <!-- Lane 1: acquisition -->
+  <rect class="panel" x="30" y="96" width="330" height="380"/>
+  <text class="lane" x="50" y="126">1 · ACQUIRE</text>
+
+  <rect class="box" x="52" y="148" width="286" height="74"/>
+  <text class="h" x="68" y="174">Physical camera</text>
+  <text class="t" x="68" y="194">USB / MSMF, 640×480, 30 fps</text>
+  <text class="t" x="68" y="211">same path used by the WPF console</text>
+
+  <rect class="box-accent" x="52" y="252" width="286" height="92"/>
+  <text class="h" x="68" y="278">VirtualPath-Core virtual camera</text>
+  <text class="t" x="68" y="298">headless offscreen render → MJPEG</text>
+  <text class="mono" x="68" y="317">GET /cam1  (multipart/x-mixed-replace)</text>
+  <text class="t" x="68" y="334">lets the vision app run with no hardware</text>
+
+  <rect class="box" x="52" y="374" width="286" height="74"/>
+  <text class="h" x="68" y="400">OpenCV 5 VideoCapture</text>
+  <text class="t" x="68" y="420">NetworkStream + MJPEG parser</text>
+  <text class="t" x="68" y="437">zero changes to the desktop app</text>
+
+  <path class="flow" d="M195 222 L195 252"/>
+  <path class="flow" d="M195 344 L195 374"/>
+
+  <!-- Lane 2: inspect & decide -->
+  <rect class="panel" x="390" y="96" width="420" height="540"/>
+  <text class="lane" x="410" y="126">2 · INSPECT &amp; DECIDE</text>
+
+  <rect class="box-accent" x="412" y="148" width="376" height="128"/>
+  <text class="h" x="428" y="174">DefectDetector (OpenCV 5)</text>
+  <text class="t" x="428" y="195">Otsu part mask → 17 px edge exclusion</text>
+  <text class="t" x="428" y="213">fine scale σ=3 → scratches &amp; spots</text>
+  <text class="t" x="428" y="231">coarse scale σ=8 → low-contrast stains</text>
+  <text class="t" x="428" y="249">score = mean response / reference</text>
+  <text class="mono" x="428" y="267">output: verdict, class, bbox, focus, exposure</text>
+
+  <rect class="box" x="412" y="304" width="376" height="150"/>
+  <text class="h" x="428" y="330">InspectionAgent</text>
+  <text class="t" x="428" y="351">1 · focus &lt; 10 → reacquire / escalate</text>
+  <text class="t" x="428" y="369">2 · near threshold → reinspect (σ 0.85)</text>
+  <text class="t" x="428" y="387">3 · stain ≥ 0.50 → quarantine + human review</text>
+  <text class="t" x="428" y="405">4 · defect ≥ 0.60 → reject</text>
+  <text class="mono" x="428" y="426">every step logged with args + observation</text>
+  <text class="mono" x="428" y="443">→ agent-trace.jsonl</text>
+
+  <rect class="box" x="412" y="482" width="376" height="88"/>
+  <text class="h" x="428" y="508">Actuator / MES</text>
+  <text class="t" x="428" y="528">conveyor.advance · diverter.reject</text>
+  <text class="t" x="428" y="546">diverter.quarantine · andon.request_human</text>
+
+  <path class="flow" d="M600 276 L600 304"/>
+  <path class="flow" d="M600 454 L600 482"/>
+  <path class="flow-dash" d="M600 329 C 760 340, 760 420, 788 400"/>
+
+  <!-- feedback label -->
+  <text class="note" x="640" y="372">reinspect</text>
+  <text class="note" x="640" y="388">changes tool args</text>
+
+  <!-- Lane 3: evidence & cloud -->
+  <rect class="panel" x="850" y="96" width="360" height="660"/>
+  <text class="lane" x="870" y="126">3 · EVIDENCE &amp; CLOUD</text>
+
+  <rect class="box" x="872" y="148" width="316" height="104"/>
+  <text class="h" x="888" y="174">Evidence packager</text>
+  <text class="t" x="888" y="194">annotated JPEG + verdict + score</text>
+  <text class="t" x="888" y="212">evaluation.json · agent-summary.json</text>
+  <text class="mono" x="888" y="232">Competition -- aws</text>
+
+  <rect class="box-aws" x="872" y="292" width="316" height="82"/>
+  <text class="h" x="888" y="318">Amazon S3</text>
+  <text class="t" x="888" y="338">versioned, SSE, public access blocked</text>
+  <text class="t" x="888" y="356">lifecycle: 90 d (30 d noncurrent)</text>
+
+  <rect class="box-aws" x="872" y="414" width="316" height="96"/>
+  <text class="h" x="888" y="440">AWS Lambda</text>
+  <text class="mono" x="888" y="460">vpv-defect-aggregator</text>
+  <text class="t" x="888" y="480">aggregates pass / reject / quarantine</text>
+  <text class="t" x="888" y="498">returns batch summary to the edge</text>
+
+  <rect class="box-aws" x="872" y="550" width="150" height="86"/>
+  <text class="h" x="886" y="576">CloudWatch</text>
+  <text class="t" x="886" y="596">PartsInspected</text>
+  <text class="t" x="886" y="614">ItemsRequiringReview</text>
+
+  <rect class="box-aws" x="1038" y="550" width="150" height="86"/>
+  <text class="h" x="1052" y="576">SNS</text>
+  <text class="t" x="1052" y="596">review alerts</text>
+  <text class="t" x="1052" y="614">email subscription</text>
+
+  <rect class="box" x="872" y="676" width="316" height="60"/>
+  <text class="h" x="888" y="700">Synthetic dataset + evaluation</text>
+  <text class="t" x="888" y="720">800 labelled parts · precision / recall / p95</text>
+
+  <path class="flow" d="M810 200 L872 200"/>
+  <path class="flow" d="M1030 252 L1030 292"/>
+  <path class="flow" d="M1030 374 L1030 414"/>
+  <path class="flow" d="M1030 510 L1030 550"/>
+  <path class="flow" d="M947 510 L947 550"/>
+  <path class="flow-dash" d="M1030 676 L1030 636"/>
+
+  <!-- bottom legend -->
+  <text class="note" x="40" y="760">Solid arrows: data path. Dashed arrows: feedback / orchestration. The agent never acts on a single ambiguous frame — it changes the next inspection or asks a human.</text>
+  <text class="note" x="40" y="778">Source: VirtualPathVision.Inspection (detector, agent, evaluation) · VirtualPathVision.Competition (CLI) · infra/template.yaml (AWS).</text>
+</svg>

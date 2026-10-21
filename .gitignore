@@ -371,3 +371,6 @@ user_settings.json
 
 # Visual Studio Code
 .vscode/
+
+# Competition pipeline outputs (regenerate with: dotnet run --project VirtualPathVision.Competition -- all)
+competition/dataset/

@@ -17,10 +17,15 @@
     <Compile Include="Program.cs" />
     <Compile Include="ProductionLineTests.cs" />
     <Compile Include="ShutdownDeadlockTests.cs" />
+    <Compile Include="InspectionTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\VirtualPathVision\VirtualPathVision.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VirtualPathVision.Inspection\VirtualPathVision.Inspection.csproj" />
   </ItemGroup>
 
 </Project>

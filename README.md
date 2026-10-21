@@ -221,6 +221,36 @@ The engine logs `[serve] client connected: <addr>` and `[serve] streaming... fra
 
 ---
 
+## Competition pipeline (OpenCV AI Competition 2026)
+
+The repository also ships a headless benchmark and an agentic re-inspection loop, so the
+inspection quality is measured rather than asserted:
+
+- **`VirtualPathVision.Inspection`** — two-scale OpenCV 5 defect detector (scratches, spots,
+  low-contrast stains), image-quality metrics, re-inspection agent, evidence renderer.
+- **`VirtualPathVision.Competition`** — CLI: `dataset`, `eval`, `agent`, `probe`, `aws`, `all`.
+- **`infra/template.yaml`** — S3 evidence lake + Lambda aggregation + CloudWatch + SNS.
+
+```powershell
+# dataset → evaluation → agent loop → dry-run AWS
+dotnet run --project VirtualPathVision.Competition -- all
+
+# real AWS (after deploying infra/template.yaml)
+dotnet run --project VirtualPathVision.Competition -- aws
+```
+
+Measured on 800 synthetic parts (seed `20261026`): **precision 100.00 %, recall 82.50 %,
+F1 90.41 %, p95 8.79 ms (128 FPS)**; **26.4 %** of parts triggered a vision-driven
+re-inspection before the final action.
+
+Read: [technical report](docs/competition/TECHNICAL_REPORT.md) ·
+[architecture](docs/competition/ARCHITECTURE.md) ·
+[submission checklist](docs/competition/SUBMISSION_CHECKLIST.md) ·
+[video script](docs/competition/VIDEO_SCRIPT.md) ·
+[AWS deployment](infra/README.md).
+
+---
+
 ## Known Limitations
 
 - **Closing the app with a camera open takes up to ~1 second.** That is the upper bound of the
@@ -278,7 +308,12 @@ The engine logs `[serve] client connected: <addr>` and `[serve] streaming... fra
 │   └── haarcascade_frontalface_default.xml
 ├── VirtualPathVision.Tests/         # Headless regression tests (83 assertions)
 │   ├── ProductionLineTests.cs       # Stability, target tracking, MES protocol and payloads
-│   └── ShutdownDeadlockTests.cs     # Shutdown deadlock, Dispose idempotency
+│   ├── ShutdownDeadlockTests.cs     # Shutdown deadlock, Dispose idempotency
+│   └── InspectionTests.cs           # Detector recall/FP, edge margin, agent escalation and re-plan
+├── VirtualPathVision.Inspection/    # Headless detector, agent loop, dataset and evaluation
+├── VirtualPathVision.Competition/   # CLI: dataset / eval / agent / probe / aws / all
+├── infra/                           # CloudFormation stack + AWS deploy and verification notes
+├── docs/competition/                # Technical report, architecture, checklist, video script
 ├── TestImages/                      # Sample test images (scene, templates, face photo)
 └── docs/images/                     # Screenshots used by this README
 ```

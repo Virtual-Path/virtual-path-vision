@@ -1,0 +1,21 @@
+{
+  "total": 800,
+  "byAction": {
+    "Pass": 514,
+    "Escalate": 1,
+    "Reject": 240,
+    "Quarantine": 45
+  },
+  "byReason": {
+    "clean": 469,
+    "image_unusable": 1,
+    "cleared_by_reinspection": 45,
+    "confirmed_by_reinspection": 165,
+    "high_confidence_defect": 75,
+    "stain_requires_review": 45
+  },
+  "visionChangedAction": 211,
+  "agreementWithTruth": 0.855,
+  "tracePath": "agent-trace.jsonl",
+  "evidenceCount": 12
+}

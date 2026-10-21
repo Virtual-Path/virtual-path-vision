@@ -1,0 +1,154 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  VirtualPath Vision - inspection evidence lake, aggregation Lambda and review topic.
+  Deploy with: aws cloudformation deploy --template-file infra/template.yaml
+  --stack-name vpv-inspection --capabilities CAPABILITY_NAMED_IAM
+
+Parameters:
+  AlertEmail:
+    Type: String
+    Default: ''
+    Description: Optional email address subscribed to the review topic. Leave empty to skip.
+
+Conditions:
+  HasAlertEmail: !Not [!Equals [!Ref AlertEmail, '']]
+
+Resources:
+  # ── Evidence lake ────────────────────────────────────────────────────
+  # Every inspection run uploads annotated JPEGs plus evaluation/agent JSON.
+  # Versioning + SSE keep the audit trail tamper-evident; lifecycle keeps cost bounded.
+  EvidenceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'vpv-evidence-${AWS::AccountId}-${AWS::Region}'
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireEvidence
+            Status: Enabled
+            ExpirationInDays: 90
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+
+  # ── Review topic ─────────────────────────────────────────────────────
+  ReviewTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: vpv-review
+      DisplayName: VirtualPath Vision review
+
+  ReviewSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasAlertEmail
+    Properties:
+      TopicArn: !Ref ReviewTopic
+      Protocol: email
+      Endpoint: !Ref AlertEmail
+
+  # ── Aggregation Lambda ───────────────────────────────────────────────
+  AggregatorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: PutInspectionMetrics
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricData
+                Resource: '*'
+
+  AggregatorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: vpv-defect-aggregator
+      Runtime: python3.12
+      Handler: index.handler
+      Timeout: 10
+      MemorySize: 128
+      Role: !GetAtt AggregatorRole.Arn
+      Code:
+        ZipFile: |
+          """Aggregate one inspection run and publish it as a CloudWatch metric.
+
+          Input is the payload produced by `VirtualPathVision.Competition aws`:
+          {runId, evidenceCount, evaluation: {...}, agent: {byAction: {...}}}
+          """
+          import json
+          import os
+
+          import boto3
+
+          METRIC_NAMESPACE = os.environ.get("METRIC_NAMESPACE", "VPV/Inspection")
+          cloudwatch = boto3.client("cloudwatch")
+
+
+          def handler(event, context):
+              actions = (event.get("agent") or {}).get("byAction") or {}
+              evaluation = event.get("evaluation") or {}
+
+              quarantine = int(actions.get("Quarantine", 0))
+              escalate = int(actions.get("Escalate", 0))
+              reject = int(actions.get("Reject", 0))
+              passed = int(actions.get("Pass", 0))
+
+              review = quarantine + escalate
+
+              cloudwatch.put_metric_data(
+                  Namespace=METRIC_NAMESPACE,
+                  MetricData=[
+                      {"MetricName": "PartsInspected", "Value": quarantine + escalate + reject + passed, "Unit": "Count"},
+                      {"MetricName": "PartsRejected", "Value": reject, "Unit": "Count"},
+                      {"MetricName": "ItemsRequiringReview", "Value": review, "Unit": "Count"},
+                  ],
+              )
+
+              return {
+                  "runId": event.get("runId"),
+                  "parts": quarantine + escalate + reject + passed,
+                  "reject": reject,
+                  "quarantine": quarantine,
+                  "escalate": escalate,
+                  "review": review,
+                  "precision": evaluation.get("precision"),
+                  "recall": evaluation.get("recall"),
+                  "f1": evaluation.get("f1"),
+                  "verdict": "REVIEW" if review > 0 else "OK",
+              }
+
+Outputs:
+  BucketName:
+    Description: S3 bucket for inspection evidence
+    Value: !Ref EvidenceBucket
+
+  TopicArn:
+    Description: SNS topic for review alerts
+    Value: !Ref ReviewTopic
+
+  FunctionName:
+    Description: Aggregation Lambda name
+    Value: !Ref AggregatorFunction
+
+  FunctionArn:
+    Description: Aggregation Lambda ARN
+    Value: !GetAtt AggregatorFunction.Arn

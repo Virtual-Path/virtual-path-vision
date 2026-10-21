@@ -1,0 +1,10 @@
+{
+  "mode": "dry-run",
+  "runId": "20261021-055123",
+  "region": "us-east-1",
+  "bucket": "",
+  "lambda": "",
+  "topic": "",
+  "evidenceCount": 12,
+  "reason": "VPV_S3_BUCKET \u672A\u914D\u7F6E"
+}
