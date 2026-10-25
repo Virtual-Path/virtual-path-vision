@@ -163,7 +163,7 @@ Other results we are proud of:
 - **117 assertions** pass across production-line and inspection tests.
 - The solution builds with **0 warnings and 0 errors**.
 - VirtualPath-Core builds with **0 warnings and 0 errors** and passes **19/19 xUnit tests**.
-- The desktop path was exercised end to end over MJPEG: P0400 produced `NG Scratch score=0.56` and an evidence PNG. P0401 was misclassified as a spot (`NG Spot 0.38`) and is documented as a failure, not retouched.
+- The desktop path was exercised end to end over MJPEG: P0400 produced `NG Scratch score=0.56` and an evidence PNG. P0401 was misclassified as a spot (`NG Spot 0.38` after MJPEG re-encoding; `0.41` in the PNG trace) and is documented as a failure, not retouched.
 - The virtual camera delivered 30/30 frames at 1280×720.
 
 ## What we learned
