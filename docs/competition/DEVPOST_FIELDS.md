@@ -13,6 +13,45 @@ Agentic industrial vision: OpenCV 5 finds scratches, spots and stains, an agent 
 ```
 
 - **Video demo:** paste the full YouTube watch URL after upload (Unlisted). Do not paste a GitHub link or a local file path.
+- **Upload a File:** `C:\Users\Reality\Videos\VirtualPathVision_Competition_Evidence.zip` (6.4 MB, under the 35 MB limit). The same zip is at `artifacts/demo/VirtualPathVision_Competition_Evidence.zip` (Git-ignored).
+- **Repository URL:** `https://github.com/Virtual-Path/virtual-path-vision`
+
+## Sponsor / Special Prizes
+
+- **Best Use of COOL Award:** leave unchecked. The project does not add or claim a COOL-specific integration; do not invent one.
+- **Agentic Vision Award:** check it. The project has a vision-driven re-inspection loop, a JSONL audit trail, a human-in-the-loop quarantine path, and guardrails.
+- **Special Award Consideration:** if a second checkbox group appears, select **Agentic Vision Award** only. Leave **Best Use of COOL** unchecked unless you have actually integrated COOL.
+
+## Testing instructions (paste-ready)
+
+```text
+No hosted public web endpoint. This is a Windows 10/11 x64 desktop + CLI project; reproduce locally.
+
+Prerequisites: Windows 10/11 x64, .NET 8 SDK, Git.
+
+1) Clone and build the vision app:
+git clone https://github.com/Virtual-Path/virtual-path-vision.git
+cd virtual-path-vision
+dotnet build VirtualPathVision.sln
+dotnet run --project VirtualPathVision.Tests
+
+2) Reproduce the 800-part benchmark, agent trace and dry-run AWS receipt:
+dotnet run --project VirtualPathVision.Competition -- all
+
+Expected outputs under artifacts/: evaluation.json, agent-summary.json, agent-trace.jsonl, aws-receipt.json (mode "dry-run"). No AWS account is required for this step.
+
+3) Optional desktop UI with the virtual camera:
+git clone https://github.com/Virtual-Path/virtual-path-core.git
+cd virtual-path-core/VirtualPath-EngineClient
+dotnet run --project VirtualPathCore.CameraBridge -- --serve --port 8080
+
+In a second terminal, from virtual-path-vision:
+dotnet run --project VirtualPathVision/VirtualPathVision.csproj
+
+In the app: choose Network Stream, host 127.0.0.1, port 8080, path /cam1, click Connect, select Surface Defect, then start the camera. Expected: P0400 -> NG Scratch score≈0.56. P0401 is a documented class-confusion failure (NG Spot).
+
+AWS note: the CloudFormation template is included, but this submission uses a dry-run receipt only. No live AWS deployment is claimed. The physical USB/MSMF path and MES/PLC integration are not commissioned.
+```
 
 ## Built with — exactly 25 tags
 
