@@ -13,7 +13,7 @@ Agentic industrial vision: OpenCV 5 finds scratches, spots and stains, an agent 
 ```
 
 - **Video demo:** paste the full YouTube watch URL after upload (Unlisted). Do not paste a GitHub link or a local file path.
-- **Upload a File:** `C:\Users\Reality\Videos\VirtualPathVision_Competition_Evidence.zip` (6.4 MB, under the 35 MB limit). The same zip is at `artifacts/demo/VirtualPathVision_Competition_Evidence.zip` (Git-ignored).
+- **Upload a File:** `C:\Users\Reality\Videos\VirtualPathVision_Competition_Evidence.zip` (6.4 MB, under the 35 MB limit; local only, not committed).
 - **Repository URL:** `https://github.com/Virtual-Path/virtual-path-vision`
 
 ## Sponsor / Special Prizes

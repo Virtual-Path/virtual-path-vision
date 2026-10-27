@@ -1,6 +1,6 @@
 # Demo video transcript — VirtualPath Vision
 
-Video: `artifacts/demo/VirtualPathVision-Demo-2026.mp4`  
+Video: submitted Devpost demo (YouTube, 2026-10-27)  
 Duration: 1:26  
 Narration: English (Microsoft Zira, Windows SAPI)
 

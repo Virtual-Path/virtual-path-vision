@@ -2,15 +2,13 @@
 
 ## File
 
-- Video: `artifacts/demo/VirtualPathVision-Demo-2026.mp4` (ignored by Git)
+- Video: `C:\Users\Reality\Videos\VirtualPathVision-Demo-2026.mp4` (local, not committed)
 - Duration: **1:26**
 - Format: 1920×1080, 30 fps, H.264, AAC mono
 - Thumbnail: `docs/competition/youtube-thumbnail.jpg` (1280×720)
 - Transcript: `docs/competition/VIDEO_TRANSCRIPT_EN.md`
 
-The MP4 is also available at:
-
-`C:\Users\Reality\AppData\Local\Temp\opencode\vpv-video-build\vpv-video-narrated.mp4`
+**Status: uploaded and submitted on Devpost on 2026-10-27.**
 
 ## Upload settings
 
@@ -61,7 +59,7 @@ AWS note: the repository includes a CloudFormation template and a dry-run receip
 ## Upload checklist
 
 1. Open YouTube Studio → **Create** → **Upload videos**.
-2. Select `artifacts/demo/VirtualPathVision-Demo-2026.mp4`.
+2. Select `C:\Users\Reality\Videos\VirtualPathVision-Demo-2026.mp4`.
 3. Paste the title and description above; add the tags.
 4. Set visibility to **Unlisted**; select **Not made for kids**.
 5. Upload `docs/competition/youtube-thumbnail.jpg` as the thumbnail.
