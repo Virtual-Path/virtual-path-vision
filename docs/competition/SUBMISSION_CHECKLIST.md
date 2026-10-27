@@ -2,6 +2,8 @@
 
 Deadline: **2026-10-27 14:45 GMT+8** (= 2026-10-26 23:59 PT). Judging 10-27 → 11-09; winners announced 11-10 on OpenCV Live.
 
+**Status: submitted on 2026-10-27 (user confirmed).** The remaining items below are post-submission / optional follow-ups, except the AWS live path, which remains a known compliance risk.
+
 ## Hard requirements
 
 | # | Requirement | Status | Evidence / action |
@@ -12,10 +14,10 @@ Deadline: **2026-10-27 14:45 GMT+8** (= 2026-10-26 23:59 PT). Judging 10-27 → 
 | 4 | Repository accessible to judges | **Done** | GitHub repo is public (`gh repo view`: `visibility: PUBLIC`); judges can clone it |
 | 5 | Dependencies pinned | **Done** | exact versions in the `.csproj` files; dataset seed fixed |
 | 6 | Architecture diagram | **Done** | `docs/competition/architecture.svg`, Mermaid in `ARCHITECTURE.md` |
-| 7 | Runnable endpoint or live demo | **Done (app); video recorded, YouTube upload pending** | engine MJPEG endpoint `/cam1` + desktop Surface Defect mode verified over MJPEG; evidence PNG written; demo MP4 at `artifacts/demo/VirtualPathVision-Demo-2026.mp4` (Git-ignored) |
-| 8 | Video ≤ 5 minutes | **Recorded (1:26); upload pending** | `artifacts/demo/VirtualPathVision-Demo-2026.mp4`; package in `YOUTUBE_UPLOAD.md`; transcript in `VIDEO_TRANSCRIPT_EN.md` |
+| 7 | Runnable endpoint or live demo | **Done** | engine MJPEG endpoint `/cam1` + desktop Surface Defect mode verified over MJPEG; evidence PNG written; demo video recorded and submitted |
+| 8 | Video ≤ 5 minutes | **Done (1:26)** | `C:\Users\Reality\Videos\VirtualPathVision-Demo-2026.mp4` (not committed); package in `YOUTUBE_UPLOAD.md`; transcript in `VIDEO_TRANSCRIPT_EN.md` |
 | 9 | Evaluation evidence incl. failure cases | **Done** | §7–§8 of the report, `artifacts/evaluation.json`, `docs/competition/evidence-grid.png` |
-| 10 | Devpost submission | **Pending** | needs the user's Devpost account |
+| 10 | Devpost submission | **Submitted 2026-10-27** | user confirmed submission |
 
 ## Bonus track: Agentic Vision ($1,000)
 
@@ -26,18 +28,18 @@ Deadline: **2026-10-27 14:45 GMT+8** (= 2026-10-26 23:59 PT). Judging 10-27 → 
 | Human in the loop | stains ≥ 0.50 are quarantined (45 parts), not auto-scrapped; SNS review alert |
 | Guardrails | unusable image → escalate, never pass; unclear score → re-inspect, never guess |
 
-## Before submitting
+## Before submitting / submission record
 
-- [ ] **AWS live run.** Configure credentials, deploy `infra/template.yaml`, run `-- aws`, keep `artifacts/aws-receipt.json` with `"mode": "aws"`, plus the S3 object list, Lambda response and SNS message id. Paste the S3/Lambda section into the Devpost "How we built it" or the report appendix.
-- [x] **Desktop integration verified.** Surface Defect mode ran against a live MJPEG stream: `NG Scratch score=0.56`, annotated evidence written; screenshot `docs/images/14_surface_camera.png`. Known failure `0401` (truth scratch → Spot 0.38) kept in §8.6.
-- [x] **Record the video.** 1:26, 1080p30, English narration and on-screen captions; uses the clean Game Bar live clip plus verified screenshots and trace evidence. File is Git-ignored.
-- [ ] **Upload the video to YouTube as Unlisted** and paste the watch URL into Devpost. Follow `YOUTUBE_UPLOAD.md`; wait for HD processing before checking the embed.
+- [ ] **AWS live run.** Configure credentials, deploy `infra/template.yaml`, run `-- aws`, keep `artifacts/aws-receipt.json` with `"mode": "aws"`, plus the S3 object list, Lambda response and SNS message id. Paste the S3/Lambda section into the Devpost "How we built it" or the report appendix. **Still open; dry-run only.**
+- [x] **Desktop integration verified.** Surface Defect mode ran against a live MJPEG stream: `NG Scratch score=0.56`, annotated evidence written; screenshot `docs/images/14_surface_camera.png`. Known failure `0401` (truth scratch → Spot 0.38 after MJPEG re-encoding; 0.41 in the PNG trace) kept in §8.6.
+- [x] **Record the video.** 1:26, 1080p30, English narration and on-screen captions; uses the clean Game Bar live clip plus verified screenshots and trace evidence. Final copy: `C:\Users\Reality\Videos\VirtualPathVision-Demo-2026.mp4`.
+- [x] **Upload the video and submit the Devpost form.** User confirmed submission on 2026-10-27.
 - [x] **Repo visibility checked** (`gh repo view --json visibility` → `PUBLIC`).
 - [ ] **Fresh-clone test** on another machine or a clean folder:
       `dotnet build VirtualPathVision.sln` → `dotnet run --project VirtualPathVision.Tests` → `dotnet run --project VirtualPathVision.Competition -- all`.
 - [ ] **Re-run the benchmark** after any code change and update the numbers in the report (they are measured, not aspirational).
-- [ ] **Devpost fields**: title, tagline, "what it does", "how we built it", "challenges", "accomplishments", "what we learned", "what's next", built-with tags (OpenCV, C#, .NET, AWS Lambda, Amazon S3, WPF), repo URL, video URL.
-- [ ] **Screenshot** of the Devpost submission confirmation.
+- [x] **Devpost fields**: title, tagline, story sections, built-with tags, repo URL, video URL — user confirmed submission.
+- [ ] **Confirmation screenshot** for the post-submission record (optional).
 
 ## Honest gaps (do not hide these)
 

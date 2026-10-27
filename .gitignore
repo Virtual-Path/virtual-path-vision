@@ -61,7 +61,21 @@ BenchmarkDotNet.Artifacts/
 # .NET Core
 project.lock.json
 project.fragment.lock.json
-artifacts/
+# Competition evidence is tracked (small, deterministic). Demo media stays ignored.
+artifacts/*
+!artifacts/README.md
+!artifacts/evaluation.json
+!artifacts/evaluation.md
+!artifacts/sweep.json
+!artifacts/sweep.md
+!artifacts/agent-summary.json
+!artifacts/agent-trace.jsonl
+!artifacts/aws-receipt.json
+!artifacts/actuator.log
+!artifacts/probe-*.jpg
+!artifacts/evidence/
+!artifacts/evidence/*.jpg
+artifacts/demo/
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
@@ -91,6 +105,7 @@ StyleCopReport.xml
 *.tmp_proj
 *_wpftmp.csproj
 *.log
+!artifacts/actuator.log
 *.vspscc
 *.vssscc
 .builds

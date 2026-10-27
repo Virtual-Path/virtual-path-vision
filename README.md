@@ -274,8 +274,10 @@ Measured on 800 synthetic parts (seed `20261026`): **precision 100.00 %, recall 
 F1 90.41 %, p95 8.79 ms (128 FPS)**; **26.4 %** of parts triggered a vision-driven
 re-inspection before the final action.
 
-Read: [technical report](docs/competition/TECHNICAL_REPORT.md) ·
+Read: [project story](docs/competition/DEVPOST_PROJECT_STORY.md) ·
+[technical report](docs/competition/TECHNICAL_REPORT.md) ·
 [architecture](docs/competition/ARCHITECTURE.md) ·
+[competition artifacts](artifacts/README.md) ·
 [submission checklist](docs/competition/SUBMISSION_CHECKLIST.md) ·
 [video script](docs/competition/VIDEO_SCRIPT.md) ·
 [AWS deployment](infra/README.md).
